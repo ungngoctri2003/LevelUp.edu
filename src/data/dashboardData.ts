@@ -23,6 +23,8 @@ export type MockStudent = {
   grade: string
   status: 'active' | 'inactive' | 'trial'
   joined: string
+  phone?: string
+  source?: 'registered'
 }
 
 export const mockStudents: MockStudent[] = [
@@ -39,7 +41,7 @@ export type MockTeacherRow = {
   email: string
   subjects: string
   classes: number
-  status: 'approved' | 'pending'
+  status: 'approved' | 'pending' | 'suspended'
 }
 
 export const mockTeachersAdmin: MockTeacherRow[] = [

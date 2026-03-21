@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom'
-import { news } from '../data'
+import { usePublicContent } from '../hooks/usePublicContent'
 
 export default function NewsPage() {
+  const { news } = usePublicContent()
   return (
     <div className="py-16 sm:py-24">
       <div className="mx-auto max-w-7xl px-6">
-        <div className="text-center mb-16">
+        <div className="mb-16 text-center">
           <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl">
             Tin tức
           </h1>

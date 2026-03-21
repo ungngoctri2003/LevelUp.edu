@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Reveal } from '../motion/Reveal'
-import { courses } from '../../data'
+import { usePublicContent } from '../../hooks/usePublicContent'
 
 const initialForm = {
   fullName: '',
@@ -11,6 +11,7 @@ const initialForm = {
 }
 
 export default function RegistrationForm() {
+  const { courses } = usePublicContent()
   const [form, setForm] = useState(initialForm)
   const [errors, setErrors] = useState({})
   const [submitted, setSubmitted] = useState(false)

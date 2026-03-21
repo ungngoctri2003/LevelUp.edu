@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { exams } from '../data'
 import { useAuthSession } from '../context/AuthSessionContext'
+import { usePublicContent } from '../hooks/usePublicContent'
 import { appendTestResult } from '../utils/userBusinessStorage'
 
 const mockQuestions = [
@@ -17,6 +17,7 @@ const ANSWER_KEY = {
 }
 
 export default function TestsPage() {
+  const { exams } = usePublicContent()
   const { user } = useAuthSession()
   const [selectedExam, setSelectedExam] = useState(null)
   const [answers, setAnswers] = useState({})
@@ -183,6 +184,11 @@ export default function TestsPage() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {exams.length === 0 && (
+            <p className="col-span-full text-center text-slate-500">
+              Chưa có đề công khai. Admin có thể thêm đề tại khu vực quản trị.
+            </p>
+          )}
           {exams.map((exam) => (
             <div
               key={exam.id}

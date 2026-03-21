@@ -54,7 +54,9 @@ function normalizeState(raw) {
     students: Array.isArray(raw.students) ? raw.students : d.students,
     teachers: Array.isArray(raw.teachers) ? raw.teachers : d.teachers,
     courses: Array.isArray(raw.courses) ? raw.courses : d.courses,
-    exams: Array.isArray(raw.exams) ? raw.exams : d.exams,
+    exams: Array.isArray(raw.exams)
+      ? raw.exams.map((e) => ({ ...e, published: e.published !== false }))
+      : d.exams,
     news: Array.isArray(raw.news) ? raw.news : d.news,
     admissions: Array.isArray(raw.admissions) ? raw.admissions : d.admissions,
     activity: Array.isArray(raw.activity) ? raw.activity : d.activity,

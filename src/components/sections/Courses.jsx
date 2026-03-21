@@ -1,8 +1,9 @@
 import { motion } from 'framer-motion'
 import { Reveal, RevealStagger, RevealItem } from '../motion/Reveal'
-import { courses } from '../../data'
+import { usePublicContent } from '../../hooks/usePublicContent'
 
 export default function Courses() {
+  const { courses } = usePublicContent()
   return (
     <section id="courses" className="py-24 dark:bg-slate-950 sm:py-32">
       <div className="mx-auto max-w-7xl px-6">

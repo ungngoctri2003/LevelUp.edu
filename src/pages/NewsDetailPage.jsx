@@ -1,9 +1,10 @@
 import { Link, useParams } from 'react-router-dom'
-import { news } from '../data'
+import { usePublicContent } from '../hooks/usePublicContent'
 
 export default function NewsDetailPage() {
   const { id } = useParams()
-  const item = news.find((n) => n.id === parseInt(id, 10))
+  const { news } = usePublicContent()
+  const item = news.find((n) => String(n.id) === String(id))
 
   if (!item) {
     return (

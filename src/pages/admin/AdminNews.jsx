@@ -1,36 +1,51 @@
 import { useState } from 'react'
-import { news as initialNews } from '../../data'
+import { Link } from 'react-router-dom'
+import { useAdminState } from '../../hooks/useAdminState'
+import { appendAdminActivity } from '../../utils/adminStorage'
 
 export default function AdminNews() {
-  const [items, setItems] = useState(initialNews)
+  const { state, update } = useAdminState()
+  const items = state.news
   const [draft, setDraft] = useState({ title: '', category: 'Thông báo', excerpt: '' })
 
   const add = (e) => {
     e.preventDefault()
     if (!draft.title.trim()) return
-    setItems((prev) => [
-      {
-        id: Math.max(0, ...prev.map((x) => x.id)) + 1,
-        title: draft.title.trim(),
-        date: new Date().toLocaleDateString('vi-VN'),
-        excerpt: draft.excerpt || 'Nội dung sẽ được biên tập sau.',
-        category: draft.category,
-      },
+    const nextId = Math.max(0, ...items.map((x) => Number(x.id) || 0)) + 1
+    update((prev) => ({
       ...prev,
-    ])
+      news: [
+        {
+          id: nextId,
+          title: draft.title.trim(),
+          date: new Date().toLocaleDateString('vi-VN'),
+          excerpt: draft.excerpt || 'Nội dung sẽ được biên tập sau.',
+          category: draft.category,
+        },
+        ...prev.news,
+      ],
+    }))
+    appendAdminActivity(`Đăng tin mới: ${draft.title.trim()}`)
     setDraft({ title: '', category: 'Thông báo', excerpt: '' })
   }
 
   const remove = (id) => {
-    if (!confirm('Xóa tin này? (mô phỏng)')) return
-    setItems((prev) => prev.filter((x) => x.id !== id))
+    if (!confirm('Xóa tin này?')) return
+    const row = items.find((x) => x.id === id)
+    update((prev) => ({
+      ...prev,
+      news: prev.news.filter((x) => x.id !== id),
+    }))
+    if (row) appendAdminActivity(`Xóa tin: ${row.title}`)
   }
 
   return (
     <div className="space-y-8">
       <div>
         <h2 className="text-xl font-bold text-white">Tin tức & thông báo</h2>
-        <p className="text-sm text-slate-400">Thêm / xóa bài trên giao diện admin (chỉ lưu trong phiên trình duyệt).</p>
+        <p className="text-sm text-slate-400">
+          Quản lý bài hiển thị tại <Link className="text-cyan-400 hover:text-cyan-300" to="/tin-tuc">/tin-tuc</Link> — lưu cục bộ.
+        </p>
       </div>
 
       <form onSubmit={add} className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
