@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react'
+import PageHeader from '../../components/dashboard/PageHeader'
+import Panel from '../../components/dashboard/Panel'
 import { useAdminState } from '../../hooks/useAdminState'
 import { appendAdminActivity, getStudentTestCount } from '../../utils/adminStorage'
 
@@ -125,43 +127,43 @@ export default function AdminStudents() {
     appendAdminActivity(`${newStatus === 'inactive' ? 'Khóa' : 'Mở'} tài khoản: ${row.email}`)
   }
 
+  const inputCls =
+    'rounded-xl border border-white/15 bg-black/35 px-3 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-cyan-500/50 focus:outline-none focus:ring-2 focus:ring-cyan-500/15'
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 className="text-xl font-bold text-white">Quản lý học viên</h2>
-          <p className="text-sm text-slate-400">CRUD đầy đủ — lưu cục bộ.</p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={openCreate}
-            className="rounded-xl bg-gradient-to-r from-cyan-600 to-fuchsia-600 px-4 py-2.5 text-sm font-semibold text-white"
-          >
-            + Thêm học viên
-          </button>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="rounded-xl border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-white focus:border-cyan-500/50 focus:outline-none"
-          >
-            <option value="all">Mọi trạng thái</option>
-            <option value="active">Đang học</option>
-            <option value="trial">Học thử</option>
-            <option value="inactive">Tạm dừng</option>
-          </select>
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Tìm kiếm..."
-            className="w-full max-w-md rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-cyan-500/50 focus:outline-none sm:w-72"
-          />
-        </div>
+    <div className="space-y-8">
+      <PageHeader title="Quản lý học viên" description="Thêm, sửa, khóa và tìm kiếm — dữ liệu lưu cục bộ trên trình duyệt." badge="CRUD" />
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+        <button
+          type="button"
+          onClick={openCreate}
+          className="rounded-xl bg-gradient-to-r from-cyan-600 to-fuchsia-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-fuchsia-500/15 transition hover:opacity-95"
+        >
+          + Thêm học viên
+        </button>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className={`${inputCls} min-w-[160px]`}
+        >
+          <option value="all">Mọi trạng thái</option>
+          <option value="active">Đang học</option>
+          <option value="trial">Học thử</option>
+          <option value="inactive">Tạm dừng</option>
+        </select>
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Tìm theo tên, email, mã..."
+          className={`${inputCls} w-full min-w-0 sm:max-w-md sm:flex-1`}
+        />
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-white/10 bg-white/5">
+      <Panel noDivider padding={false} className="overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="w-full min-w-[880px] text-left text-sm">
-          <thead className="border-b border-white/10 text-xs uppercase text-slate-400">
+          <thead className="border-b border-white/10 bg-black/20 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
             <tr>
               <th className="px-4 py-3">Mã</th>
               <th className="px-4 py-3">Họ tên</th>
@@ -222,11 +224,15 @@ export default function AdminStudents() {
             ))}
           </tbody>
         </table>
-      </div>
+        </div>
+      </Panel>
 
       {modal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-          <form onSubmit={save} className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-white/15 bg-slate-900 p-6 shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-md">
+          <form
+            onSubmit={save}
+            className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-white/15 bg-gradient-to-b from-slate-900 to-slate-950 p-6 shadow-2xl shadow-cyan-500/10 ring-1 ring-white/10"
+          >
             <h3 className="text-lg font-semibold text-white">{modal === 'create' ? 'Thêm học viên' : 'Sửa học viên'}</h3>
             {modal === 'edit' && <p className="mt-1 text-xs text-slate-500">Mã: {form.id}</p>}
             <label className="mt-4 block text-sm text-slate-400">
@@ -234,7 +240,7 @@ export default function AdminStudents() {
               <input
                 value={form.name}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white focus:border-cyan-500/50 focus:outline-none"
+                className={`${inputCls} mt-1 w-full`}
               />
             </label>
             <label className="mt-3 block text-sm text-slate-400">
@@ -243,7 +249,7 @@ export default function AdminStudents() {
                 type="email"
                 value={form.email}
                 onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-                className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white focus:border-cyan-500/50 focus:outline-none"
+                className={`${inputCls} mt-1 w-full`}
               />
             </label>
             <label className="mt-3 block text-sm text-slate-400">
@@ -251,7 +257,7 @@ export default function AdminStudents() {
               <input
                 value={form.phone}
                 onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-                className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white focus:border-cyan-500/50 focus:outline-none"
+                className={`${inputCls} mt-1 w-full`}
               />
             </label>
             <label className="mt-3 block text-sm text-slate-400">
@@ -259,7 +265,7 @@ export default function AdminStudents() {
               <input
                 value={form.grade}
                 onChange={(e) => setForm((f) => ({ ...f, grade: e.target.value }))}
-                className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white focus:border-cyan-500/50 focus:outline-none"
+                className={`${inputCls} mt-1 w-full`}
               />
             </label>
             <label className="mt-3 block text-sm text-slate-400">
@@ -267,7 +273,7 @@ export default function AdminStudents() {
               <select
                 value={form.status}
                 onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
-                className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white focus:border-cyan-500/50 focus:outline-none"
+                className={`${inputCls} mt-1 w-full`}
               >
                 <option value="active">Đang học</option>
                 <option value="trial">Học thử</option>
@@ -279,7 +285,7 @@ export default function AdminStudents() {
               <input
                 value={form.joined}
                 onChange={(e) => setForm((f) => ({ ...f, joined: e.target.value }))}
-                className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white focus:border-cyan-500/50 focus:outline-none"
+                className={`${inputCls} mt-1 w-full`}
               />
             </label>
             <div className="mt-6 flex justify-end gap-2">

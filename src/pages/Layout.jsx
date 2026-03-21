@@ -22,8 +22,14 @@ export default function Layout() {
       <AuthSearchParamsSync />
       <MotionConfig reducedMotion={reduceMotion ? 'always' : 'user'}>
         <div className="app-shell flex min-h-screen flex-col bg-white transition-[background-color] duration-300 dark:bg-slate-950">
+          <a
+            href="#main-content"
+            className="sr-only rounded-xl border border-cyan-500/50 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-lg outline-none ring-2 ring-cyan-500/30 transition-transform focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[300] dark:bg-slate-900 dark:text-white dark:ring-cyan-400/40"
+          >
+            Bỏ qua đến nội dung chính
+          </a>
           <Navbar />
-          <main className="flex-1 overflow-x-hidden">
+          <main id="main-content" tabIndex={-1} className="flex-1 overflow-x-hidden outline-none">
             <AnimatePresence mode="wait">
               <motion.div
                 key={location.pathname}

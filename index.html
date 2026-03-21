@@ -8,9 +8,15 @@
     <link rel="icon" type="image/png" href="/logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LevelUp.edu - Nâng tầm điểm số của bạn</title>
+    <link
+      rel="stylesheet"
+      href="https://www.gstatic.com/dialogflow-console/fast/df-messenger/v1/themes/default.css"
+    />
   </head>
   <body>
     <div id="root"></div>
+    <!-- Bước 3: bootstrap — thiếu script thì <df-messenger> không hoạt động -->
+    <script src="https://www.gstatic.com/dialogflow-console/fast/messenger/bootstrap.js?v=1"></script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

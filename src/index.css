@@ -13,6 +13,16 @@
   --color-brand-dark: #0a0a12;
 }
 
+/* Bàn phím: viền focus cho liên kết / nút (input giữ ring trong component) */
+:is(a, button, summary):focus-visible {
+  outline: 2px solid var(--color-brand-cyan);
+  outline-offset: 2px;
+}
+
+:is(a, button):focus:not(:focus-visible) {
+  outline: none;
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -141,4 +151,51 @@ html.motion-reduce *::after {
 
 .animate-border-glow {
   animation: borderGlow 3s ease-in-out infinite;
+}
+
+/* Khu vực dashboard / học viên / giáo viên — nền lưới + noise nhẹ */
+.dashboard-app-bg {
+  position: relative;
+  isolation: isolate;
+}
+
+.dashboard-app-bg::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 20%, transparent 75%);
+}
+
+.dashboard-app-bg::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.35;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+}
+
+.dashboard-main-inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 72rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Dialogflow Messenger — theme + z-index cao (widget gắn body; tránh bị che bởi layout) */
+df-messenger {
+  --df-messenger-button-titlebar-color: var(--color-brand-cyan);
+  --df-messenger-button-titlebar-font-color: #0a0a12;
+  --df-messenger-chat-background-color: #fafafa;
+  z-index: 99999;
 }

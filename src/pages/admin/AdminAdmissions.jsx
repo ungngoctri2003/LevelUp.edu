@@ -1,5 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import PageHeader from '../../components/dashboard/PageHeader'
+import Panel from '../../components/dashboard/Panel'
+import { inputAdmin, btnPrimaryAdmin, tableHeadAdmin } from '../../components/dashboard/dashboardStyles'
 import { useAdminState } from '../../hooks/useAdminState'
 import { appendAdminActivity } from '../../utils/adminStorage'
 
@@ -77,67 +80,73 @@ export default function AdminAdmissions() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 className="text-xl font-bold text-white">Hồ sơ tuyển sinh</h2>
-          <p className="text-sm text-slate-400">
+    <div className="space-y-8">
+      <PageHeader
+        title="Hồ sơ tuyển sinh"
+        description={
+          <>
             CRUD — form công khai tại{' '}
-            <Link to="/tuyen-sinh" className="text-cyan-400 hover:text-cyan-300">
+            <Link className="font-medium text-cyan-400 hover:text-cyan-300" to="/tuyen-sinh">
               /tuyen-sinh
             </Link>
             .
-          </p>
-        </div>
+          </>
+        }
+        badge="Tuyển sinh"
+      />
+
+      <div className="flex justify-end">
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Tìm theo tên, mã, SĐT..."
-          className="w-full max-w-md rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-cyan-500/50 focus:outline-none sm:w-72"
+          className={`${inputAdmin} w-full max-w-md`}
         />
       </div>
 
-      <form onSubmit={addRow} className="rounded-2xl border border-dashed border-cyan-500/30 bg-white/5 p-5 backdrop-blur-sm">
-        <h3 className="font-semibold text-white">Thêm hồ sơ (nhập tay)</h3>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <input
-            value={draft.studentName}
-            onChange={(e) => setDraft((d) => ({ ...d, studentName: e.target.value }))}
-            placeholder="Họ tên học sinh"
-            className="rounded-xl border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-cyan-500/50 focus:outline-none"
-          />
-          <input
-            value={draft.parentPhone}
-            onChange={(e) => setDraft((d) => ({ ...d, parentPhone: e.target.value }))}
-            placeholder="SĐT phụ huynh"
-            className="rounded-xl border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-cyan-500/50 focus:outline-none"
-          />
-          <input
-            value={draft.grade}
-            onChange={(e) => setDraft((d) => ({ ...d, grade: e.target.value }))}
-            placeholder="Khối"
-            className="rounded-xl border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-cyan-500/50 focus:outline-none"
-          />
-          <select
-            value={draft.status}
-            onChange={(e) => setDraft((d) => ({ ...d, status: e.target.value }))}
-            className="rounded-xl border border-white/15 bg-black/30 px-3 py-2 text-sm text-white focus:border-cyan-500/50 focus:outline-none"
-          >
-            {Object.keys(labels).map((k) => (
-              <option key={k} value={k}>
-                {labels[k]}
-              </option>
-            ))}
-          </select>
-        </div>
-        <button type="submit" className="mt-4 rounded-xl bg-cyan-600 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-500">
-          Thêm hồ sơ
-        </button>
-      </form>
+      <Panel variant="highlight" title="Thêm hồ sơ (nhập tay)" subtitle="Dùng khi cần nhập nhanh từ điện thoại hoặc giấy tờ.">
+        <form onSubmit={addRow} className="space-y-4">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <input
+              value={draft.studentName}
+              onChange={(e) => setDraft((d) => ({ ...d, studentName: e.target.value }))}
+              placeholder="Họ tên học sinh"
+              className={inputAdmin}
+            />
+            <input
+              value={draft.parentPhone}
+              onChange={(e) => setDraft((d) => ({ ...d, parentPhone: e.target.value }))}
+              placeholder="SĐT phụ huynh"
+              className={inputAdmin}
+            />
+            <input
+              value={draft.grade}
+              onChange={(e) => setDraft((d) => ({ ...d, grade: e.target.value }))}
+              placeholder="Khối"
+              className={inputAdmin}
+            />
+            <select
+              value={draft.status}
+              onChange={(e) => setDraft((d) => ({ ...d, status: e.target.value }))}
+              className={inputAdmin}
+            >
+              {Object.keys(labels).map((k) => (
+                <option key={k} value={k}>
+                  {labels[k]}
+                </option>
+              ))}
+            </select>
+          </div>
+          <button type="submit" className={btnPrimaryAdmin}>
+            Thêm hồ sơ
+          </button>
+        </form>
+      </Panel>
 
-      <div className="overflow-x-auto rounded-2xl border border-white/10 bg-white/5">
+      <Panel noDivider padding={false} className="overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="w-full min-w-[880px] text-left text-sm">
-          <thead className="border-b border-white/10 text-xs uppercase text-slate-400">
+          <thead className={tableHeadAdmin}>
             <tr>
               <th className="px-4 py-3">Mã</th>
               <th className="px-4 py-3">Học sinh</th>
@@ -160,7 +169,7 @@ export default function AdminAdmissions() {
                   <select
                     value={r.status}
                     onChange={(e) => setStatus(r.id, e.target.value)}
-                    className="rounded-lg border border-white/15 bg-black/30 px-2 py-1 text-xs text-white focus:border-cyan-500/50 focus:outline-none"
+                    className={`${inputAdmin} px-2 py-1 text-xs`}
                   >
                     {Object.keys(labels).map((k) => (
                       <option key={k} value={k}>
@@ -178,7 +187,8 @@ export default function AdminAdmissions() {
             ))}
           </tbody>
         </table>
-      </div>
+        </div>
+      </Panel>
     </div>
   )
 }

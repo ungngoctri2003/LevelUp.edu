@@ -1,5 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import PageHeader from '../../components/dashboard/PageHeader'
+import Panel from '../../components/dashboard/Panel'
+import { btnPrimaryStudent } from '../../components/dashboard/dashboardStyles'
 import { useAuthSession } from '../../context/AuthSessionContext'
 import { studentEnrolledCourses } from '../../data/studentBusinessData'
 import { getCourseProgressMap, setCourseProgress } from '../../utils/userBusinessStorage'
@@ -28,44 +31,51 @@ export default function StudentCourses() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold text-white">Khóa học của tôi</h2>
-        <p className="text-sm text-slate-400">Tiến độ được lưu cục bộ — demo trước khi có máy chủ.</p>
-      </div>
+    <div className="space-y-8">
+      <PageHeader
+        title="Khóa học của tôi"
+        description="Tiến độ được lưu cục bộ — demo trước khi có máy chủ."
+      />
 
       <div className="grid gap-4">
         {rows.map((c) => (
-          <div key={c.key} className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
-            <div className="flex flex-wrap items-start justify-between gap-2">
-              <div>
-                <h3 className="font-semibold text-white">{c.title}</h3>
+          <Panel
+            key={c.key}
+            noDivider
+            className="transition hover:border-sky-500/20"
+            padding
+          >
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h3 className="text-lg font-semibold text-white">{c.title}</h3>
                 <p className="mt-1 text-sm text-slate-400">Giảng viên: {c.teacher}</p>
               </div>
-              <span className="rounded-full bg-sky-500/20 px-2 py-0.5 text-xs text-sky-200">{c.progress}%</span>
+              <span className="shrink-0 rounded-full border border-sky-500/30 bg-sky-500/15 px-3 py-1 text-sm font-semibold text-sky-200">
+                {c.progress}%
+              </span>
             </div>
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
-              <div className="h-full rounded-full bg-gradient-to-r from-sky-500 to-cyan-400" style={{ width: `${c.progress}%` }} />
+            <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-white/10 ring-1 ring-white/5">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-sky-500 to-cyan-400 shadow-[0_0_12px_rgba(56,189,248,0.35)]"
+                style={{ width: `${c.progress}%` }}
+              />
             </div>
-            <p className="mt-3 text-sm text-slate-300">
+            <p className="mt-4 text-sm text-slate-300">
               <span className="text-slate-500">Tiếp theo:</span> {c.nextLesson}
             </p>
-            <div className="mt-4 flex flex-wrap gap-2">
+            <div className="mt-5 flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={() => bump(c.key, 5)}
-                className="rounded-lg border border-white/20 px-3 py-1.5 text-xs text-slate-200 hover:bg-white/10"
+                className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-xs font-medium text-slate-200 transition hover:bg-white/10"
               >
                 +5% tiến độ (demo)
               </button>
-              <Link
-                to="/bai-giang"
-                className="rounded-lg bg-sky-500/30 px-3 py-1.5 text-xs font-medium text-sky-100 hover:bg-sky-500/40"
-              >
+              <Link to="/bai-giang" className={`${btnPrimaryStudent} inline-block text-xs`}>
                 Xem bài giảng
               </Link>
             </div>
-          </div>
+          </Panel>
         ))}
       </div>
     </div>

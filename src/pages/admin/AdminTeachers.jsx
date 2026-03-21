@@ -1,4 +1,13 @@
 import { useMemo, useState } from 'react'
+import PageHeader from '../../components/dashboard/PageHeader'
+import Panel from '../../components/dashboard/Panel'
+import {
+  inputAdmin,
+  modalBackdrop,
+  modalPanelAdmin,
+  btnPrimaryAdmin,
+  tableHeadAdmin,
+} from '../../components/dashboard/dashboardStyles'
 import { useAdminState } from '../../hooks/useAdminState'
 import { appendAdminActivity } from '../../utils/adminStorage'
 
@@ -120,33 +129,28 @@ export default function AdminTeachers() {
 
   const approve = (id) => setTeacherStatus(id, 'approved')
 
+  const field = `${inputAdmin} mt-1 w-full`
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 className="text-xl font-bold text-white">Quản lý giáo viên</h2>
-          <p className="text-sm text-slate-400">CRUD đầy đủ — duyệt / khóa — lưu cục bộ.</p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={openCreate}
-            className="rounded-xl bg-gradient-to-r from-cyan-600 to-fuchsia-600 px-4 py-2.5 text-sm font-semibold text-white"
-          >
-            + Thêm giáo viên
-          </button>
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Tìm kiếm..."
-            className="w-full max-w-md rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-cyan-500/50 focus:outline-none sm:w-80"
-          />
-        </div>
+    <div className="space-y-8">
+      <PageHeader title="Quản lý giáo viên" description="CRUD đầy đủ — duyệt / khóa — lưu cục bộ." badge="Nhân sự" />
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+        <button type="button" onClick={openCreate} className={btnPrimaryAdmin}>
+          + Thêm giáo viên
+        </button>
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Tìm theo tên, email, môn..."
+          className={`${inputAdmin} w-full sm:max-w-md`}
+        />
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-white/10 bg-white/5">
+      <Panel noDivider padding={false} className="overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="w-full min-w-[900px] text-left text-sm">
-          <thead className="border-b border-white/10 text-xs uppercase text-slate-400">
+          <thead className={tableHeadAdmin}>
             <tr>
               <th className="px-4 py-3">Mã</th>
               <th className="px-4 py-3">Họ tên</th>
@@ -204,11 +208,12 @@ export default function AdminTeachers() {
             ))}
           </tbody>
         </table>
-      </div>
+        </div>
+      </Panel>
 
       {modal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-          <form onSubmit={save} className="w-full max-w-md rounded-2xl border border-white/15 bg-slate-900 p-6 shadow-xl">
+        <div className={modalBackdrop}>
+          <form onSubmit={save} className={`${modalPanelAdmin} max-w-md`}>
             <h3 className="text-lg font-semibold text-white">{modal === 'create' ? 'Thêm giáo viên' : 'Sửa giáo viên'}</h3>
             {modal === 'edit' && <p className="mt-1 text-xs text-slate-500">Mã: {form.id}</p>}
             <label className="mt-4 block text-sm text-slate-400">
@@ -216,7 +221,7 @@ export default function AdminTeachers() {
               <input
                 value={form.name}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white focus:border-cyan-500/50 focus:outline-none"
+                className={field}
               />
             </label>
             <label className="mt-3 block text-sm text-slate-400">
@@ -225,7 +230,7 @@ export default function AdminTeachers() {
                 type="email"
                 value={form.email}
                 onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-                className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white focus:border-cyan-500/50 focus:outline-none"
+                className={field}
               />
             </label>
             <label className="mt-3 block text-sm text-slate-400">
@@ -234,7 +239,7 @@ export default function AdminTeachers() {
                 value={form.subjects}
                 onChange={(e) => setForm((f) => ({ ...f, subjects: e.target.value }))}
                 placeholder="VD: Toán, Vật lý"
-                className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white placeholder:text-slate-600 focus:border-cyan-500/50 focus:outline-none"
+                className={field}
               />
             </label>
             <label className="mt-3 block text-sm text-slate-400">
@@ -244,7 +249,7 @@ export default function AdminTeachers() {
                 min={0}
                 value={form.classes}
                 onChange={(e) => setForm((f) => ({ ...f, classes: e.target.value }))}
-                className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white focus:border-cyan-500/50 focus:outline-none"
+                className={field}
               />
             </label>
             <label className="mt-3 block text-sm text-slate-400">
@@ -252,7 +257,7 @@ export default function AdminTeachers() {
               <select
                 value={form.status}
                 onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
-                className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white focus:border-cyan-500/50 focus:outline-none"
+                className={field}
               >
                 <option value="pending">Chờ duyệt</option>
                 <option value="approved">Đã duyệt</option>
@@ -267,7 +272,7 @@ export default function AdminTeachers() {
               >
                 Hủy
               </button>
-              <button type="submit" className="rounded-xl bg-gradient-to-r from-cyan-500 to-fuchsia-600 px-4 py-2 text-sm font-semibold text-white">
+              <button type="submit" className={btnPrimaryAdmin}>
                 Lưu
               </button>
             </div>

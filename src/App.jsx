@@ -30,6 +30,7 @@ import StudentCourses from './pages/student/StudentCourses'
 import StudentLessons from './pages/student/StudentLessons'
 import StudentTests from './pages/student/StudentTests'
 import StudentProfile from './pages/student/StudentProfile'
+import { DialogflowMessenger } from './components/DialogflowMessenger'
 
 function App() {
   return (
@@ -76,6 +77,7 @@ function App() {
           <Route path="ho-so" element={<StudentProfile />} />
         </Route>
       </Routes>
+      <DialogflowMessenger />
     </BrowserRouter>
   )
 }

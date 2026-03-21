@@ -1,5 +1,14 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import PageHeader from '../../components/dashboard/PageHeader'
+import Panel from '../../components/dashboard/Panel'
+import {
+  inputAdmin,
+  modalBackdrop,
+  modalPanelAdmin,
+  btnPrimaryAdmin,
+  tableHeadAdmin,
+} from '../../components/dashboard/dashboardStyles'
 import { useAdminState } from '../../hooks/useAdminState'
 import { appendAdminActivity } from '../../utils/adminStorage'
 
@@ -112,30 +121,33 @@ export default function AdminExams() {
     appendAdminActivity(`Xóa đề: ${ex.title}`)
   }
 
+  const field = `${inputAdmin} mt-1 w-full`
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <h2 className="text-xl font-bold text-white">Bài kiểm tra & đề</h2>
-          <p className="text-sm text-slate-400">
+    <div className="space-y-8">
+      <PageHeader
+        title="Bài kiểm tra & đề"
+        description={
+          <>
             Quản lý đề hiển thị tại{' '}
-            <Link to="/bai-kiem-tra" className="text-cyan-400 hover:text-cyan-300">
+            <Link className="font-medium text-cyan-400 hover:text-cyan-300" to="/bai-kiem-tra">
               /bai-kiem-tra
             </Link>
             . Tắt &quot;Hiển thị&quot; sẽ ẩn đề khỏi trang công khai.
-          </p>
-        </div>
-      </div>
+          </>
+        }
+        badge="Đề thi"
+      />
 
-      <form onSubmit={addExam} className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
-        <h3 className="font-semibold text-white">Tạo đề mới</h3>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <Panel title="Tạo đề mới" subtitle="Thêm đề vào kho — có thể giao lớp hoặc ẩn khỏi web công khai.">
+        <form onSubmit={addExam} className="space-y-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <label className="text-sm text-slate-400">
             Tên đề
             <input
               value={form.title}
               onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-              className="mt-1 w-full rounded-xl border border-white/15 bg-black/30 px-3 py-2 text-white focus:border-cyan-500/50 focus:outline-none"
+              className={field}
               placeholder="VD: Kiểm tra 15 phút — Đạo hàm"
             />
           </label>
@@ -145,7 +157,7 @@ export default function AdminExams() {
               value={form.subject}
               onChange={(e) => setForm((f) => ({ ...f, subject: e.target.value }))}
               placeholder="VD: Toán học, Vật lý..."
-              className="mt-1 w-full rounded-xl border border-white/15 bg-black/30 px-3 py-2 text-white placeholder:text-slate-600 focus:border-cyan-500/50 focus:outline-none"
+              className={field}
             />
           </label>
           <label className="text-sm text-slate-400">
@@ -153,7 +165,7 @@ export default function AdminExams() {
             <input
               value={form.level}
               onChange={(e) => setForm((f) => ({ ...f, level: e.target.value }))}
-              className="mt-1 w-full rounded-xl border border-white/15 bg-black/30 px-3 py-2 text-white focus:border-cyan-500/50 focus:outline-none"
+              className={field}
             />
           </label>
           <label className="text-sm text-slate-400">
@@ -163,7 +175,7 @@ export default function AdminExams() {
               min={5}
               value={form.duration}
               onChange={(e) => setForm((f) => ({ ...f, duration: e.target.value }))}
-              className="mt-1 w-full rounded-xl border border-white/15 bg-black/30 px-3 py-2 text-white focus:border-cyan-500/50 focus:outline-none"
+              className={field}
             />
           </label>
           <label className="text-sm text-slate-400">
@@ -173,7 +185,7 @@ export default function AdminExams() {
               min={1}
               value={form.questions}
               onChange={(e) => setForm((f) => ({ ...f, questions: e.target.value }))}
-              className="mt-1 w-full rounded-xl border border-white/15 bg-black/30 px-3 py-2 text-white focus:border-cyan-500/50 focus:outline-none"
+              className={field}
             />
           </label>
         </div>
@@ -197,17 +209,16 @@ export default function AdminExams() {
             Hiển thị công khai
           </label>
         </div>
-        <button
-          type="submit"
-          className="mt-4 rounded-xl bg-gradient-to-r from-cyan-500 to-fuchsia-600 px-4 py-2 text-sm font-semibold text-white"
-        >
+        <button type="submit" className={btnPrimaryAdmin}>
           Thêm đề
         </button>
-      </form>
+        </form>
+      </Panel>
 
-      <div className="overflow-x-auto rounded-2xl border border-white/10 bg-white/5">
+      <Panel noDivider padding={false} className="overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="w-full min-w-[900px] text-left text-sm">
-          <thead className="border-b border-white/10 text-xs uppercase text-slate-400">
+          <thead className={tableHeadAdmin}>
             <tr>
               <th className="px-4 py-3">Tên đề</th>
               <th className="px-4 py-3">Môn</th>
@@ -261,11 +272,15 @@ export default function AdminExams() {
             ))}
           </tbody>
         </table>
-      </div>
+        </div>
+      </Panel>
 
       {editId != null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-          <form onSubmit={saveEdit} className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-white/15 bg-slate-900 p-6 shadow-xl">
+        <div className={modalBackdrop}>
+          <form
+            onSubmit={saveEdit}
+            className={`${modalPanelAdmin} max-h-[90vh] max-w-lg overflow-y-auto`}
+          >
             <h3 className="text-lg font-semibold text-white">Sửa đề thi</h3>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <label className="text-sm text-slate-400 sm:col-span-2">
@@ -273,7 +288,7 @@ export default function AdminExams() {
                 <input
                   value={editForm.title}
                   onChange={(e) => setEditForm((f) => ({ ...f, title: e.target.value }))}
-                  className="mt-1 w-full rounded-xl border border-white/15 bg-black/30 px-3 py-2 text-white focus:border-cyan-500/50 focus:outline-none"
+                  className={field}
                 />
               </label>
               <label className="text-sm text-slate-400">
@@ -281,7 +296,7 @@ export default function AdminExams() {
                 <input
                   value={editForm.subject}
                   onChange={(e) => setEditForm((f) => ({ ...f, subject: e.target.value }))}
-                  className="mt-1 w-full rounded-xl border border-white/15 bg-black/30 px-3 py-2 text-white focus:border-cyan-500/50 focus:outline-none"
+                  className={field}
                 />
               </label>
               <label className="text-sm text-slate-400">
@@ -289,7 +304,7 @@ export default function AdminExams() {
                 <input
                   value={editForm.level}
                   onChange={(e) => setEditForm((f) => ({ ...f, level: e.target.value }))}
-                  className="mt-1 w-full rounded-xl border border-white/15 bg-black/30 px-3 py-2 text-white focus:border-cyan-500/50 focus:outline-none"
+                  className={field}
                 />
               </label>
               <label className="text-sm text-slate-400">
@@ -299,7 +314,7 @@ export default function AdminExams() {
                   min={5}
                   value={editForm.duration}
                   onChange={(e) => setEditForm((f) => ({ ...f, duration: e.target.value }))}
-                  className="mt-1 w-full rounded-xl border border-white/15 bg-black/30 px-3 py-2 text-white focus:border-cyan-500/50 focus:outline-none"
+                  className={field}
                 />
               </label>
               <label className="text-sm text-slate-400">
@@ -309,7 +324,7 @@ export default function AdminExams() {
                   min={1}
                   value={editForm.questions}
                   onChange={(e) => setEditForm((f) => ({ ...f, questions: e.target.value }))}
-                  className="mt-1 w-full rounded-xl border border-white/15 bg-black/30 px-3 py-2 text-white focus:border-cyan-500/50 focus:outline-none"
+                  className={field}
                 />
               </label>
             </div>
@@ -341,7 +356,7 @@ export default function AdminExams() {
               >
                 Hủy
               </button>
-              <button type="submit" className="rounded-xl bg-gradient-to-r from-cyan-500 to-fuchsia-600 px-4 py-2 text-sm font-semibold text-white">
+              <button type="submit" className={btnPrimaryAdmin}>
                 Lưu
               </button>
             </div>

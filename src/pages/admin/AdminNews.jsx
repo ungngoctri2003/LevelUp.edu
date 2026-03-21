@@ -1,5 +1,14 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import PageHeader from '../../components/dashboard/PageHeader'
+import Panel from '../../components/dashboard/Panel'
+import {
+  inputAdmin,
+  modalBackdrop,
+  modalPanelAdmin,
+  btnPrimaryAdmin,
+  tableHeadAdmin,
+} from '../../components/dashboard/dashboardStyles'
 import { useAdminState } from '../../hooks/useAdminState'
 import { appendAdminActivity } from '../../utils/adminStorage'
 
@@ -68,53 +77,61 @@ export default function AdminNews() {
     if (row) appendAdminActivity(`Xóa tin: ${row.title}`)
   }
 
+  const field = `${inputAdmin} mt-1 w-full`
+
   return (
     <div className="space-y-8">
-      <div>
-        <h2 className="text-xl font-bold text-white">Tin tức & thông báo</h2>
-        <p className="text-sm text-slate-400">
-          CRUD đầy đủ — hiển thị tại <Link className="text-cyan-400 hover:text-cyan-300" to="/tin-tuc">/tin-tuc</Link>.
-        </p>
-      </div>
+      <PageHeader
+        title="Tin tức & thông báo"
+        description={
+          <>
+            CRUD đầy đủ — hiển thị tại{' '}
+            <Link className="font-medium text-cyan-400 hover:text-cyan-300" to="/tin-tuc">
+              /tin-tuc
+            </Link>
+            .
+          </>
+        }
+        badge="CMS"
+      />
 
-      <form onSubmit={add} className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
-        <h3 className="font-semibold text-white">Đăng tin mới</h3>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <input
-            value={draft.title}
-            onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
-            placeholder="Tiêu đề"
-            className="rounded-xl border border-white/15 bg-black/20 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-cyan-500/50 focus:outline-none"
+      <Panel title="Đăng tin mới" subtitle="Tin sẽ xuất hiện trên trang Tin tức công khai.">
+        <form onSubmit={add} className="space-y-4">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <input
+              value={draft.title}
+              onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
+              placeholder="Tiêu đề"
+              className={inputAdmin}
+            />
+            <select
+              value={draft.category}
+              onChange={(e) => setDraft((d) => ({ ...d, category: e.target.value }))}
+              className={inputAdmin}
+            >
+              <option>Sự kiện</option>
+              <option>Hướng dẫn</option>
+              <option>Thông báo</option>
+              <option>Cập nhật</option>
+            </select>
+          </div>
+          <textarea
+            value={draft.excerpt}
+            onChange={(e) => setDraft((d) => ({ ...d, excerpt: e.target.value }))}
+            placeholder="Mô tả ngắn / đoạn lead"
+            rows={3}
+            className={`${inputAdmin} w-full`}
           />
-          <select
-            value={draft.category}
-            onChange={(e) => setDraft((d) => ({ ...d, category: e.target.value }))}
-            className="rounded-xl border border-white/15 bg-black/20 px-3 py-2 text-sm text-white focus:border-cyan-500/50 focus:outline-none"
-          >
-            <option>Sự kiện</option>
-            <option>Hướng dẫn</option>
-            <option>Thông báo</option>
-            <option>Cập nhật</option>
-          </select>
-        </div>
-        <textarea
-          value={draft.excerpt}
-          onChange={(e) => setDraft((d) => ({ ...d, excerpt: e.target.value }))}
-          placeholder="Mô tả ngắn / đoạn lead"
-          rows={3}
-          className="mt-3 w-full rounded-xl border border-white/15 bg-black/20 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-cyan-500/50 focus:outline-none"
-        />
-        <button
-          type="submit"
-          className="mt-3 rounded-xl bg-gradient-to-r from-cyan-500 to-fuchsia-600 px-4 py-2 text-sm font-semibold text-white"
-        >
-          Thêm tin
-        </button>
-      </form>
+          <button type="submit" className={btnPrimaryAdmin}>
+            Thêm tin
+          </button>
+        </form>
+      </Panel>
 
-      <div className="overflow-x-auto rounded-2xl border border-white/10 bg-white/5">
+      <Panel noDivider padding={false} className="overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="w-full min-w-[640px] text-left text-sm">
-          <thead className="border-b border-white/10 text-xs uppercase text-slate-400">
+          <thead className={tableHeadAdmin}>
             <tr>
               <th className="px-4 py-3">ID</th>
               <th className="px-4 py-3">Tiêu đề</th>
@@ -142,18 +159,19 @@ export default function AdminNews() {
             ))}
           </tbody>
         </table>
-      </div>
+        </div>
+      </Panel>
 
       {editModal != null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-          <form onSubmit={saveEdit} className="w-full max-w-lg rounded-2xl border border-white/15 bg-slate-900 p-6 shadow-xl">
+        <div className={modalBackdrop}>
+          <form onSubmit={saveEdit} className={modalPanelAdmin}>
             <h3 className="text-lg font-semibold text-white">Sửa tin</h3>
             <label className="mt-4 block text-sm text-slate-400">
               Tiêu đề
               <input
                 value={editForm.title}
                 onChange={(e) => setEditForm((f) => ({ ...f, title: e.target.value }))}
-                className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white focus:border-cyan-500/50 focus:outline-none"
+                className={field}
               />
             </label>
             <label className="mt-3 block text-sm text-slate-400">
@@ -161,7 +179,7 @@ export default function AdminNews() {
               <select
                 value={editForm.category}
                 onChange={(e) => setEditForm((f) => ({ ...f, category: e.target.value }))}
-                className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white focus:border-cyan-500/50 focus:outline-none"
+                className={field}
               >
                 <option>Sự kiện</option>
                 <option>Hướng dẫn</option>
@@ -175,7 +193,7 @@ export default function AdminNews() {
                 value={editForm.excerpt}
                 onChange={(e) => setEditForm((f) => ({ ...f, excerpt: e.target.value }))}
                 rows={4}
-                className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white focus:border-cyan-500/50 focus:outline-none"
+                className={field}
               />
             </label>
             <div className="mt-6 flex justify-end gap-2">
@@ -186,7 +204,7 @@ export default function AdminNews() {
               >
                 Hủy
               </button>
-              <button type="submit" className="rounded-xl bg-gradient-to-r from-cyan-500 to-fuchsia-600 px-4 py-2 text-sm font-semibold text-white">
+              <button type="submit" className={btnPrimaryAdmin}>
                 Lưu
               </button>
             </div>

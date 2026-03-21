@@ -37,6 +37,15 @@ export default function ThemeSettings({ compact = false }) {
     return () => document.removeEventListener('click', onDoc)
   }, [])
 
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open])
+
   return (
     <div className="relative" ref={ref}>
       <button

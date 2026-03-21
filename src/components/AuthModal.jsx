@@ -14,6 +14,7 @@ const ROLES = [
 ]
 
 function LoginForm({ onSwitchToRegister, onSuccess, titleId }) {
+  const fieldIds = useId()
   const [form, setForm] = useState({
     email: '',
     password: '',
@@ -67,26 +68,41 @@ function LoginForm({ onSwitchToRegister, onSuccess, titleId }) {
         <div>
           <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-slate-300">Email</label>
           <input
+            id={`${fieldIds}-email`}
             type="email"
             value={form.email}
             onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
             className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm transition-all focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
             placeholder="email@example.com"
             autoComplete="email"
+            data-auth-autofocus
+            aria-invalid={errors.email ? true : undefined}
+            aria-describedby={errors.email ? `${fieldIds}-email-err` : undefined}
           />
-          {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
+          {errors.email && (
+            <p id={`${fieldIds}-email-err`} className="mt-1 text-sm text-red-600 dark:text-red-400" role="alert">
+              {errors.email}
+            </p>
+          )}
         </div>
         <div>
           <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-slate-300">Mật khẩu</label>
           <input
+            id={`${fieldIds}-password`}
             type="password"
             value={form.password}
             onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
             className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm transition-all focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
             placeholder="••••••••"
             autoComplete="current-password"
+            aria-invalid={errors.password ? true : undefined}
+            aria-describedby={errors.password ? `${fieldIds}-password-err` : undefined}
           />
-          {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
+          {errors.password && (
+            <p id={`${fieldIds}-password-err`} className="mt-1 text-sm text-red-600 dark:text-red-400" role="alert">
+              {errors.password}
+            </p>
+          )}
         </div>
         <button
           type="submit"
@@ -151,6 +167,7 @@ function LoginForm({ onSwitchToRegister, onSuccess, titleId }) {
 }
 
 function RegisterForm({ onSwitchToLogin, onSuccess, titleId }) {
+  const fieldIds = useId()
   const [form, setForm] = useState({
     fullName: '',
     email: '',
@@ -217,14 +234,22 @@ function RegisterForm({ onSwitchToLogin, onSuccess, titleId }) {
         <div>
           <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-slate-300">Họ và tên</label>
           <input
+            id={`${fieldIds}-fullname`}
             type="text"
             value={form.fullName}
             onChange={(e) => setForm((p) => ({ ...p, fullName: e.target.value }))}
             className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm focus:border-cyan-500 focus:ring-cyan-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
             placeholder="Nguyễn Văn A"
             autoComplete="name"
+            data-auth-autofocus
+            aria-invalid={errors.fullName ? true : undefined}
+            aria-describedby={errors.fullName ? `${fieldIds}-fullname-err` : undefined}
           />
-          {errors.fullName && <p className="mt-1 text-sm text-red-600">{errors.fullName}</p>}
+          {errors.fullName && (
+            <p id={`${fieldIds}-fullname-err`} className="mt-1 text-sm text-red-600 dark:text-red-400" role="alert">
+              {errors.fullName}
+            </p>
+          )}
         </div>
         <div>
           <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-slate-300">Email</label>
@@ -332,6 +357,14 @@ export default function AuthModal() {
       window.removeEventListener('keydown', onKey)
     }
   }, [authView, closeAuth])
+
+  useEffect(() => {
+    if (!authView) return
+    const id = window.requestAnimationFrame(() => {
+      document.querySelector('[data-auth-autofocus]')?.focus()
+    })
+    return () => cancelAnimationFrame(id)
+  }, [authView])
 
   const node =
     typeof document !== 'undefined' ? document.body : null

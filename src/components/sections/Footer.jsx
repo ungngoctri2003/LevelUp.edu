@@ -67,10 +67,38 @@ export default function Footer() {
           <motion.div variants={itemVariants}>
             <h4 className="font-semibold text-white">Liên kết</h4>
             <ul className="mt-4 space-y-2 text-sm text-gray-400">
-              <li><Link to="/bai-giang" className="transition-colors hover:text-white">Bài giảng</Link></li>
-              <li><Link to="/bai-kiem-tra" className="transition-colors hover:text-white">Bài kiểm tra</Link></li>
-              <li><Link to="/tuyen-sinh" className="transition-colors hover:text-white">Tuyển sinh</Link></li>
-              <li><Link to="/tin-tuc" className="transition-colors hover:text-white">Tin tức</Link></li>
+              <li>
+                <Link
+                  to="/bai-giang"
+                  className="rounded transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900"
+                >
+                  Bài giảng
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/bai-kiem-tra"
+                  className="rounded transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900"
+                >
+                  Bài kiểm tra
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/tuyen-sinh"
+                  className="rounded transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900"
+                >
+                  Tuyển sinh
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/tin-tuc"
+                  className="rounded transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900"
+                >
+                  Tin tức
+                </Link>
+              </li>
             </ul>
           </motion.div>
           <motion.div variants={itemVariants}>

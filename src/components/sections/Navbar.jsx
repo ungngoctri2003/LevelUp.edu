@@ -111,25 +111,37 @@ export default function Navbar() {
               </button>
             </div>
           ) : (
-            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+            <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={openRegister}
-                className="rounded-xl bg-gradient-to-r from-cyan-500 to-fuchsia-600 px-5 py-2.5 font-medium text-white shadow-md shadow-fuchsia-500/25 transition-all duration-300 hover:from-cyan-600 hover:to-fuchsia-700 hover:shadow-lg"
+                onClick={openLogin}
+                className="rounded-xl border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
               >
-                Đăng ký
+                Đăng nhập
               </button>
-            </motion.div>
+              <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                <button
+                  type="button"
+                  onClick={openRegister}
+                  className="rounded-xl bg-gradient-to-r from-cyan-500 to-fuchsia-600 px-5 py-2.5 font-medium text-white shadow-md shadow-fuchsia-500/25 transition-all duration-300 hover:from-cyan-600 hover:to-fuchsia-700 hover:shadow-lg"
+                >
+                  Đăng ký
+                </button>
+              </motion.div>
+            </div>
           )}
           <ThemeSettings />
         </div>
 
         <div className="flex items-center gap-2 md:hidden">
+          <ThemeSettings compact />
           <button
             type="button"
             className="rounded-lg p-2 text-gray-700 transition-colors hover:bg-gray-100 dark:text-slate-200 dark:hover:bg-slate-800"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Toggle menu"
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-nav"
+            aria-label={mobileMenuOpen ? 'Đóng menu' : 'Mở menu'}
           >
             <motion.svg
               className="h-6 w-6"
@@ -152,6 +164,7 @@ export default function Navbar() {
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
+            id="mobile-nav"
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
@@ -235,7 +248,17 @@ export default function Navbar() {
                     </button>
                   </div>
                 ) : (
-                  <>
+                  <div className="flex flex-col gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        openLogin()
+                        setMobileMenuOpen(false)
+                      }}
+                      className="w-full rounded-xl border border-gray-300 py-3 text-center text-sm font-semibold text-gray-800 dark:border-slate-600 dark:text-slate-100"
+                    >
+                      Đăng nhập
+                    </button>
                     <button
                       type="button"
                       onClick={() => {
@@ -246,25 +269,9 @@ export default function Navbar() {
                     >
                       Đăng ký
                     </button>
-                    <p className="mt-3 text-center text-sm text-gray-500 dark:text-slate-500">
-                      Đã có tài khoản?{' '}
-                      <button
-                        type="button"
-                        className="font-medium text-cyan-600 hover:text-fuchsia-600 dark:text-cyan-400"
-                        onClick={() => {
-                          openLogin()
-                          setMobileMenuOpen(false)
-                        }}
-                      >
-                        Đăng nhập
-                      </button>
-                    </p>
-                  </>
+                  </div>
                 )}
               </motion.div>
-              <div className="mt-4 flex justify-center border-t border-gray-100 pt-4 dark:border-slate-700">
-                <ThemeSettings compact />
-              </div>
             </div>
           </motion.div>
         )}

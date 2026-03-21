@@ -114,7 +114,7 @@ export default function Hero() {
           <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.98 }}>
             <Link
               to={{ pathname: '/', search: '?auth=register' }}
-              className="inline-block w-full rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 px-12 py-5 text-center text-lg font-bold text-slate-900 shadow-2xl shadow-amber-500/30 transition-shadow duration-300 hover:shadow-amber-400/50 sm:w-auto"
+              className="inline-block w-full rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 px-12 py-5 text-center text-lg font-bold text-slate-900 shadow-2xl shadow-amber-500/30 transition-shadow duration-300 hover:shadow-amber-400/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200 focus-visible:ring-offset-4 focus-visible:ring-offset-[#0f172a] sm:w-auto"
             >
               Học thử miễn phí
             </Link>
@@ -122,7 +122,7 @@ export default function Hero() {
           <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.98 }}>
             <Link
               to="/bai-giang"
-              className="inline-block w-full rounded-2xl border-2 border-cyan-400/60 bg-cyan-500/10 px-12 py-5 text-center text-lg font-bold text-cyan-100 backdrop-blur-sm transition-colors duration-300 hover:border-cyan-300 hover:bg-cyan-500/20 sm:w-auto"
+              className="inline-block w-full rounded-2xl border-2 border-cyan-400/60 bg-cyan-500/10 px-12 py-5 text-center text-lg font-bold text-cyan-100 backdrop-blur-sm transition-colors duration-300 hover:border-cyan-300 hover:bg-cyan-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-4 focus-visible:ring-offset-[#0f172a] sm:w-auto"
             >
               Xem bài giảng
             </Link>

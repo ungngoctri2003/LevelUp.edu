@@ -1,5 +1,13 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import PageHeader from '../../components/dashboard/PageHeader'
+import Panel from '../../components/dashboard/Panel'
+import {
+  inputAdmin,
+  modalBackdrop,
+  modalPanelAdmin,
+  btnPrimaryAdmin,
+} from '../../components/dashboard/dashboardStyles'
 import { useAdminState } from '../../hooks/useAdminState'
 import { appendAdminActivity } from '../../utils/adminStorage'
 
@@ -76,51 +84,50 @@ export default function AdminCourses() {
     }
   }
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold text-white">Khóa học</h2>
-        <p className="text-sm text-slate-400">
-          Chỉnh nội dung hiển thị trên trang chủ (mục Khóa học). Ẩn khóa sẽ gỡ khỏi website công khai.
-        </p>
-        <p className="mt-2 text-xs text-slate-500">
-          <Link to="/" className="text-cyan-400 hover:text-cyan-300">
-            Xem trang chủ →
-          </Link>
-        </p>
-      </div>
+  const field = `${inputAdmin} mt-1 w-full`
 
-      <form onSubmit={addCourse} className="rounded-2xl border border-dashed border-cyan-500/30 bg-white/5 p-5 backdrop-blur-sm">
-        <h3 className="font-semibold text-white">Thêm khóa học mới</h3>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <input
-            value={createDraft.title}
-            onChange={(e) => setCreateDraft((d) => ({ ...d, title: e.target.value }))}
-            placeholder="Tiêu đề khóa"
-            className="rounded-xl border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-cyan-500/50 focus:outline-none"
+  return (
+    <div className="space-y-8">
+      <PageHeader
+        title="Khóa học"
+        description="Chỉnh nội dung hiển thị trên trang chủ (mục Khóa học). Ẩn khóa sẽ gỡ khỏi website công khai."
+        badge="Website"
+      >
+        <Link to="/" className={`${btnPrimaryAdmin} inline-block text-center`}>
+          Xem trang chủ →
+        </Link>
+      </PageHeader>
+
+      <Panel variant="highlight" title="Thêm khóa học mới" subtitle="Tạo khóa mới và hiển thị trên landing page.">
+        <form onSubmit={addCourse} className="space-y-4">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <input
+              value={createDraft.title}
+              onChange={(e) => setCreateDraft((d) => ({ ...d, title: e.target.value }))}
+              placeholder="Tiêu đề khóa"
+              className={inputAdmin}
+            />
+            <input
+              value={createDraft.subject}
+              onChange={(e) => setCreateDraft((d) => ({ ...d, subject: e.target.value }))}
+              placeholder="Môn (VD: Vật lý)"
+              className={inputAdmin}
+            />
+          </div>
+          <textarea
+            value={createDraft.description}
+            onChange={(e) => setCreateDraft((d) => ({ ...d, description: e.target.value }))}
+            placeholder="Mô tả ngắn"
+            rows={2}
+            className={`${inputAdmin} w-full`}
           />
-          <input
-            value={createDraft.subject}
-            onChange={(e) => setCreateDraft((d) => ({ ...d, subject: e.target.value }))}
-            placeholder="Môn (VD: Vật lý)"
-            className="rounded-xl border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-cyan-500/50 focus:outline-none"
-          />
-          <button
-            type="submit"
-            className="rounded-xl bg-cyan-600/90 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-600 sm:col-span-2 sm:max-w-xs"
-          >
+          <button type="submit" className={btnPrimaryAdmin}>
             Tạo khóa
           </button>
-        </div>
-        <textarea
-          value={createDraft.description}
-          onChange={(e) => setCreateDraft((d) => ({ ...d, description: e.target.value }))}
-          placeholder="Mô tả ngắn"
-          rows={2}
-          className="mt-3 w-full rounded-xl border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-cyan-500/50 focus:outline-none"
-        />
-      </form>
+        </form>
+      </Panel>
 
+      <Panel title="Danh sách khóa học" subtitle="Thẻ ẩn có viền vàng — không hiển thị công khai.">
       <div className="grid gap-4 md:grid-cols-2">
         {state.courses.map((c) => (
           <div
@@ -169,20 +176,18 @@ export default function AdminCourses() {
           </div>
         ))}
       </div>
+      </Panel>
 
       {editing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-          <form
-            onSubmit={saveEdit}
-            className="w-full max-w-lg rounded-2xl border border-white/15 bg-slate-900 p-6 shadow-xl"
-          >
+        <div className={modalBackdrop}>
+          <form onSubmit={saveEdit} className={modalPanelAdmin}>
             <h3 className="text-lg font-semibold text-white">Chỉnh khóa học</h3>
             <label className="mt-4 block text-sm text-slate-400">
               Tiêu đề
               <input
                 value={form.title}
                 onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white focus:border-cyan-500/50 focus:outline-none"
+                className={field}
               />
             </label>
             <label className="mt-3 block text-sm text-slate-400">
@@ -191,7 +196,7 @@ export default function AdminCourses() {
                 value={form.subject}
                 onChange={(e) => setForm((f) => ({ ...f, subject: e.target.value }))}
                 placeholder="VD: Văn, Sinh..."
-                className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white focus:border-cyan-500/50 focus:outline-none"
+                className={field}
               />
             </label>
             <label className="mt-3 block text-sm text-slate-400">
@@ -200,7 +205,7 @@ export default function AdminCourses() {
                 value={form.description}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                 rows={5}
-                className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white focus:border-cyan-500/50 focus:outline-none"
+                className={field}
               />
             </label>
             <div className="mt-6 flex justify-end gap-2">
@@ -211,10 +216,7 @@ export default function AdminCourses() {
               >
                 Hủy
               </button>
-              <button
-                type="submit"
-                className="rounded-xl bg-gradient-to-r from-cyan-500 to-fuchsia-600 px-4 py-2 text-sm font-semibold text-white"
-              >
+              <button type="submit" className={btnPrimaryAdmin}>
                 Lưu
               </button>
             </div>
