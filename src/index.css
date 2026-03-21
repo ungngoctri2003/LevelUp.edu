@@ -1,0 +1,144 @@
+@import "tailwindcss";
+
+/* Biến thể dark: dùng class .dark trên <html> */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Bảng màu thương hiệu – đồng bộ logo (cyan EDU, magenta, amber) */
+@theme {
+  --color-brand-cyan: #00b8d9;
+  --color-brand-fuchsia: #d946ef;
+  --color-brand-magenta: #e11d8f;
+  --color-brand-amber: #fbbf24;
+  --color-brand-violet: #7c3aed;
+  --color-brand-dark: #0a0a12;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+html.motion-reduce {
+  scroll-behavior: auto;
+}
+
+html.text-scale-large {
+  font-size: 112.5%;
+}
+
+body {
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  background-color: #fafafa;
+  color: #111827;
+  transition: background-color 0.35s ease, color 0.35s ease;
+}
+
+.dark body {
+  background-color: #020617;
+  color: #e2e8f0;
+}
+
+/* Giảm chuyển động – CSS + Framer Motion (MotionConfig trong Layout) */
+html.motion-reduce *,
+html.motion-reduce *::before,
+html.motion-reduce *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  transition-delay: 0ms !important;
+}
+
+::selection {
+  background-color: rgba(6, 182, 212, 0.25);
+  color: inherit;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.8s ease-out;
+}
+
+/* Mesh gradient shift – hero background */
+@keyframes meshShift {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1) translate(0, 0);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.05) translate(2%, -2%);
+  }
+}
+
+.animate-mesh {
+  animation: meshShift 12s ease-in-out infinite;
+}
+
+/* Floating orbs */
+@keyframes floatSlow {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  33% {
+    transform: translate(8px, -12px) rotate(2deg);
+  }
+  66% {
+    transform: translate(-6px, 8px) rotate(-1deg);
+  }
+}
+
+.animate-float-slow {
+  animation: floatSlow 18s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: floatSlow 22s ease-in-out infinite;
+  animation-delay: -4s;
+}
+
+/* Shimmer line for cards */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2.5s ease-in-out infinite;
+}
+
+/* Gradient border glow */
+@keyframes borderGlow {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.animate-border-glow {
+  animation: borderGlow 3s ease-in-out infinite;
+}
