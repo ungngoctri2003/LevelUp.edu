@@ -23,7 +23,7 @@ export default function DashboardShell({ navItems, accent = 'admin', title }) {
         <aside className="hidden w-64 shrink-0 flex-col border-r border-white/10 bg-black/20 backdrop-blur-md lg:flex">
           <div className="border-b border-white/10 p-4">
             <NavLink to="/" className="block">
-              <Logo variant="navbar" className="max-w-[160px] brightness-0 invert opacity-90" />
+              <Logo variant="navbar" forDarkSidebar className="max-w-[160px]" />
             </NavLink>
             <p className="mt-2 text-xs font-medium uppercase tracking-wider text-slate-400">{title}</p>
           </div>

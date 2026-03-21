@@ -6,11 +6,12 @@ import { appendAdminActivity } from '../../utils/adminStorage'
 export default function AdminCourses() {
   const { state, update } = useAdminState()
   const [editing, setEditing] = useState(null)
-  const [form, setForm] = useState({ title: '', description: '' })
+  const [form, setForm] = useState({ title: '', description: '', subject: '' })
+  const [createDraft, setCreateDraft] = useState({ title: '', description: '', subject: '' })
 
   const openEdit = (c) => {
     setEditing(c)
-    setForm({ title: c.title, description: c.description })
+    setForm({ title: c.title, description: c.description, subject: c.subject || '' })
   }
 
   const saveEdit = (e) => {
@@ -19,11 +20,48 @@ export default function AdminCourses() {
     update((prev) => ({
       ...prev,
       courses: prev.courses.map((c) =>
-        c.id === editing.id ? { ...c, title: form.title.trim(), description: form.description.trim() } : c,
+        c.id === editing.id
+          ? {
+              ...c,
+              title: form.title.trim(),
+              description: form.description.trim(),
+              subject: form.subject.trim() || undefined,
+            }
+          : c,
       ),
     }))
     appendAdminActivity(`Cập nhật khóa học: ${form.title.trim()}`)
     setEditing(null)
+  }
+
+  const addCourse = (e) => {
+    e.preventDefault()
+    if (!createDraft.title.trim()) return
+    const nextId = Math.max(0, ...state.courses.map((c) => Number(c.id) || 0)) + 1
+    update((prev) => ({
+      ...prev,
+      courses: [
+        ...prev.courses,
+        {
+          id: nextId,
+          title: createDraft.title.trim(),
+          description: createDraft.description.trim() || 'Mô tả đang cập nhật.',
+          subject: createDraft.subject.trim() || undefined,
+          visible: true,
+        },
+      ],
+    }))
+    appendAdminActivity(`Thêm khóa học: ${createDraft.title.trim()}`)
+    setCreateDraft({ title: '', description: '', subject: '' })
+  }
+
+  const deleteCourse = (c) => {
+    if (!confirm(`Xóa khóa "${c.title}"?`)) return
+    update((prev) => ({
+      ...prev,
+      courses: prev.courses.filter((x) => x.id !== c.id),
+    }))
+    appendAdminActivity(`Xóa khóa: ${c.title}`)
   }
 
   const toggleVisible = (id) => {
@@ -52,6 +90,37 @@ export default function AdminCourses() {
         </p>
       </div>
 
+      <form onSubmit={addCourse} className="rounded-2xl border border-dashed border-cyan-500/30 bg-white/5 p-5 backdrop-blur-sm">
+        <h3 className="font-semibold text-white">Thêm khóa học mới</h3>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <input
+            value={createDraft.title}
+            onChange={(e) => setCreateDraft((d) => ({ ...d, title: e.target.value }))}
+            placeholder="Tiêu đề khóa"
+            className="rounded-xl border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-cyan-500/50 focus:outline-none"
+          />
+          <input
+            value={createDraft.subject}
+            onChange={(e) => setCreateDraft((d) => ({ ...d, subject: e.target.value }))}
+            placeholder="Môn (VD: Vật lý)"
+            className="rounded-xl border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-cyan-500/50 focus:outline-none"
+          />
+          <button
+            type="submit"
+            className="rounded-xl bg-cyan-600/90 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-600 sm:col-span-2 sm:max-w-xs"
+          >
+            Tạo khóa
+          </button>
+        </div>
+        <textarea
+          value={createDraft.description}
+          onChange={(e) => setCreateDraft((d) => ({ ...d, description: e.target.value }))}
+          placeholder="Mô tả ngắn"
+          rows={2}
+          className="mt-3 w-full rounded-xl border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-cyan-500/50 focus:outline-none"
+        />
+      </form>
+
       <div className="grid gap-4 md:grid-cols-2">
         {state.courses.map((c) => (
           <div
@@ -61,7 +130,14 @@ export default function AdminCourses() {
             }`}
           >
             <div className="flex items-start justify-between gap-2">
-              <h3 className="font-semibold text-white">{c.title}</h3>
+              <div>
+                {c.subject && (
+                  <span className="mb-1.5 inline-block rounded-full bg-cyan-500/20 px-2 py-0.5 text-[10px] text-cyan-200">
+                    {c.subject}
+                  </span>
+                )}
+                <h3 className="font-semibold text-white">{c.title}</h3>
+              </div>
               {c.visible === false && (
                 <span className="shrink-0 rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] text-amber-200">Đang ẩn</span>
               )}
@@ -82,6 +158,13 @@ export default function AdminCourses() {
               >
                 {c.visible === false ? 'Hiện trên web' : 'Ẩn khóa'}
               </button>
+              <button
+                type="button"
+                onClick={() => deleteCourse(c)}
+                className="rounded-lg border border-red-500/40 px-3 py-1.5 text-xs text-red-400 hover:bg-red-500/10"
+              >
+                Xóa
+              </button>
             </div>
           </div>
         ))}
@@ -99,6 +182,15 @@ export default function AdminCourses() {
               <input
                 value={form.title}
                 onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+                className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white focus:border-cyan-500/50 focus:outline-none"
+              />
+            </label>
+            <label className="mt-3 block text-sm text-slate-400">
+              Môn (nhãn hiển thị)
+              <input
+                value={form.subject}
+                onChange={(e) => setForm((f) => ({ ...f, subject: e.target.value }))}
+                placeholder="VD: Văn, Sinh..."
                 className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white focus:border-cyan-500/50 focus:outline-none"
               />
             </label>

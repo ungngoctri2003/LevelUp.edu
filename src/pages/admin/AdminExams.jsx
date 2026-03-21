@@ -5,7 +5,7 @@ import { appendAdminActivity } from '../../utils/adminStorage'
 
 const emptyForm = {
   title: '',
-  subject: 'Toán học',
+  subject: '',
   duration: 45,
   questions: 20,
   level: 'Lớp 10',
@@ -16,6 +16,8 @@ const emptyForm = {
 export default function AdminExams() {
   const { state, update } = useAdminState()
   const [form, setForm] = useState(emptyForm)
+  const [editId, setEditId] = useState(null)
+  const [editForm, setEditForm] = useState(emptyForm)
 
   const addExam = (e) => {
     e.preventDefault()
@@ -28,7 +30,7 @@ export default function AdminExams() {
         {
           id: nextId,
           title: form.title.trim(),
-          subject: form.subject,
+          subject: form.subject.trim() || 'Môn học',
           duration: Number(form.duration) || 45,
           questions: Number(form.questions) || 10,
           level: form.level,
@@ -64,6 +66,52 @@ export default function AdminExams() {
     }
   }
 
+  const openEdit = (ex) => {
+    setEditId(ex.id)
+    setEditForm({
+      title: ex.title,
+      subject: ex.subject,
+      duration: ex.duration,
+      questions: ex.questions,
+      level: ex.level,
+      assigned: !!ex.assigned,
+      published: ex.published !== false,
+    })
+  }
+
+  const saveEdit = (e) => {
+    e.preventDefault()
+    if (!editForm.title.trim() || editId == null) return
+    update((prev) => ({
+      ...prev,
+      exams: prev.exams.map((x) =>
+        x.id === editId
+          ? {
+              ...x,
+              title: editForm.title.trim(),
+              subject: String(editForm.subject || '').trim() || 'Môn học',
+              duration: Number(editForm.duration) || 45,
+              questions: Number(editForm.questions) || 10,
+              level: editForm.level,
+              assigned: !!editForm.assigned,
+              published: editForm.published !== false,
+            }
+          : x,
+      ),
+    }))
+    appendAdminActivity(`Sửa đề: ${editForm.title.trim()}`)
+    setEditId(null)
+  }
+
+  const deleteExam = (ex) => {
+    if (!confirm(`Xóa đề "${ex.title}"?`)) return
+    update((prev) => ({
+      ...prev,
+      exams: prev.exams.filter((x) => x.id !== ex.id),
+    }))
+    appendAdminActivity(`Xóa đề: ${ex.title}`)
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -96,7 +144,8 @@ export default function AdminExams() {
             <input
               value={form.subject}
               onChange={(e) => setForm((f) => ({ ...f, subject: e.target.value }))}
-              className="mt-1 w-full rounded-xl border border-white/15 bg-black/30 px-3 py-2 text-white focus:border-cyan-500/50 focus:outline-none"
+              placeholder="VD: Toán học, Vật lý..."
+              className="mt-1 w-full rounded-xl border border-white/15 bg-black/30 px-3 py-2 text-white placeholder:text-slate-600 focus:border-cyan-500/50 focus:outline-none"
             />
           </label>
           <label className="text-sm text-slate-400">
@@ -167,6 +216,7 @@ export default function AdminExams() {
               <th className="px-4 py-3">Cấp</th>
               <th className="px-4 py-3">Đã giao</th>
               <th className="px-4 py-3">Công khai</th>
+              <th className="px-4 py-3">Thao tác</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5 text-slate-200">
@@ -199,11 +249,105 @@ export default function AdminExams() {
                     {e.published !== false ? 'Hiện' : 'Ẩn'}
                   </button>
                 </td>
+                <td className="px-4 py-3 space-x-2">
+                  <button type="button" onClick={() => openEdit(e)} className="text-xs text-cyan-400 hover:text-cyan-300">
+                    Sửa
+                  </button>
+                  <button type="button" onClick={() => deleteExam(e)} className="text-xs text-red-400 hover:text-red-300">
+                    Xóa
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {editId != null && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+          <form onSubmit={saveEdit} className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-white/15 bg-slate-900 p-6 shadow-xl">
+            <h3 className="text-lg font-semibold text-white">Sửa đề thi</h3>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <label className="text-sm text-slate-400 sm:col-span-2">
+                Tên đề
+                <input
+                  value={editForm.title}
+                  onChange={(e) => setEditForm((f) => ({ ...f, title: e.target.value }))}
+                  className="mt-1 w-full rounded-xl border border-white/15 bg-black/30 px-3 py-2 text-white focus:border-cyan-500/50 focus:outline-none"
+                />
+              </label>
+              <label className="text-sm text-slate-400">
+                Môn
+                <input
+                  value={editForm.subject}
+                  onChange={(e) => setEditForm((f) => ({ ...f, subject: e.target.value }))}
+                  className="mt-1 w-full rounded-xl border border-white/15 bg-black/30 px-3 py-2 text-white focus:border-cyan-500/50 focus:outline-none"
+                />
+              </label>
+              <label className="text-sm text-slate-400">
+                Cấp
+                <input
+                  value={editForm.level}
+                  onChange={(e) => setEditForm((f) => ({ ...f, level: e.target.value }))}
+                  className="mt-1 w-full rounded-xl border border-white/15 bg-black/30 px-3 py-2 text-white focus:border-cyan-500/50 focus:outline-none"
+                />
+              </label>
+              <label className="text-sm text-slate-400">
+                Thời gian (phút)
+                <input
+                  type="number"
+                  min={5}
+                  value={editForm.duration}
+                  onChange={(e) => setEditForm((f) => ({ ...f, duration: e.target.value }))}
+                  className="mt-1 w-full rounded-xl border border-white/15 bg-black/30 px-3 py-2 text-white focus:border-cyan-500/50 focus:outline-none"
+                />
+              </label>
+              <label className="text-sm text-slate-400">
+                Số câu
+                <input
+                  type="number"
+                  min={1}
+                  value={editForm.questions}
+                  onChange={(e) => setEditForm((f) => ({ ...f, questions: e.target.value }))}
+                  className="mt-1 w-full rounded-xl border border-white/15 bg-black/30 px-3 py-2 text-white focus:border-cyan-500/50 focus:outline-none"
+                />
+              </label>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-6 text-sm text-slate-300">
+              <label className="flex cursor-pointer items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={editForm.assigned}
+                  onChange={(e) => setEditForm((f) => ({ ...f, assigned: e.target.checked }))}
+                  className="rounded border-white/30 bg-black/40 text-cyan-500"
+                />
+                Đã giao
+              </label>
+              <label className="flex cursor-pointer items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={editForm.published !== false}
+                  onChange={(e) => setEditForm((f) => ({ ...f, published: e.target.checked }))}
+                  className="rounded border-white/30 bg-black/40 text-cyan-500"
+                />
+                Công khai
+              </label>
+            </div>
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setEditId(null)}
+                className="rounded-xl border border-white/20 px-4 py-2 text-sm text-slate-300 hover:bg-white/5"
+              >
+                Hủy
+              </button>
+              <button type="submit" className="rounded-xl bg-gradient-to-r from-cyan-500 to-fuchsia-600 px-4 py-2 text-sm font-semibold text-white">
+                Lưu
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   )
 }

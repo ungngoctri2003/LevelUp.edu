@@ -10,7 +10,7 @@ export const adminStats = {
 }
 
 export const adminActivity = [
-  { id: 1, time: '10:32', user: 'admin@levelup.edu', action: 'Cập nhật khóa học Toán 12', type: 'course' },
+  { id: 1, time: '10:32', user: 'admin@levelup.edu', action: 'Cập nhật khóa đa môn THPT', type: 'course' },
   { id: 2, time: '09:15', user: 'system', action: 'Sao lưu cơ sở dữ liệu tự động', type: 'system' },
   { id: 3, time: 'Hôm qua', user: 'admin@levelup.edu', action: 'Duyệt tài khoản giáo viên mới', type: 'user' },
   { id: 4, time: 'Hôm qua', user: 'support@levelup.edu', action: 'Trả lời ticket #882', type: 'support' },
@@ -24,7 +24,7 @@ export type MockStudent = {
   status: 'active' | 'inactive' | 'trial'
   joined: string
   phone?: string
-  source?: 'registered'
+  source?: 'registered' | 'manual'
 }
 
 export const mockStudents: MockStudent[] = [
@@ -46,8 +46,8 @@ export type MockTeacherRow = {
 
 export const mockTeachersAdmin: MockTeacherRow[] = [
   { id: 'GV001', name: 'Thầy Minh Tuấn', email: 'tuan@levelup.edu', subjects: 'Toán', classes: 5, status: 'approved' },
-  { id: 'GV002', name: 'Cô Thanh Hà', email: 'ha@levelup.edu', subjects: 'Toán, Vật lý', classes: 4, status: 'approved' },
-  { id: 'GV003', name: 'Thầy Đức Anh', email: 'anh@levelup.edu', subjects: 'Toán', classes: 3, status: 'pending' },
+  { id: 'GV002', name: 'Cô Thanh Hà', email: 'ha@levelup.edu', subjects: 'Vật lý, Hóa học', classes: 4, status: 'approved' },
+  { id: 'GV003', name: 'Thầy Đức Anh', email: 'anh@levelup.edu', subjects: 'Tiếng Anh', classes: 3, status: 'pending' },
 ]
 
 export type AdmissionApplication = {
@@ -84,8 +84,8 @@ export type TeacherClass = {
 
 export const mockTeacherClasses: TeacherClass[] = [
   { id: 'LH01', name: 'Toán 12A - Luyện thi', subject: 'Toán', grade: '12', students: 28, schedule: 'T2, T4 19:30' },
-  { id: 'LH02', name: 'Toán 10C', subject: 'Toán', grade: '10', students: 32, schedule: 'T3, T6 18:00' },
-  { id: 'LH03', name: 'Ôn lớp 11', subject: 'Toán', grade: '11', students: 26, schedule: 'T5 20:00' },
+  { id: 'LH02', name: 'Vật lý 10 - Nền tảng', subject: 'Vật lý', grade: '10', students: 32, schedule: 'T3, T6 18:00' },
+  { id: 'LH03', name: 'Hóa 11 - Hữu cơ', subject: 'Hóa học', grade: '11', students: 26, schedule: 'T5 20:00' },
 ]
 
 export type TeacherLesson = {
@@ -99,8 +99,8 @@ export type TeacherLesson = {
 
 export const mockTeacherLessons: TeacherLesson[] = [
   { id: 'BG101', title: 'Đạo hàm - Bài tập tổng hợp', className: 'Toán 12A', duration: '52 phút', views: 124, updated: '19/03/2025' },
-  { id: 'BG102', title: 'Hình học không gian - Lăng trụ', className: 'Toán 12A', duration: '45 phút', views: 98, updated: '17/03/2025' },
-  { id: 'BG103', title: 'Phương trình bậc hai', className: 'Toán 10C', duration: '40 phút', views: 210, updated: '15/03/2025' },
+  { id: 'BG102', title: 'Điện học - Định luật Ohm', className: 'Vật lý 10', duration: '45 phút', views: 98, updated: '17/03/2025' },
+  { id: 'BG103', title: 'Hiđrocacbon no - Đồng đẳng', className: 'Hóa 11', duration: '40 phút', views: 210, updated: '15/03/2025' },
 ]
 
 export type ScheduleSlot = {
@@ -113,9 +113,9 @@ export type ScheduleSlot = {
 
 export const mockTeacherSchedule: ScheduleSlot[] = [
   { id: 'S1', day: 'Thứ 2', time: '19:30 - 21:00', className: 'Toán 12A', room: 'Online - Zoom 1' },
-  { id: 'S2', day: 'Thứ 3', time: '18:00 - 19:30', className: 'Toán 10C', room: 'Online - Zoom 2' },
+  { id: 'S2', day: 'Thứ 3', time: '18:00 - 19:30', className: 'Vật lý 10', room: 'Online - Zoom 2' },
   { id: 'S3', day: 'Thứ 4', time: '19:30 - 21:00', className: 'Toán 12A', room: 'Online - Zoom 1' },
-  { id: 'S4', day: 'Thứ 5', time: '20:00 - 21:30', className: 'Ôn lớp 11', room: 'Online - Zoom 3' },
+  { id: 'S4', day: 'Thứ 5', time: '20:00 - 21:30', className: 'Hóa 11', room: 'Online - Zoom 3' },
 ]
 
 export type AssignmentItem = {
@@ -129,7 +129,7 @@ export type AssignmentItem = {
 
 export const mockTeacherAssignments: AssignmentItem[] = [
   { id: 'BT01', title: 'Bài tập Đạo hàm - Tuần 4', className: 'Toán 12A', due: '23/03/2025', submitted: 22, total: 28 },
-  { id: 'BT02', title: 'Kiểm tra 15 phút - Hình học', className: 'Toán 10C', due: '22/03/2025', submitted: 30, total: 32 },
+  { id: 'BT02', title: 'Bài tập Điện - Chương 1', className: 'Vật lý 10', due: '22/03/2025', submitted: 30, total: 32 },
 ]
 
 export type GradingQueueItem = {
@@ -157,7 +157,7 @@ export type TeacherStudent = {
 
 export const mockTeacherStudents: TeacherStudent[] = [
   { id: 'HV101', name: 'Nguyễn Văn A', className: 'Toán 12A', progress: 78, lastActive: 'Hôm nay' },
-  { id: 'HV102', name: 'Trần Thị B', className: 'Toán 12A', progress: 92, lastActive: 'Hôm qua' },
-  { id: 'HV103', name: 'Lê Văn C', className: 'Toán 10C', progress: 65, lastActive: '2 ngày trước' },
+  { id: 'HV102', name: 'Trần Thị B', className: 'Vật lý 10', progress: 92, lastActive: 'Hôm qua' },
+  { id: 'HV103', name: 'Lê Văn C', className: 'Hóa 11', progress: 65, lastActive: '2 ngày trước' },
 ]
 

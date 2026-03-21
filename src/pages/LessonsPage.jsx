@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { lessonsBySubject } from '../data'
 import { Reveal } from '../components/motion/Reveal'
@@ -68,13 +69,14 @@ export default function LessonsPage() {
                   </div>
                   <div className="flex items-center gap-4">
                     <span className="text-sm text-gray-500 dark:text-slate-400">{lesson.duration}</span>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="rounded-lg bg-gradient-to-r from-cyan-500 to-fuchsia-600 px-4 py-2 text-sm font-medium text-white shadow-md shadow-fuchsia-500/20 transition-opacity hover:opacity-95"
-                    >
-                      Xem bài giảng
-                    </motion.button>
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <Link
+                        to={`/bai-giang/${lesson.id}`}
+                        className="inline-block rounded-lg bg-gradient-to-r from-cyan-500 to-fuchsia-600 px-4 py-2 text-sm font-medium text-white shadow-md shadow-fuchsia-500/20 transition-opacity hover:opacity-95"
+                      >
+                        Xem bài giảng
+                      </Link>
+                    </motion.div>
                   </div>
                 </motion.li>
               ))}

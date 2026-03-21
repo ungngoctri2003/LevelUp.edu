@@ -9,10 +9,10 @@ export default function Courses() {
       <div className="mx-auto max-w-7xl px-6">
         <Reveal className="text-center">
           <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl lg:text-5xl">
-            Khóa học toán
+            Khóa học đa môn
           </h2>
           <p className="mt-6 max-w-2xl mx-auto text-lg text-gray-600 dark:text-slate-400">
-            Lộ trình học phù hợp với mọi cấp độ từ cơ bản đến nâng cao
+            Toán, Lý, Hóa, Anh, Văn, Sinh… — chọn môn bạn cần, học theo lộ trình rõ ràng
           </p>
         </Reveal>
         <RevealStagger className="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
@@ -31,6 +31,11 @@ export default function Courses() {
                   />
                 </div>
                 <div className="p-8">
+                  {course.subject && (
+                    <span className="mb-2 inline-block rounded-full bg-cyan-500/15 px-2.5 py-0.5 text-xs font-medium text-cyan-700 dark:text-cyan-300">
+                      {course.subject}
+                    </span>
+                  )}
                   <h3 className="text-xl font-semibold text-gray-900 transition-colors group-hover:text-cyan-600 dark:text-white dark:group-hover:text-cyan-400">
                     {course.title}
                   </h3>

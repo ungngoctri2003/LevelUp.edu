@@ -21,7 +21,7 @@ export default function StudentShell() {
         <aside className="hidden w-60 shrink-0 flex-col border-r border-white/10 bg-black/25 backdrop-blur-md lg:flex">
           <div className="border-b border-white/10 p-4">
             <NavLink to="/" className="block">
-              <Logo variant="navbar" className="max-w-[150px] brightness-0 invert opacity-90" />
+              <Logo variant="navbar" forDarkSidebar className="max-w-[150px]" />
             </NavLink>
             <p className="mt-2 text-xs font-medium uppercase tracking-wider text-sky-300/80">Khu học viên</p>
           </div>

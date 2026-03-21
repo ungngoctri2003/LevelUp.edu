@@ -61,7 +61,7 @@ export default function Footer() {
               <Logo variant="footer" className="max-w-[220px]" />
             </Link>
             <p className="mt-4 text-gray-400 leading-relaxed">
-              Nền tảng học toán trực tuyến với video chất lượng, AI hỗ trợ và giáo viên giàu kinh nghiệm.
+              Nền tảng học trực tuyến đa môn — video chất lượng, AI hỗ trợ và đội ngũ giáo viên giàu kinh nghiệm.
             </p>
           </motion.div>
           <motion.div variants={itemVariants}>

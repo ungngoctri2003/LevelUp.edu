@@ -19,12 +19,20 @@ export const studentEnrolledCourses: EnrolledCourse[] = [
     totalLessons: 48,
   },
   {
-    key: 'toan-10',
-    title: 'Toán 10 nâng cao',
+    key: 'vat-ly-thpt',
+    title: 'Vật lý THPT — Điện & sóng',
     teacher: 'Cô Thanh Hà',
+    defaultProgress: 44,
+    nextLesson: 'Dao động cơ — Bài tập chương 1',
+    totalLessons: 36,
+  },
+  {
+    key: 'tieng-anh-12',
+    title: 'Tiếng Anh — Reading & Writing',
+    teacher: 'Thầy Đức Anh',
     defaultProgress: 52,
-    nextLesson: 'Phương trình bậc hai',
-    totalLessons: 32,
+    nextLesson: 'Unit 5 — Reading comprehension',
+    totalLessons: 40,
   },
 ]
 

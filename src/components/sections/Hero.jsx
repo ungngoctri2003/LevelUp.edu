@@ -104,7 +104,7 @@ export default function Hero() {
           variants={itemVariants}
           className="mb-14 mx-auto max-w-2xl text-lg leading-relaxed text-slate-300 sm:text-xl"
         >
-          Học toán trực tuyến với video bài giảng chất lượng cao, AI hỗ trợ 24/7 và lộ trình cá nhân hóa theo trình độ
+          Học đa môn trực tuyến — Toán, khoa học, ngoại ngữ, văn và xã hội — video chất lượng, AI hỗ trợ 24/7 và lộ trình phù hợp từng học sinh
         </motion.p>
 
         <motion.div

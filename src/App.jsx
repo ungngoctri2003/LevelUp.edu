@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './pages/Layout'
 import HomePage from './pages/HomePage'
 import LessonsPage from './pages/LessonsPage'
+import LessonDetailPage from './pages/LessonDetailPage'
 import TestsPage from './pages/TestsPage'
 import AdmissionsPage from './pages/AdmissionsPage'
 import NewsPage from './pages/NewsPage'
@@ -38,6 +39,7 @@ function App() {
           <Route index element={<HomePage />} />
           <Route path="dang-nhap" element={<Navigate to="/?auth=login" replace />} />
           <Route path="dang-ky" element={<Navigate to="/?auth=register" replace />} />
+          <Route path="bai-giang/:lessonId" element={<LessonDetailPage />} />
           <Route path="bai-giang" element={<LessonsPage />} />
           <Route path="bai-kiem-tra" element={<TestsPage />} />
           <Route path="tuyen-sinh" element={<AdmissionsPage />} />

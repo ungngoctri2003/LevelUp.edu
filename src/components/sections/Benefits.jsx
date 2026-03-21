@@ -49,7 +49,7 @@ export default function Benefits() {
             Vì sao chọn LevelUp.edu?
           </h2>
           <p className="mt-6 max-w-2xl mx-auto text-lg text-gray-600 dark:text-slate-400">
-            Trải nghiệm học toán hiện đại và hiệu quả nhất
+            Học nhiều môn trên một nền tảng — linh hoạt, hiện đại và hiệu quả
           </p>
         </Reveal>
         <RevealStagger className="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
