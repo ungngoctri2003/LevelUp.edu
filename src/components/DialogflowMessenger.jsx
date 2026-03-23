@@ -5,7 +5,7 @@ const DIALOGFLOW_BOOTSTRAP_URL =
   'https://www.gstatic.com/dialogflow-console/fast/messenger/bootstrap.js?v=1'
 
 const AGENT_ID = import.meta.env.VITE_DIALOGFLOW_AGENT_ID ?? ''
-const CHAT_TITLE = import.meta.env.VITE_DIALOGFLOW_CHAT_TITLE ?? 'HoiThao'
+const CHAT_TITLE = import.meta.env.VITE_DIALOGFLOW_CHAT_TITLE ?? 'Levelup.edu'
 const LANGUAGE_CODE = import.meta.env.VITE_DIALOGFLOW_LANGUAGE_CODE ?? 'vi'
 const INTENT = import.meta.env.VITE_DIALOGFLOW_INTENT ?? 'WELCOME'
 
