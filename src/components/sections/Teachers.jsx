@@ -13,6 +13,21 @@ function AvatarPlaceholder({ initial, color }) {
   )
 }
 
+function TeacherPortrait({ teacher }) {
+  if (teacher.imageSrc) {
+    return (
+      <img
+        src={teacher.imageSrc}
+        alt={`Chân dung ${teacher.name}`}
+        className="h-full w-full object-cover object-center"
+        loading="lazy"
+        decoding="async"
+      />
+    )
+  }
+  return <AvatarPlaceholder initial={teacher.initial} color={teacher.color} />
+}
+
 export default function Teachers() {
   return (
     <section id="teachers" className="py-24 dark:bg-slate-950 sm:py-32">
@@ -39,7 +54,7 @@ export default function Teachers() {
                     whileHover={{ scale: 1.08 }}
                     transition={{ duration: 0.4 }}
                   >
-                    <AvatarPlaceholder initial={teacher.initial} color={teacher.color} />
+                    <TeacherPortrait teacher={teacher} />
                   </motion.div>
                 </div>
                 <div className="p-6">

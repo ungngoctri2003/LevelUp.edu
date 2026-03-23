@@ -55,6 +55,9 @@ export const teachers = [
     bio: '12 năm kinh nghiệm — Toán THPT & luyện thi. Phương pháp bài bản, sát đề.',
     initial: 'MT',
     color: 'indigo',
+    /** Ảnh chân dung (Unsplash — miễn phí dùng thương mại) */
+    imageSrc:
+      'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=800&q=80',
   },
   {
     id: 2,
@@ -62,6 +65,8 @@ export const teachers = [
     bio: 'Vật lý & Hóa: 10 năm kinh nghiệm, nhiều học sinh đạt điểm cao THPT Quốc gia.',
     initial: 'TH',
     color: 'purple',
+    imageSrc:
+      'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80',
   },
   {
     id: 3,
@@ -69,6 +74,8 @@ export const teachers = [
     bio: 'Tiếng Anh học thuật & giao tiếp; từng làm việc với giáo trình quốc tế.',
     initial: 'ĐA',
     color: 'indigo',
+    imageSrc:
+      'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=800&q=80',
   },
   {
     id: 4,
@@ -76,6 +83,8 @@ export const teachers = [
     bio: 'Ngữ văn & kỹ năng viết: chuyên sâu nghị luận, văn học hiện đại.',
     initial: 'LP',
     color: 'purple',
+    imageSrc:
+      'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=800&q=80',
   },
 ]
 
