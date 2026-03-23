@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuthModal } from '../context/AuthModalContext'
 import { useAuthSession } from '../context/AuthSessionContext'
-import { demoLoginAccounts, DEMO_PASSWORD } from '../data/demoAccounts'
 import { registerStudentFromSignup } from '../utils/adminStorage'
 
 const ROLES = [
@@ -34,7 +33,6 @@ function LoginForm({ onSwitchToRegister, onSuccess, titleId }) {
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!validate()) return
-    console.log('Login:', form)
     onSuccess({ email: form.email.trim(), role: form.role })
   }
 
@@ -47,7 +45,9 @@ function LoginForm({ onSwitchToRegister, onSuccess, titleId }) {
         <h2 id={titleId} className="text-xl font-bold text-gray-900 dark:text-white">
           Đăng nhập
         </h2>
-        <p className="mt-1 text-sm text-gray-600 dark:text-slate-400">Chọn loại tài khoản và đăng nhập</p>
+        <p className="mt-1 text-sm text-gray-600 dark:text-slate-400">
+          Chọn loại tài khoản và đăng nhập bằng email đã đăng ký.
+        </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -112,46 +112,6 @@ function LoginForm({ onSwitchToRegister, onSuccess, titleId }) {
         </button>
       </form>
 
-      <div className="mt-5 rounded-xl border border-dashed border-cyan-500/35 bg-cyan-500/5 p-3 dark:border-cyan-500/25 dark:bg-cyan-950/40">
-        <p className="text-center text-xs font-semibold uppercase tracking-wide text-cyan-800 dark:text-cyan-200">
-          Tài khoản thử nhanh
-        </p>
-        <p className="mt-1 text-center text-[11px] text-slate-600 dark:text-slate-400">
-          Mật khẩu chung:{' '}
-          <code className="rounded bg-white/80 px-1.5 py-0.5 font-mono text-cyan-800 dark:bg-slate-800 dark:text-cyan-200">
-            {DEMO_PASSWORD}
-          </code>
-        </p>
-        <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-center">
-          {demoLoginAccounts.map((acc) => (
-            <div key={acc.id} className="flex min-w-0 flex-1 flex-col gap-1 sm:min-w-[140px]">
-              <button
-                type="button"
-                onClick={() => {
-                  setForm({
-                    email: acc.email,
-                    password: acc.password,
-                    role: acc.role,
-                  })
-                  setErrors({})
-                }}
-                className="w-full rounded-lg border border-cyan-500/30 bg-white/90 px-2 py-2 text-left text-xs font-medium text-cyan-900 transition-colors hover:bg-cyan-50 dark:border-cyan-500/20 dark:bg-slate-800/80 dark:text-cyan-100 dark:hover:bg-slate-700"
-              >
-                <span className="block font-semibold">{acc.label}</span>
-                <span className="block truncate text-[10px] font-normal text-slate-500 dark:text-slate-400">{acc.email}</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => onSuccess({ email: acc.email, role: acc.role, name: acc.name })}
-                className="w-full rounded-lg bg-gradient-to-r from-cyan-500/90 to-fuchsia-600/90 py-1.5 text-[11px] font-semibold text-white shadow-sm hover:from-cyan-600 hover:to-fuchsia-700"
-              >
-                Đăng nhập luôn →
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
-
       <p className="mt-5 text-center text-sm text-gray-600 dark:text-slate-400">
         Chưa có tài khoản?{' '}
         <button
@@ -194,7 +154,6 @@ function RegisterForm({ onSwitchToLogin, onSuccess, titleId }) {
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!validate()) return
-    console.log('Register:', form)
     onSuccess({
       email: form.email.trim(),
       role: form.role,

@@ -24,7 +24,7 @@ export default function VideoPreview() {
                   </svg>
                 </motion.div>
                 <p className="text-center text-lg font-medium text-white/90">
-                  Bài giảng mẫu - Đại số lớp 10
+                  Đại số lớp 10 — Ôn tập tổng hợp
                 </p>
                 <p className="text-center text-sm text-white/70">
                   Video bài giảng có sẵn khi đăng ký

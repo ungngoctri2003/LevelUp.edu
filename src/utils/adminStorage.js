@@ -1,7 +1,7 @@
 /**
  * Trạng thái quản trị offline — lưu localStorage, đồng bộ với trang công khai.
  */
-import { mockStudents, mockTeachersAdmin, mockAdmissions, adminActivity } from '../data/dashboardData'
+import { initialStudents, initialTeachersAdmin, initialAdmissions, adminActivity } from '../data/dashboardData'
 import { courses as defaultCourses, exams as defaultExams, news as defaultNews } from '../data'
 import { getTestResults } from './userBusinessStorage'
 
@@ -33,12 +33,12 @@ export function subscribeAdmin(callback) {
 
 export function getDefaultAdminState() {
   return {
-    students: mockStudents.map((s) => ({ ...s })),
-    teachers: mockTeachersAdmin.map((t) => ({ ...t })),
+    students: initialStudents.map((s) => ({ ...s })),
+    teachers: initialTeachersAdmin.map((t) => ({ ...t })),
     courses: defaultCourses.map((c) => ({ ...c, visible: true })),
     exams: defaultExams.map((e) => ({ ...e, published: true })),
     news: defaultNews.map((n) => ({ ...n })),
-    admissions: mockAdmissions.map((a) => ({ ...a })),
+    admissions: initialAdmissions.map((a) => ({ ...a })),
     activity: adminActivity.map((a) => ({ ...a })),
     settings: {
       monthlyRevenue: 245000000,
@@ -149,7 +149,7 @@ export function registerStudentFromSignup({ email, name, phone, role }) {
   })
 }
 
-/** Khôi phục dữ liệu mẫu (dùng trong admin). */
+/** Khôi phục dữ liệu mặc định (dùng trong admin). */
 export function resetAdminToDefaults() {
   const d = getDefaultAdminState()
   saveAdminState(d)

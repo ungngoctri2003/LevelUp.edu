@@ -1,4 +1,4 @@
-/** Mock dữ liệu cho trang Admin & Giáo viên — offline, không gọi API */
+/** Dữ liệu khởi tạo cho trang Admin & Giáo viên — lưu cục bộ, không gọi API */
 
 export const adminStats = {
   totalStudents: 1284,
@@ -16,7 +16,7 @@ export const adminActivity = [
   { id: 4, time: 'Hôm qua', user: 'support@levelup.edu', action: 'Trả lời ticket #882', type: 'support' },
 ]
 
-export type MockStudent = {
+export type StudentRow = {
   id: string
   name: string
   email: string
@@ -27,7 +27,7 @@ export type MockStudent = {
   source?: 'registered' | 'manual'
 }
 
-export const mockStudents: MockStudent[] = [
+export const initialStudents: StudentRow[] = [
   { id: 'HV001', name: 'Nguyễn Văn A', email: 'nva@email.com', grade: 'Lớp 10', status: 'active', joined: '12/01/2025' },
   { id: 'HV002', name: 'Trần Thị B', email: 'ttb@email.com', grade: 'Lớp 11', status: 'trial', joined: '15/02/2025' },
   { id: 'HV003', name: 'Lê Văn C', email: 'lvc@email.com', grade: 'Lớp 12', status: 'active', joined: '03/03/2025' },
@@ -35,7 +35,7 @@ export const mockStudents: MockStudent[] = [
   { id: 'HV005', name: 'Hoàng Minh E', email: 'hme@email.com', grade: 'Lớp 12', status: 'active', joined: '01/03/2025' },
 ]
 
-export type MockTeacherRow = {
+export type TeacherRow = {
   id: string
   name: string
   email: string
@@ -44,7 +44,7 @@ export type MockTeacherRow = {
   status: 'approved' | 'pending' | 'suspended'
 }
 
-export const mockTeachersAdmin: MockTeacherRow[] = [
+export const initialTeachersAdmin: TeacherRow[] = [
   { id: 'GV001', name: 'Thầy Minh Tuấn', email: 'tuan@levelup.edu', subjects: 'Toán', classes: 5, status: 'approved' },
   { id: 'GV002', name: 'Cô Thanh Hà', email: 'ha@levelup.edu', subjects: 'Vật lý, Hóa học', classes: 4, status: 'approved' },
   { id: 'GV003', name: 'Thầy Đức Anh', email: 'anh@levelup.edu', subjects: 'Tiếng Anh', classes: 3, status: 'pending' },
@@ -59,7 +59,7 @@ export type AdmissionApplication = {
   submitted: string
 }
 
-export const mockAdmissions: AdmissionApplication[] = [
+export const initialAdmissions: AdmissionApplication[] = [
   { id: 'TS001', studentName: 'Vũ Khánh', parentPhone: '0901112233', grade: 'Lớp 10', status: 'new', submitted: '18/03/2025' },
   { id: 'TS002', studentName: 'Đặng Linh', parentPhone: '0912223344', grade: 'Lớp 12', status: 'reviewing', submitted: '17/03/2025' },
   { id: 'TS003', studentName: 'Bùi Nam', parentPhone: '0933334455', grade: 'Lớp 11', status: 'accepted', submitted: '10/03/2025' },
@@ -82,7 +82,7 @@ export type TeacherClass = {
   schedule: string
 }
 
-export const mockTeacherClasses: TeacherClass[] = [
+export const initialTeacherClasses: TeacherClass[] = [
   { id: 'LH01', name: 'Toán 12A - Luyện thi', subject: 'Toán', grade: '12', students: 28, schedule: 'T2, T4 19:30' },
   { id: 'LH02', name: 'Vật lý 10 - Nền tảng', subject: 'Vật lý', grade: '10', students: 32, schedule: 'T3, T6 18:00' },
   { id: 'LH03', name: 'Hóa 11 - Hữu cơ', subject: 'Hóa học', grade: '11', students: 26, schedule: 'T5 20:00' },
@@ -97,7 +97,7 @@ export type TeacherLesson = {
   updated: string
 }
 
-export const mockTeacherLessons: TeacherLesson[] = [
+export const initialTeacherLessons: TeacherLesson[] = [
   { id: 'BG101', title: 'Đạo hàm - Bài tập tổng hợp', className: 'Toán 12A', duration: '52 phút', views: 124, updated: '19/03/2025' },
   { id: 'BG102', title: 'Điện học - Định luật Ohm', className: 'Vật lý 10', duration: '45 phút', views: 98, updated: '17/03/2025' },
   { id: 'BG103', title: 'Hiđrocacbon no - Đồng đẳng', className: 'Hóa 11', duration: '40 phút', views: 210, updated: '15/03/2025' },
@@ -111,7 +111,7 @@ export type ScheduleSlot = {
   room: string
 }
 
-export const mockTeacherSchedule: ScheduleSlot[] = [
+export const initialTeacherSchedule: ScheduleSlot[] = [
   { id: 'S1', day: 'Thứ 2', time: '19:30 - 21:00', className: 'Toán 12A', room: 'Online - Zoom 1' },
   { id: 'S2', day: 'Thứ 3', time: '18:00 - 19:30', className: 'Vật lý 10', room: 'Online - Zoom 2' },
   { id: 'S3', day: 'Thứ 4', time: '19:30 - 21:00', className: 'Toán 12A', room: 'Online - Zoom 1' },
@@ -127,7 +127,7 @@ export type AssignmentItem = {
   total: number
 }
 
-export const mockTeacherAssignments: AssignmentItem[] = [
+export const initialTeacherAssignments: AssignmentItem[] = [
   { id: 'BT01', title: 'Bài tập Đạo hàm - Tuần 4', className: 'Toán 12A', due: '23/03/2025', submitted: 22, total: 28 },
   { id: 'BT02', title: 'Bài tập Điện - Chương 1', className: 'Vật lý 10', due: '22/03/2025', submitted: 30, total: 32 },
 ]
@@ -141,7 +141,7 @@ export type GradingQueueItem = {
   status: 'pending' | 'graded'
 }
 
-export const mockGradingQueue: GradingQueueItem[] = [
+export const initialGradingQueue: GradingQueueItem[] = [
   { id: 'G1', studentName: 'Nguyễn Văn A', assignment: 'BT Đạo hàm', submittedAt: '20/03 21:10', status: 'pending' },
   { id: 'G2', studentName: 'Trần Thị B', assignment: 'BT Đạo hàm', submittedAt: '20/03 19:00', status: 'graded', score: 8.5 },
   { id: 'G3', studentName: 'Lê Văn C', assignment: 'Kiểm tra 15p', submittedAt: '19/03 22:00', status: 'pending' },
@@ -155,9 +155,8 @@ export type TeacherStudent = {
   lastActive: string
 }
 
-export const mockTeacherStudents: TeacherStudent[] = [
+export const initialTeacherStudents: TeacherStudent[] = [
   { id: 'HV101', name: 'Nguyễn Văn A', className: 'Toán 12A', progress: 78, lastActive: 'Hôm nay' },
   { id: 'HV102', name: 'Trần Thị B', className: 'Vật lý 10', progress: 92, lastActive: 'Hôm qua' },
   { id: 'HV103', name: 'Lê Văn C', className: 'Hóa 11', progress: 65, lastActive: '2 ngày trước' },
 ]
-

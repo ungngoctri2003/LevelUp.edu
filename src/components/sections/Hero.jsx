@@ -116,7 +116,7 @@ export default function Hero() {
               to={{ pathname: '/', search: '?auth=register' }}
               className="inline-block w-full rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 px-12 py-5 text-center text-lg font-bold text-slate-900 shadow-2xl shadow-amber-500/30 transition-shadow duration-300 hover:shadow-amber-400/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200 focus-visible:ring-offset-4 focus-visible:ring-offset-[#0f172a] sm:w-auto"
             >
-              Học thử miễn phí
+              Bắt đầu miễn phí
             </Link>
           </motion.div>
           <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.98 }}>

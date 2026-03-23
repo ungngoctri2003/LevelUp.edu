@@ -1,5 +1,5 @@
 /**
- * Nội dung demo cho trang xem bài giảng — không gọi API.
+ * Nội dung chi tiết bài giảng (tĩnh) — có thể thay bằng API sau này.
  */
 import { findLessonContext } from '../data'
 
@@ -216,7 +216,7 @@ const DETAILS: Record<number, LessonDetailExtra> = {
           'Đừng đọc kỹ từng từ ngay từ đầu. Đọc câu hỏi trước, gạch chân keyword, quay lại bài đọc để định vị đoạn liên quan.',
       },
     ],
-    resources: [{ name: 'Passage mẫu + key', type: 'PDF' }],
+    resources: [{ name: 'Bài đọc kèm đáp án', type: 'PDF' }],
     teacherName: 'Thầy Đức Anh',
     practiceHints: ['Tìm main idea của một đoạn cho trước.', 'Xác định từ đồng nghĩa trong ngữ cảnh.'],
   },
@@ -246,7 +246,7 @@ const DETAILS: Record<number, LessonDetailExtra> = {
           'Thân bài nên có ít nhất hai lớp luận (Mỗi lớp: khẳng định nhỏ → giải thích → ví dụ / bình luận). Tránh lạc đề và lặp ý.',
       },
     ],
-    resources: [{ name: 'Dàn ý mẫu — đề về học đường', type: 'DOCX' }],
+    resources: [{ name: 'Dàn ý bài viết — chủ đề học đường', type: 'DOCX' }],
     teacherName: 'Cô Lan Phương',
     practiceHints: ['Lập dàn ý cho đề: “Học để làm gì?”', 'Viết mở bài 4–5 câu cho một đề xã hội.'],
   },
@@ -299,7 +299,7 @@ const DETAILS: Record<number, LessonDetailExtra> = {
 
 function defaultDetail(subjectName: string, title: string): LessonDetailExtra {
   return {
-    summary: `Bài giảng demo "${title}" — môn ${subjectName}. Nội dung đầy đủ sẽ được cập nhật trên nền tảng; đây là bản minh họa giao diện.`,
+    summary: `Bài "${title}" — môn ${subjectName}: ôn lý thuyết, làm ví dụ và luyện tập theo lộ trình lớp.`,
     outline: ['Mục tiêu bài học', 'Nội dung lý thuyết', 'Ví dụ minh họa', 'Câu hỏi củng cố'],
     sections: [
       {
@@ -309,7 +309,7 @@ function defaultDetail(subjectName: string, title: string): LessonDetailExtra {
       {
         heading: 'Nội dung chính',
         body:
-          'Trong phiên bản demo, chúng tôi hiển thị cấu trúc bài giảng: phần lý thuyết, ví dụ và phần luyện tập. Khi tích hợp nội dung thật, giáo viên sẽ cập nhật slide và bài kiểm tra ngắn sau mỗi mục.',
+          'Bài gồm phần lý thuyết, ví dụ và phần luyện tập. Giáo viên có thể bổ sung slide, bài kiểm tra ngắn sau từng mục tùy lớp.',
       },
     ],
     resources: [

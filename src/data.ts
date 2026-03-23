@@ -1,6 +1,5 @@
 /**
- * Centralized mock data - all content is hardcoded for offline use.
- * No fetch, API routes, or async data loading.
+ * Dữ liệu nội dung tập trung — hiện tải tĩnh trong ứng dụng (có thể chuyển sang API sau).
  */
 
 /** Mỗi khóa có thể gắn `subject` để hiển thị nhãn môn trên trang chủ */
@@ -170,7 +169,7 @@ export const lessonsBySubject = [
   },
 ]
 
-/** Tìm môn + bài theo id bài (id duy nhất trong mock lessonsBySubject) */
+/** Tìm môn + bài theo id bài (id duy nhất trong lessonsBySubject) */
 export function findLessonContext(lessonId) {
   const id = Number(lessonId)
   if (Number.isNaN(id)) return null
@@ -270,7 +269,7 @@ export const admissionsInfo = {
   ],
 }
 
-// Video preview section - static placeholder data (no YouTube embed for offline)
+// Video preview — nội dung tĩnh trên trang chủ
 export const videoPreview = {
   title: 'Trải nghiệm bài giảng đa môn',
   description:

@@ -15,7 +15,6 @@ export default function TeacherDashboard() {
         eyebrow="Giáo viên"
         title="Tổng quan lớp học"
         description="Tóm tắt công việc và lịch sắp tới — dữ liệu lưu cục bộ trên trình duyệt."
-        badge="Demo"
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

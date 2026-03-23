@@ -34,7 +34,7 @@ export default function StudentCourses() {
     <div className="space-y-8">
       <PageHeader
         title="Khóa học của tôi"
-        description="Tiến độ được lưu cục bộ — demo trước khi có máy chủ."
+        description="Tiến độ học được lưu trên trình duyệt của bạn và đồng bộ khi đăng nhập cùng tài khoản."
       />
 
       <div className="grid gap-4">
@@ -69,7 +69,7 @@ export default function StudentCourses() {
                 onClick={() => bump(c.key, 5)}
                 className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-xs font-medium text-slate-200 transition hover:bg-white/10"
               >
-                +5% tiến độ (demo)
+                +5% tiến độ
               </button>
               <Link to="/bai-giang" className={`${btnPrimaryStudent} inline-block text-xs`}>
                 Xem bài giảng

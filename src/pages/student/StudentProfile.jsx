@@ -23,7 +23,7 @@ export default function StudentProfile() {
 
   return (
     <div className="mx-auto max-w-lg space-y-8">
-      <PageHeader title="Hồ sơ học viên" description="Thông tin hiển thị và gợi ý liên hệ (demo)." />
+      <PageHeader title="Hồ sơ học viên" description="Thông tin hiển thị trên hệ thống và cách liên hệ hỗ trợ." />
 
       <Panel title="Thông tin cá nhân" subtitle="Cập nhật tên và số điện thoại — email cố định theo tài khoản.">
         <form onSubmit={save} className="space-y-5">

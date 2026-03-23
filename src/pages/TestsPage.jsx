@@ -4,7 +4,7 @@ import { useAuthSession } from '../context/AuthSessionContext'
 import { usePublicContent } from '../hooks/usePublicContent'
 import { appendTestResult } from '../utils/userBusinessStorage'
 
-const mockQuestions = [
+const practiceQuestions = [
   { id: 1, text: 'Phương trình x² - 4 = 0 có nghiệm là?', options: ['x = ±2', 'x = 2', 'x = -2', 'x = 4'] },
   { id: 2, text: 'Đạo hàm của hàm số f(x) = x³ là?', options: ['3x²', 'x²', '3x', '2x²'] },
   { id: 3, text: 'Giá trị của sin(90°) là?', options: ['0', '1', '-1', '√2/2'] },
@@ -33,10 +33,10 @@ export default function TestsPage() {
 
   const handleSubmitExam = () => {
     let correct = 0
-    mockQuestions.forEach((q) => {
+    practiceQuestions.forEach((q) => {
       if (answers[q.id] === ANSWER_KEY[q.id]) correct += 1
     })
-    const total = mockQuestions.length
+    const total = practiceQuestions.length
     const maxScore = 10
     const score = Math.round((correct / total) * maxScore * 10) / 10
 
@@ -73,7 +73,7 @@ export default function TestsPage() {
             </div>
 
             <div className="space-y-8">
-              {mockQuestions.map((q, idx) => (
+              {practiceQuestions.map((q, idx) => (
                 <div key={q.id} className="border-b border-gray-100 pb-6 dark:border-slate-700">
                   <p className="mb-3 font-medium text-gray-900 dark:text-white">
                     Câu {idx + 1}: {q.text}

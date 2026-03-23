@@ -115,7 +115,7 @@ export default function RegistrationForm() {
             >
               <Reveal className="text-center">
                 <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl lg:text-5xl">
-                  Đăng ký học thử miễn phí
+                  Đăng ký tư vấn miễn phí
                 </h2>
                 <p className="mt-6 text-lg text-gray-600 dark:text-slate-400">
                   Điền form bên dưới để nhận tư vấn và trải nghiệm khóa học

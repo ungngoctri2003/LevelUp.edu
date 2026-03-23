@@ -39,9 +39,9 @@ export default function AdminDashboard() {
   }
 
   const handleReset = () => {
-    if (!confirm('Xóa toàn bộ dữ liệu quản trị đã lưu và khôi phục bản mẫu? Thao tác không thể hoàn tác.')) return
+    if (!confirm('Xóa toàn bộ dữ liệu quản trị đã lưu và khôi phục về mặc định? Thao tác không thể hoàn tác.')) return
     resetAdminToDefaults()
-    appendAdminActivity('Khôi phục dữ liệu mẫu hệ thống')
+    appendAdminActivity('Khôi phục dữ liệu mặc định hệ thống')
   }
 
   return (
@@ -50,14 +50,13 @@ export default function AdminDashboard() {
         eyebrow="Bảng điều khiển"
         title="Tổng quan hệ thống"
         description="Số liệu cập nhật theo dữ liệu bạn chỉnh trong admin — lưu cục bộ trên trình duyệt."
-        badge="Demo"
       >
         <button
           type="button"
           onClick={handleReset}
           className="rounded-xl border border-red-500/35 bg-red-500/10 px-4 py-2.5 text-sm font-medium text-red-200 transition-colors hover:bg-red-500/20"
         >
-          Khôi phục dữ liệu mẫu
+          Khôi phục dữ liệu mặc định
         </button>
       </PageHeader>
 
@@ -81,7 +80,7 @@ export default function AdminDashboard() {
       </div>
 
       <form onSubmit={applySettings} className="space-y-0">
-        <Panel title="Chỉ số nhanh (demo)" subtitle="Chỉnh doanh thu ước và số ticket — dùng cho báo cáo tổng quan.">
+        <Panel title="Chỉ số nhanh" subtitle="Chỉnh doanh thu ước và số ticket — dùng cho báo cáo tổng quan.">
         <div className="mt-4 flex flex-wrap gap-4">
           <label className="flex flex-col gap-1 text-sm">
             <span className="text-slate-400">Doanh thu tháng (VND)</span>
@@ -132,7 +131,7 @@ export default function AdminDashboard() {
         </div>
       </Panel>
 
-      <Panel title="Hoạt động gần đây" subtitle="Nhật ký thao tác gần nhất (demo).">
+      <Panel title="Hoạt động gần đây" subtitle="Nhật ký thao tác gần nhất trên hệ thống.">
         <ul className="space-y-0">
           {(state.activity || []).map((row) => (
             <li

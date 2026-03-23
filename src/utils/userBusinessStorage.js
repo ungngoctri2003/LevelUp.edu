@@ -1,4 +1,4 @@
-/** Lưu nghiệp vụ phía học viên theo email (mock, localStorage) */
+/** Lưu nghiệp vụ phía học viên theo email (localStorage) */
 
 const PREFIX = 'levelup-biz-'
 

@@ -34,7 +34,12 @@ export default function NewsDetailPage() {
             <div className="prose prose-lg mt-6 max-w-none space-y-4 text-lg text-gray-600 dark:text-slate-300">
               <p>{item.excerpt}</p>
               <p className="mt-4">
-                Đây là nội dung mẫu của bài viết. Trong phiên bản thực tế, nội dung đầy đủ sẽ được hiển thị tại đây.
+                LevelUp.edu cập nhật lịch khai giảng, chính sách học phí và ưu đãi theo từng đợt. Phụ huynh và học
+                sinh nên đăng ký tư vấn sớm để được xếp lớp phù hợp trình độ và thời gian biểu.
+              </p>
+              <p className="mt-4">
+                Mọi thắc mắc về khóa học, hình thức học trực tuyến hoặc hỗ trợ kỹ thuật, vui lòng liên hệ bộ phận
+                chăm sóc khách hàng qua website hoặc hotline được công bố trên trang liên hệ.
               </p>
             </div>
           </div>

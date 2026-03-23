@@ -14,7 +14,7 @@ export default function StudentLessons() {
         description="Gợi ý từ khóa học bạn đã đăng ký — xem chi tiết hoặc mở thư viện bài giảng công khai."
       />
 
-      <Panel title={`Tiếp tục — ${first?.name || 'Bài giảng'}`} subtitle="Danh sách rút gọn; bấm Xem để mở nội dung demo.">
+      <Panel title={`Tiếp tục — ${first?.name || 'Bài giảng'}`} subtitle="Các bài gần đây — chọn Xem để mở chi tiết.">
         <ul className="space-y-2">
           {sample.map((l) => (
             <li

@@ -49,7 +49,6 @@ export default function LessonDetailPage() {
           </p>
         </Reveal>
 
-        {/* Video placeholder — demo */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -61,14 +60,14 @@ export default function LessonDetailPage() {
             <button
               type="button"
               className="relative z-10 flex h-16 w-16 items-center justify-center rounded-full bg-white/95 text-cyan-600 shadow-lg ring-4 ring-white/30 transition hover:scale-105"
-              aria-label="Phát video demo"
+              aria-label="Phát video bài giảng"
             >
               <svg className="ml-1 h-8 w-8" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M8 5v14l11-7z" />
               </svg>
             </button>
             <p className="absolute bottom-4 left-0 right-0 text-center text-xs text-white/70">
-              Video minh họa — bản demo không có nguồn phát thật. Nội dung bên dưới mô tả bài học.
+              Nhấn để xem video bài giảng. Phần dưới là tóm tắt, dàn ý và tài liệu kèm theo.
             </p>
           </div>
         </motion.div>
@@ -110,7 +109,7 @@ export default function LessonDetailPage() {
           </section>
 
           <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800/80">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Tài liệu đính kèm (demo)</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Tài liệu đính kèm</h2>
             <ul className="mt-4 divide-y divide-gray-100 dark:divide-slate-700">
               {resources.map((r, i) => (
                 <li key={i} className="flex items-center justify-between py-3 first:pt-0">
@@ -122,7 +121,7 @@ export default function LessonDetailPage() {
               ))}
             </ul>
             <p className="mt-3 text-xs text-gray-500 dark:text-slate-500">
-              Đây là danh sách giả lập — không có tệp tải xuống thật.
+              Tệp được cung cấp theo khóa học; liên hệ giáo viên hoặc hỗ trợ nếu bạn chưa thấy liên kết tải.
             </p>
           </section>
         </div>

@@ -1,4 +1,4 @@
-/** Nghiệp vụ học viên & roster lớp (mock — đồng bộ với giáo viên / admin) */
+/** Nghiệp vụ học viên & danh sách lớp — đồng bộ với khu giáo viên / admin (lưu cục bộ) */
 
 export type EnrolledCourse = {
   key: string

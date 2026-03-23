@@ -2,12 +2,12 @@
  * Dữ liệu khu giáo viên — localStorage (CRUD offline).
  */
 import {
-  mockTeacherClasses,
-  mockTeacherLessons,
-  mockTeacherSchedule,
-  mockTeacherAssignments,
-  mockGradingQueue,
-  mockTeacherStudents,
+  initialTeacherClasses,
+  initialTeacherLessons,
+  initialTeacherSchedule,
+  initialTeacherAssignments,
+  initialGradingQueue,
+  initialTeacherStudents,
 } from '../data/dashboardData'
 import { teacherClassRosters } from '../data/studentBusinessData'
 
@@ -47,12 +47,12 @@ function cloneRosters() {
 
 export function getDefaultTeacherState() {
   return {
-    classes: mockTeacherClasses.map((c) => ({ ...c })),
-    lessons: mockTeacherLessons.map((l) => ({ ...l })),
-    schedule: mockTeacherSchedule.map((s) => ({ ...s })),
-    assignments: mockTeacherAssignments.map((a) => ({ ...a })),
-    gradingQueue: mockGradingQueue.map((g) => ({ ...g })),
-    teacherStudents: mockTeacherStudents.map((s) => ({ ...s })),
+    classes: initialTeacherClasses.map((c) => ({ ...c })),
+    lessons: initialTeacherLessons.map((l) => ({ ...l })),
+    schedule: initialTeacherSchedule.map((s) => ({ ...s })),
+    assignments: initialTeacherAssignments.map((a) => ({ ...a })),
+    gradingQueue: initialGradingQueue.map((g) => ({ ...g })),
+    teacherStudents: initialTeacherStudents.map((s) => ({ ...s })),
     rosters: cloneRosters(),
   }
 }
