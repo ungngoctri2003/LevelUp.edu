@@ -7,6 +7,7 @@ import TestsPage from './pages/TestsPage'
 import AdmissionsPage from './pages/AdmissionsPage'
 import NewsPage from './pages/NewsPage'
 import NewsDetailPage from './pages/NewsDetailPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
 import AdminLayout from './pages/admin/AdminLayout'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminStudents from './pages/admin/AdminStudents'
@@ -41,6 +42,8 @@ function App() {
           <Route index element={<HomePage />} />
           <Route path="dang-nhap" element={<Navigate to="/?auth=login" replace />} />
           <Route path="dang-ky" element={<Navigate to="/?auth=register" replace />} />
+          <Route path="quen-mat-khau" element={<Navigate to="/?auth=forgot" replace />} />
+          <Route path="dat-lai-mat-khau" element={<ResetPasswordPage />} />
           <Route path="bai-giang/:lessonId" element={<LessonDetailPage />} />
           <Route path="bai-giang" element={<LessonsPage />} />
           <Route path="bai-kiem-tra" element={<TestsPage />} />

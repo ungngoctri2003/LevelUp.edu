@@ -5,7 +5,74 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useAuthModal } from '../context/AuthModalContext'
 import { useAuthSession } from '../context/AuthSessionContext'
 
-function LoginForm({ onSwitchToRegister, onSuccess, titleId }) {
+function ForgotPasswordForm({ onBackToLogin, onSubmitEmail, titleId }) {
+  const fieldIds = useId()
+  const [email, setEmail] = useState('')
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setError('')
+    if (!email.trim()) {
+      setError('Vui lòng nhập email')
+      return
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError('Email không hợp lệ')
+      return
+    }
+    setBusy(true)
+    try {
+      await onSubmitEmail(email.trim())
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <>
+      <div className="mb-6 text-center">
+        <h2 id={titleId} className="text-xl font-bold text-gray-900 dark:text-white">
+          Quên mật khẩu
+        </h2>
+        <p className="mt-1 text-sm text-gray-600 dark:text-slate-400">
+          Nhập email đăng ký. Nếu tài khoản tồn tại, bạn sẽ nhận link đặt lại mật khẩu (kiểm tra cả thư mục spam).
+        </p>
+      </div>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-slate-300">Email</label>
+          <input
+            id={`${fieldIds}-email`}
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm transition-all focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+            placeholder="email@example.com"
+            autoComplete="email"
+            data-auth-autofocus
+          />
+          {error && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{error}</p>}
+        </div>
+        <button
+          type="submit"
+          disabled={busy}
+          className="w-full rounded-xl bg-gradient-to-r from-cyan-500 to-fuchsia-600 py-3 text-sm font-semibold text-white shadow-lg disabled:opacity-60"
+        >
+          {busy ? 'Đang gửi…' : 'Gửi link đặt lại mật khẩu'}
+        </button>
+      </form>
+      <p className="mt-5 text-center text-sm text-gray-600 dark:text-slate-400">
+        <button type="button" onClick={onBackToLogin} className="font-medium text-cyan-600 dark:text-cyan-400">
+          ← Quay lại đăng nhập
+        </button>
+      </p>
+    </>
+  )
+}
+
+function LoginForm({ onSwitchToRegister, onForgotPassword, onSuccess, titleId }) {
   const fieldIds = useId()
   const [form, setForm] = useState({ email: '', password: '' })
   const [errors, setErrors] = useState({})
@@ -70,6 +137,15 @@ function LoginForm({ onSwitchToRegister, onSuccess, titleId }) {
             autoComplete="current-password"
           />
           {errors.password && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.password}</p>}
+        </div>
+        <div className="text-right">
+          <button
+            type="button"
+            onClick={onForgotPassword}
+            className="text-sm font-medium text-cyan-600 hover:underline dark:text-cyan-400"
+          >
+            Quên mật khẩu?
+          </button>
         </div>
         <button
           type="submit"
@@ -213,8 +289,8 @@ function RegisterForm({ onSwitchToLogin, onSuccess, titleId }) {
 }
 
 export default function AuthModal() {
-  const { authView, openLogin, openRegister, closeAuth } = useAuthModal()
-  const { login, register } = useAuthSession()
+  const { authView, openLogin, openRegister, openForgotPassword, closeAuth } = useAuthModal()
+  const { login, register, requestPasswordReset } = useAuthSession()
   const navigate = useNavigate()
   const titleId = useId()
   const [msg, setMsg] = useState(null)
@@ -234,6 +310,18 @@ export default function AuthModal() {
     }
     closeAuth()
     redirectForRole(role || 'user')
+  }
+
+  const handleForgotPassword = async (email) => {
+    setMsg(null)
+    const { error } = await requestPasswordReset(email)
+    if (error) {
+      setMsg(error.message || 'Không gửi được email. Thử lại sau.')
+      return
+    }
+    setMsg(
+      'Nếu email có trong hệ thống, bạn sẽ nhận được hướng dẫn đặt lại mật khẩu. Kiểm tra cả thư mục spam.',
+    )
   }
 
   const handleRegister = async ({ email, password, name, phone }) => {
@@ -303,7 +391,18 @@ export default function AuthModal() {
             </button>
             {msg && <p className="mb-4 rounded-lg bg-amber-500/15 px-3 py-2 text-sm text-amber-800 dark:text-amber-200">{msg}</p>}
             {authView === 'login' ? (
-              <LoginForm titleId={titleId} onSwitchToRegister={openRegister} onSuccess={handleLogin} />
+              <LoginForm
+                titleId={titleId}
+                onSwitchToRegister={openRegister}
+                onForgotPassword={openForgotPassword}
+                onSuccess={handleLogin}
+              />
+            ) : authView === 'forgot' ? (
+              <ForgotPasswordForm
+                titleId={titleId}
+                onBackToLogin={openLogin}
+                onSubmitEmail={handleForgotPassword}
+              />
             ) : (
               <RegisterForm titleId={titleId} onSwitchToLogin={openLogin} onSuccess={handleRegister} />
             )}

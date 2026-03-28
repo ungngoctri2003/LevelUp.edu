@@ -42,11 +42,12 @@ export function AuthSessionProvider({ children }) {
       return
     }
     let cancelled = false
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
+    supabase.auth.getSession().then(async ({ data: { session: s } }) => {
       if (cancelled) return
       setSession(s)
-      if (s?.user?.id) loadProfile(s.user.id)
-      setLoading(false)
+      if (s?.user?.id) await loadProfile(s.user.id)
+      else setProfile(null)
+      if (!cancelled) setLoading(false)
     })
     const {
       data: { subscription },
@@ -144,6 +145,41 @@ export function AuthSessionProvider({ children }) {
     [profile],
   )
 
+  /** URL nhận link từ email (cần khai báo trong Supabase → Authentication → URL Configuration). */
+  const getPasswordResetRedirectUrl = useCallback(() => {
+    if (typeof window === 'undefined') return ''
+    const basePath = (import.meta.env.BASE_URL || '/').replace(/\/$/, '')
+    return `${window.location.origin}${basePath}/dat-lai-mat-khau`
+  }, [])
+
+  const requestPasswordReset = useCallback(
+    async (email) => {
+      setAuthError(null)
+      if (!supabase) {
+        const err = new Error('Chưa cấu hình Supabase')
+        setAuthError(err.message)
+        return { error: err }
+      }
+      const redirectTo = getPasswordResetRedirectUrl()
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo })
+      if (error) setAuthError(error.message)
+      return { error }
+    },
+    [getPasswordResetRedirectUrl],
+  )
+
+  const updatePassword = useCallback(async (password) => {
+    setAuthError(null)
+    if (!supabase) {
+      const err = new Error('Chưa cấu hình Supabase')
+      setAuthError(err.message)
+      return { error: err }
+    }
+    const { error } = await supabase.auth.updateUser({ password })
+    if (error) setAuthError(error.message)
+    return { error }
+  }, [])
+
   const value = useMemo(
     () => ({
       session,
@@ -157,8 +193,22 @@ export function AuthSessionProvider({ children }) {
       register,
       logout,
       updateProfile,
+      requestPasswordReset,
+      updatePassword,
     }),
-    [session, profile, user, loading, authError, login, register, logout, updateProfile],
+    [
+      session,
+      profile,
+      user,
+      loading,
+      authError,
+      login,
+      register,
+      logout,
+      updateProfile,
+      requestPasswordReset,
+      updatePassword,
+    ],
   )
 
   return <AuthSessionContext.Provider value={value}>{children}</AuthSessionContext.Provider>

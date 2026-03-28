@@ -7,6 +7,7 @@ export function AuthModalProvider({ children }) {
 
   const openLogin = useCallback(() => setAuthView('login'), [])
   const openRegister = useCallback(() => setAuthView('register'), [])
+  const openForgotPassword = useCallback(() => setAuthView('forgot'), [])
   const closeAuth = useCallback(() => setAuthView(null), [])
 
   const value = useMemo(
@@ -14,9 +15,10 @@ export function AuthModalProvider({ children }) {
       authView,
       openLogin,
       openRegister,
+      openForgotPassword,
       closeAuth,
     }),
-    [authView, openLogin, openRegister, closeAuth],
+    [authView, openLogin, openRegister, openForgotPassword, closeAuth],
   )
 
   return <AuthModalContext.Provider value={value}>{children}</AuthModalContext.Provider>
