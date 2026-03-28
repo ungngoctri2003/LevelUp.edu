@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import PageHeader from '../../components/dashboard/PageHeader'
 import Panel from '../../components/dashboard/Panel'
+import { inputAdmin, btnPrimaryAdmin } from '../../components/dashboard/dashboardStyles'
 import { useAdminState } from '../../hooks/useAdminState'
 
 const statusLabel = {
@@ -17,6 +18,14 @@ const emptyForm = {
   status: 'active',
 }
 
+const emptyCreateStudent = {
+  email: '',
+  password: '',
+  fullName: '',
+  phone: '',
+  grade: 'Lớp 10',
+}
+
 export default function AdminStudents() {
   const {
     state,
@@ -24,6 +33,7 @@ export default function AdminStudents() {
     error,
     refresh,
     attemptCounts,
+    createStudentUser,
     updateStudent,
     toggleStudentActive,
     removeStudent,
@@ -32,6 +42,7 @@ export default function AdminStudents() {
   const [statusFilter, setStatusFilter] = useState('all')
   const [modal, setModal] = useState(null)
   const [form, setForm] = useState(emptyForm)
+  const [createDraft, setCreateDraft] = useState(emptyCreateStudent)
 
   const openEdit = (r) => {
     setModal('edit')
@@ -91,6 +102,27 @@ export default function AdminStudents() {
     }
   }
 
+  const submitCreateStudent = async (e) => {
+    e.preventDefault()
+    if (!createDraft.email.trim() || !createDraft.password || !createDraft.fullName.trim()) {
+      alert('Vui lòng nhập email, mật khẩu và họ tên.')
+      return
+    }
+    try {
+      await createStudentUser({
+        email: createDraft.email.trim(),
+        password: createDraft.password,
+        fullName: createDraft.fullName.trim(),
+        phone: createDraft.phone.trim(),
+        grade: createDraft.grade.trim(),
+      })
+      setCreateDraft(emptyCreateStudent)
+      alert('Đã tạo tài khoản. Hãy gửi email và mật khẩu cho học viên qua kênh riêng tư.')
+    } catch (err) {
+      alert(err.message)
+    }
+  }
+
   const inputCls =
     'rounded-xl border border-white/15 bg-black/35 px-3 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-cyan-500/50 focus:outline-none focus:ring-2 focus:ring-cyan-500/15'
 
@@ -98,7 +130,7 @@ export default function AdminStudents() {
     <div className="space-y-8">
       <PageHeader
         title="Quản lý học viên"
-        description="Theo dõi học viên đăng ký trên website: chỉnh thông tin, trạng thái học tập và tài khoản."
+        description="Tạo tài khoản mới hoặc quản lý học viên đã có: thông tin, trạng thái học tập và tài khoản."
         badge="CRUD"
       />
 
@@ -123,6 +155,58 @@ export default function AdminStudents() {
           className={`${inputCls} w-full min-w-0 sm:max-w-md sm:flex-1`}
         />
       </div>
+
+      <Panel
+        variant="highlight"
+        title="Thêm học viên mới"
+        subtitle="Tạo tài khoản đăng nhập và gửi mật khẩu tạm cho học viên (tối thiểu 6 ký tự)."
+      >
+        <form onSubmit={submitCreateStudent} className="mt-4 space-y-4">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <input
+              type="email"
+              required
+              value={createDraft.email}
+              onChange={(e) => setCreateDraft((d) => ({ ...d, email: e.target.value }))}
+              placeholder="Email đăng nhập"
+              className={inputAdmin}
+              autoComplete="off"
+            />
+            <input
+              type="password"
+              required
+              minLength={6}
+              value={createDraft.password}
+              onChange={(e) => setCreateDraft((d) => ({ ...d, password: e.target.value }))}
+              placeholder="Mật khẩu tạm"
+              className={inputAdmin}
+              autoComplete="new-password"
+            />
+            <input
+              required
+              value={createDraft.fullName}
+              onChange={(e) => setCreateDraft((d) => ({ ...d, fullName: e.target.value }))}
+              placeholder="Họ và tên"
+              className={inputAdmin}
+            />
+            <input
+              value={createDraft.phone}
+              onChange={(e) => setCreateDraft((d) => ({ ...d, phone: e.target.value }))}
+              placeholder="Số điện thoại (tuỳ chọn)"
+              className={inputAdmin}
+            />
+            <input
+              value={createDraft.grade}
+              onChange={(e) => setCreateDraft((d) => ({ ...d, grade: e.target.value }))}
+              placeholder="Khối / lớp"
+              className={inputAdmin}
+            />
+          </div>
+          <button type="submit" className={btnPrimaryAdmin} disabled={loading}>
+            Tạo tài khoản học viên
+          </button>
+        </form>
+      </Panel>
 
       <Panel noDivider padding={false} className="overflow-hidden">
         <div className="overflow-x-auto">

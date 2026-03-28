@@ -32,6 +32,79 @@ router.get(
   jsonData(async (req) => adminApi.fetchAttemptCounts(req.sbAdmin)),
 )
 
+router.get('/classes', jsonData(async (req) => adminApi.fetchClassesAdmin(req.sbAdmin)))
+
+router.get(
+  '/classes/:id/enrollments',
+  jsonData(async (req) => adminApi.fetchClassEnrollmentsAdmin(req.sbAdmin, req.params.id)),
+)
+
+router.post('/classes', async (req, res) => {
+  try {
+    await adminApi.adminInsertClass(req.sbAdmin, req.body || {}, actor(req))
+    res.json({ ok: true })
+  } catch (e) {
+    res.status(400).json({ error: e?.message || 'Lỗi' })
+  }
+})
+
+router.patch(
+  '/classes/:id',
+  handle(async (req) => {
+    const id = Number(req.params.id)
+    if (!Number.isFinite(id)) throw new Error('ID lớp không hợp lệ')
+    await adminApi.adminUpdateClass(req.sbAdmin, id, req.body || {}, actor(req))
+  }),
+)
+
+router.delete(
+  '/classes/:id',
+  handle(async (req) => {
+    const id = Number(req.params.id)
+    if (!Number.isFinite(id)) throw new Error('ID lớp không hợp lệ')
+    await adminApi.adminDeleteClass(req.sbAdmin, id, actor(req))
+  }),
+)
+
+router.post('/classes/:id/enrollments', async (req, res) => {
+  try {
+    const id = Number(req.params.id)
+    if (!Number.isFinite(id)) throw new Error('ID lớp không hợp lệ')
+    const student_id = (req.body || {}).student_id
+    await adminApi.adminAddClassEnrollment(req.sbAdmin, id, student_id, actor(req))
+    res.json({ ok: true })
+  } catch (e) {
+    res.status(400).json({ error: e?.message || 'Lỗi' })
+  }
+})
+
+router.delete(
+  '/classes/:id/enrollments/:studentId',
+  handle(async (req) => {
+    const id = Number(req.params.id)
+    if (!Number.isFinite(id)) throw new Error('ID lớp không hợp lệ')
+    await adminApi.adminRemoveClassEnrollment(req.sbAdmin, id, req.params.studentId, actor(req))
+  }),
+)
+
+router.post('/users/student', async (req, res) => {
+  try {
+    const data = await adminApi.adminProvisionStudent(req.sbAdmin, req.body || {}, actor(req))
+    res.json({ ok: true, data })
+  } catch (e) {
+    res.status(400).json({ error: e?.message || 'Lỗi' })
+  }
+})
+
+router.post('/users/teacher', async (req, res) => {
+  try {
+    const data = await adminApi.adminProvisionTeacher(req.sbAdmin, req.body || {}, actor(req))
+    res.json({ ok: true, data })
+  } catch (e) {
+    res.status(400).json({ error: e?.message || 'Lỗi' })
+  }
+})
+
 function actor(req) {
   return { id: req.authUser.id, email: req.authUser.email }
 }

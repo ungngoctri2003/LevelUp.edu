@@ -138,12 +138,20 @@ export async function fetchStudentsAdmin(sb) {
 }
 
 export async function fetchTeachersAdmin(sb) {
-  const { data, error } = await sb
-    .from('profiles')
-    .select('*, teacher_profiles(*)')
-    .eq('role', 'teacher')
-    .order('created_at', { ascending: false })
+  const [{ data, error }, { data: classRows, error: cErr }] = await Promise.all([
+    sb
+      .from('profiles')
+      .select('*, teacher_profiles(*)')
+      .eq('role', 'teacher')
+      .order('created_at', { ascending: false }),
+    sb.from('classes').select('teacher_id'),
+  ])
   if (error) throw new Error(error.message)
+  if (cErr) throw new Error(cErr.message)
+  const countByTeacher = {}
+  for (const r of classRows || []) {
+    countByTeacher[r.teacher_id] = (countByTeacher[r.teacher_id] || 0) + 1
+  }
   return (data || []).map((p) => {
     const tp = p.teacher_profiles
     return {
@@ -151,11 +159,189 @@ export async function fetchTeachersAdmin(sb) {
       name: p.full_name,
       email: p.email,
       subjects: tp?.subjects_summary || '—',
-      classes: tp?.class_count_cache ?? 0,
+      classes: countByTeacher[p.id] ?? 0,
       status: tp?.approval_status || 'pending',
       account_status: p.account_status,
     }
   })
+}
+
+/** Đồng bộ teacher_profiles.class_count_cache theo số lớp thực tế. */
+export async function recomputeTeacherClassCount(sb, teacherUserId) {
+  const { count, error } = await sb
+    .from('classes')
+    .select('*', { count: 'exact', head: true })
+    .eq('teacher_id', teacherUserId)
+  if (error) throw new Error(error.message)
+  const n = count ?? 0
+  const { error: u } = await sb.from('teacher_profiles').update({ class_count_cache: n }).eq('user_id', teacherUserId)
+  if (u) throw new Error(u.message)
+}
+
+async function recomputeTeacherClassCounts(sb, teacherUserIds) {
+  const ids = [...new Set((teacherUserIds || []).filter(Boolean))]
+  for (const id of ids) {
+    await recomputeTeacherClassCount(sb, id)
+  }
+}
+
+/** Danh sách lớp học (bảng classes) — dùng trong admin. */
+export async function fetchClassesAdmin(sb) {
+  const { data: rows, error } = await sb.from('classes').select('*').order('id')
+  if (error) throw new Error(error.message)
+  const classes = rows || []
+  const teacherIds = [...new Set(classes.map((c) => c.teacher_id))]
+  let nameById = {}
+  if (teacherIds.length) {
+    const { data: profs, error: pErr } = await sb.from('profiles').select('id, full_name').in('id', teacherIds)
+    if (pErr) throw new Error(pErr.message)
+    nameById = Object.fromEntries((profs || []).map((p) => [p.id, p.full_name]))
+  }
+  const cids = classes.map((c) => c.id)
+  const enrollCount = {}
+  if (cids.length) {
+    const { data: ens, error: eErr } = await sb.from('class_enrollments').select('class_id').in('class_id', cids)
+    if (eErr) throw new Error(eErr.message)
+    for (const e of ens || []) {
+      enrollCount[e.class_id] = (enrollCount[e.class_id] || 0) + 1
+    }
+  }
+  return classes.map((c) => ({
+    id: c.id,
+    code: c.code,
+    name: c.name,
+    subject: c.subject,
+    grade_label: c.grade_label,
+    schedule_summary: c.schedule_summary || '',
+    teacher_id: c.teacher_id,
+    teacher_name: nameById[c.teacher_id] || '—',
+    student_count: enrollCount[c.id] || 0,
+  }))
+}
+
+export async function fetchClassEnrollmentsAdmin(sb, classId) {
+  const id = Number(classId)
+  if (!Number.isFinite(id)) throw new Error('ID lớp không hợp lệ')
+  const { data: rows, error } = await sb
+    .from('class_enrollments')
+    .select('student_id, enrolled_at, avg_score, attendance_pct')
+    .eq('class_id', id)
+    .order('enrolled_at', { ascending: true })
+  if (error) throw new Error(error.message)
+  const ids = [...new Set((rows || []).map((r) => r.student_id))]
+  const nameById = {}
+  const emailById = {}
+  if (ids.length) {
+    const { data: profs, error: pe } = await sb.from('profiles').select('id, full_name, email').in('id', ids)
+    if (pe) throw new Error(pe.message)
+    for (const p of profs || []) {
+      nameById[p.id] = p.full_name
+      emailById[p.id] = p.email
+    }
+  }
+  return (rows || []).map((e) => ({
+    student_id: e.student_id,
+    name: nameById[e.student_id] || '—',
+    email: emailById[e.student_id] || '—',
+    enrolled_at: e.enrolled_at,
+    avg_score: e.avg_score != null ? Number(e.avg_score) : null,
+    attendance_pct: e.attendance_pct != null ? Number(e.attendance_pct) : null,
+  }))
+}
+
+export async function adminInsertClass(
+  sb,
+  { teacher_id, name, subject, grade_label, schedule_summary, code },
+  user,
+) {
+  const tid = String(teacher_id || '').trim()
+  const nm = String(name || '').trim()
+  if (!tid || !nm) throw new Error('Thiếu giáo viên phụ trách hoặc tên lớp')
+  const { data: prof, error: pe } = await sb.from('profiles').select('id, role').eq('id', tid).maybeSingle()
+  if (pe) throw new Error(pe.message)
+  if (!prof || prof.role !== 'teacher') throw new Error('profile_id không phải giáo viên')
+  const row = {
+    teacher_id: tid,
+    name: nm,
+    subject: String(subject || '').trim() || '—',
+    grade_label: String(grade_label || '').trim() || '—',
+    schedule_summary: schedule_summary != null && String(schedule_summary).trim() ? String(schedule_summary).trim() : null,
+    code: code != null && String(code).trim() ? String(code).trim() : null,
+  }
+  const { error } = await sb.from('classes').insert(row)
+  if (error) throw new Error(error.message)
+  await recomputeTeacherClassCount(sb, tid)
+  await logAdminActivity(sb, `Tạo lớp: ${nm} (GV ${tid.slice(0, 8)}…)`, 'admin', user?.email, user?.id)
+}
+
+export async function adminUpdateClass(sb, classId, patch, user) {
+  const id = Number(classId)
+  if (!Number.isFinite(id)) throw new Error('ID lớp không hợp lệ')
+  const { data: cur, error: gErr } = await sb.from('classes').select('teacher_id, name').eq('id', id).maybeSingle()
+  if (gErr) throw new Error(gErr.message)
+  if (!cur) throw new Error('Không thấy lớp')
+  const body = {}
+  if (patch.name != null) body.name = String(patch.name).trim()
+  if (patch.subject != null) body.subject = String(patch.subject).trim() || '—'
+  if (patch.grade_label != null) body.grade_label = String(patch.grade_label).trim() || '—'
+  if (patch.schedule_summary !== undefined) {
+    body.schedule_summary =
+      patch.schedule_summary != null && String(patch.schedule_summary).trim()
+        ? String(patch.schedule_summary).trim()
+        : null
+  }
+  if (patch.code !== undefined) {
+    body.code = patch.code != null && String(patch.code).trim() ? String(patch.code).trim() : null
+  }
+  let newTeacherId = null
+  if (patch.teacher_id != null) {
+    const tid = String(patch.teacher_id).trim()
+    const { data: prof, error: pe } = await sb.from('profiles').select('id, role').eq('id', tid).maybeSingle()
+    if (pe) throw new Error(pe.message)
+    if (!prof || prof.role !== 'teacher') throw new Error('Giáo viên phụ trách không hợp lệ')
+    body.teacher_id = tid
+    newTeacherId = tid
+  }
+  if (Object.keys(body).length === 0) throw new Error('Không có trường cập nhật')
+  const { error } = await sb.from('classes').update(body).eq('id', id)
+  if (error) throw new Error(error.message)
+  const toRecompute = [cur.teacher_id]
+  if (newTeacherId && newTeacherId !== cur.teacher_id) toRecompute.push(newTeacherId)
+  await recomputeTeacherClassCounts(sb, toRecompute)
+  await logAdminActivity(sb, `Cập nhật lớp #${id} (${cur.name})`, 'admin', user?.email, user?.id)
+}
+
+export async function adminDeleteClass(sb, classId, user) {
+  const id = Number(classId)
+  if (!Number.isFinite(id)) throw new Error('ID lớp không hợp lệ')
+  const { data: cur, error: gErr } = await sb.from('classes').select('teacher_id, name').eq('id', id).maybeSingle()
+  if (gErr) throw new Error(gErr.message)
+  if (!cur) throw new Error('Không thấy lớp')
+  const { error } = await sb.from('classes').delete().eq('id', id)
+  if (error) throw new Error(error.message)
+  await recomputeTeacherClassCount(sb, cur.teacher_id)
+  await logAdminActivity(sb, `Xóa lớp: ${cur.name} (#${id})`, 'admin', user?.email, user?.id)
+}
+
+export async function adminAddClassEnrollment(sb, classId, studentId, user) {
+  const cid = Number(classId)
+  const sid = String(studentId || '').trim()
+  if (!Number.isFinite(cid) || !sid) throw new Error('Thiếu lớp hoặc học viên')
+  const { data: st, error: se } = await sb.from('profiles').select('id, role').eq('id', sid).maybeSingle()
+  if (se) throw new Error(se.message)
+  if (!st || st.role !== 'student') throw new Error('Chỉ thêm học viên (role student)')
+  const { error } = await sb.from('class_enrollments').insert({ class_id: cid, student_id: sid })
+  if (error) throw new Error(error.message)
+  await logAdminActivity(sb, `Thêm học viên vào lớp #${cid}`, 'user', user?.email, user?.id)
+}
+
+export async function adminRemoveClassEnrollment(sb, classId, studentId, user) {
+  const cid = Number(classId)
+  const sid = String(studentId || '').trim()
+  if (!Number.isFinite(cid) || !sid) throw new Error('Thiếu lớp hoặc học viên')
+  const { error } = await sb.from('class_enrollments').delete().eq('class_id', cid).eq('student_id', sid)
+  if (error) throw new Error(error.message)
+  await logAdminActivity(sb, `Gỡ học viên khỏi lớp #${cid}`, 'user', user?.email, user?.id)
 }
 
 export async function fetchAdminSettings(sb) {
@@ -351,7 +537,7 @@ export async function adminSetStudentAccountStatus(sb, profileId, account_status
   await logAdminActivity(sb, `Trạng thái tài khoản học viên: ${account_status}`, 'user', user?.email, user?.id)
 }
 
-export async function adminUpdateTeacher(sb, profileId, { name, email, subjects, classes, status }, user) {
+export async function adminUpdateTeacher(sb, profileId, { name, email, subjects, status }, user) {
   const { error: e1 } = await sb
     .from('profiles')
     .update({ full_name: name.trim(), email: email.trim() })
@@ -361,11 +547,11 @@ export async function adminUpdateTeacher(sb, profileId, { name, email, subjects,
     .from('teacher_profiles')
     .update({
       subjects_summary: subjects?.trim() || null,
-      class_count_cache: Math.max(0, Number(classes) || 0),
       approval_status: status || 'pending',
     })
     .eq('user_id', profileId)
   if (e2) throw new Error(e2.message)
+  await recomputeTeacherClassCount(sb, profileId)
   await logAdminActivity(sb, `Cập nhật giáo viên ${email}`, 'user', user?.email, user?.id)
 }
 
@@ -373,4 +559,78 @@ export async function adminSetTeacherApproval(sb, profileId, approval_status, us
   const { error } = await sb.from('teacher_profiles').update({ approval_status }).eq('user_id', profileId)
   if (error) throw new Error(error.message)
   await logAdminActivity(sb, `Duyệt / khóa giáo viên (${approval_status})`, 'user', user?.email, user?.id)
+}
+
+/**
+ * Tạo user Auth + profile học viên (trigger mặc định). Cần client service role (auth.admin).
+ */
+export async function adminProvisionStudent(
+  sb,
+  { email, password, fullName, phone, grade },
+  user,
+) {
+  const em = String(email || '').trim()
+  const pw = String(password || '')
+  const name = String(fullName || '').trim()
+  if (!em || !pw || !name) throw new Error('Email, mật khẩu và họ tên là bắt buộc')
+  if (pw.length < 6) throw new Error('Mật khẩu tối thiểu 6 ký tự')
+  const { data, error } = await sb.auth.admin.createUser({
+    email: em,
+    password: pw,
+    email_confirm: true,
+    user_metadata: {
+      full_name: name,
+      ...(phone != null && String(phone).trim() ? { phone: String(phone).trim() } : {}),
+    },
+  })
+  if (error) throw new Error(error.message)
+  const uid = data.user?.id
+  if (!uid) throw new Error('Không tạo được tài khoản')
+  const { error: e2 } = await sb
+    .from('student_profiles')
+    .update({
+      grade_label: grade != null && String(grade).trim() ? String(grade).trim() : null,
+      source: 'manual',
+    })
+    .eq('user_id', uid)
+  if (e2) throw new Error(e2.message)
+  const ph = phone != null && String(phone).trim() ? String(phone).trim() : null
+  if (ph) {
+    const { error: e3 } = await sb.from('profiles').update({ phone: ph }).eq('id', uid)
+    if (e3) throw new Error(e3.message)
+  }
+  await logAdminActivity(sb, `Tạo tài khoản học viên: ${em}`, 'user', user?.email, user?.id)
+  return { id: uid }
+}
+
+/**
+ * Tạo user Auth rồi chuyển sang giáo viên (xóa student_profiles, thêm teacher_profiles).
+ */
+export async function adminProvisionTeacher(sb, { email, password, fullName, subjects }, user) {
+  const em = String(email || '').trim()
+  const pw = String(password || '')
+  const name = String(fullName || '').trim()
+  if (!em || !pw || !name) throw new Error('Email, mật khẩu và họ tên là bắt buộc')
+  if (pw.length < 6) throw new Error('Mật khẩu tối thiểu 6 ký tự')
+  const { data, error } = await sb.auth.admin.createUser({
+    email: em,
+    password: pw,
+    email_confirm: true,
+    user_metadata: { full_name: name },
+  })
+  if (error) throw new Error(error.message)
+  const uid = data.user?.id
+  if (!uid) throw new Error('Không tạo được tài khoản')
+  const { error: u1 } = await sb.from('profiles').update({ role: 'teacher' }).eq('id', uid)
+  if (u1) throw new Error(u1.message)
+  const { error: d1 } = await sb.from('student_profiles').delete().eq('user_id', uid)
+  if (d1) throw new Error(d1.message)
+  const { error: i1 } = await sb.from('teacher_profiles').insert({
+    user_id: uid,
+    subjects_summary: subjects != null && String(subjects).trim() ? String(subjects).trim() : null,
+    approval_status: 'pending',
+  })
+  if (i1) throw new Error(i1.message)
+  await logAdminActivity(sb, `Tạo tài khoản giáo viên: ${em}`, 'user', user?.email, user?.id)
+  return { id: uid }
 }

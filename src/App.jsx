@@ -12,6 +12,7 @@ import AdminLayout from './pages/admin/AdminLayout'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminStudents from './pages/admin/AdminStudents'
 import AdminTeachers from './pages/admin/AdminTeachers'
+import AdminTeacherClasses from './pages/admin/AdminTeacherClasses'
 import AdminCourses from './pages/admin/AdminCourses'
 import AdminNews from './pages/admin/AdminNews'
 import AdminExams from './pages/admin/AdminExams'
@@ -56,6 +57,7 @@ function App() {
           <Route index element={<AdminDashboard />} />
           <Route path="hoc-vien" element={<AdminStudents />} />
           <Route path="giao-vien" element={<AdminTeachers />} />
+          <Route path="lop-hoc" element={<AdminTeacherClasses />} />
           <Route path="khoa-hoc" element={<AdminCourses />} />
           <Route path="tin-tuc" element={<AdminNews />} />
           <Route path="bai-kiem-tra" element={<AdminExams />} />
