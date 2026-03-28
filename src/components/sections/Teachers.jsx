@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { Reveal, RevealStagger, RevealItem } from '../motion/Reveal'
-import { teachers } from '../../data'
+import { usePublicContent } from '../../hooks/usePublicContent'
 
 function AvatarPlaceholder({ initial, color }) {
   const bgClass = color === 'purple' ? 'bg-fuchsia-500' : 'bg-cyan-500'
@@ -29,6 +29,7 @@ function TeacherPortrait({ teacher }) {
 }
 
 export default function Teachers() {
+  const { teachers } = usePublicContent()
   return (
     <section id="teachers" className="py-24 dark:bg-slate-950 sm:py-32">
       <div className="mx-auto max-w-7xl px-6">

@@ -1,8 +1,14 @@
 import { motion } from 'framer-motion'
 import { Reveal } from '../motion/Reveal'
-import { videoPreview } from '../../data'
+import { usePublicContent } from '../../hooks/usePublicContent'
 
 export default function VideoPreview() {
+  const { videoPreview } = usePublicContent()
+  const vp = videoPreview && typeof videoPreview === 'object' ? videoPreview : {}
+  const features = Array.isArray(vp.features) ? vp.features : []
+  const title = vp.title || 'Video bài giảng minh họa'
+  const description =
+    vp.description || 'Nội dung video và mô tả được quản trị viên cấu hình trong hệ thống.'
   return (
     <section id="video-preview" className="bg-gray-50 py-24 dark:bg-slate-900 sm:py-32">
       <div className="mx-auto max-w-7xl px-6">
@@ -36,13 +42,13 @@ export default function VideoPreview() {
           <Reveal delay={0.2}>
             <div>
               <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl lg:text-5xl">
-                {videoPreview.title}
+                {title}
               </h2>
-              <p className="mt-6 text-lg leading-relaxed text-gray-600 dark:text-slate-400">{videoPreview.description}</p>
+              <p className="mt-6 text-lg leading-relaxed text-gray-600 dark:text-slate-400">{description}</p>
               <ul className="mt-8 space-y-4">
-                {videoPreview.features.map((feature, i) => (
+                {features.map((feature, i) => (
                   <motion.li
-                    key={feature}
+                    key={i}
                     initial={{ opacity: 0, x: -16 }}
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }}

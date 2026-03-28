@@ -29,6 +29,7 @@ import StudentDashboard from './pages/student/StudentDashboard'
 import StudentCourses from './pages/student/StudentCourses'
 import StudentLessons from './pages/student/StudentLessons'
 import StudentTests from './pages/student/StudentTests'
+import StudentAssignments from './pages/student/StudentAssignments'
 import StudentProfile from './pages/student/StudentProfile'
 import { DialogflowMessenger } from './components/DialogflowMessenger'
 
@@ -73,6 +74,7 @@ function App() {
           <Route index element={<StudentDashboard />} />
           <Route path="khoa-hoc" element={<StudentCourses />} />
           <Route path="bai-giang" element={<StudentLessons />} />
+          <Route path="bai-tap" element={<StudentAssignments />} />
           <Route path="bai-kiem-tra" element={<StudentTests />} />
           <Route path="ho-so" element={<StudentProfile />} />
         </Route>

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Reveal } from '../motion/Reveal'
 import { usePublicContent } from '../../hooks/usePublicContent'
+import { postMarketingLead } from '../../services/publicApi.js'
 
 const initialForm = {
   fullName: '',
@@ -15,6 +16,7 @@ export default function RegistrationForm() {
   const [form, setForm] = useState(initialForm)
   const [errors, setErrors] = useState({})
   const [submitted, setSubmitted] = useState(false)
+  const [submitError, setSubmitError] = useState('')
 
   const validate = () => {
     const newErrors = {}
@@ -38,14 +40,23 @@ export default function RegistrationForm() {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (!validate()) return
-
-    console.log('Registration form data:', form)
-    setSubmitted(true)
-    setForm(initialForm)
-    setErrors({})
+    setSubmitError('')
+    try {
+      await postMarketingLead({
+        full_name: form.fullName.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim(),
+        course_interest: form.courseInterest || undefined,
+      })
+      setSubmitted(true)
+      setForm(initialForm)
+      setErrors({})
+    } catch (err) {
+      setSubmitError(err.message || 'Gửi thất bại')
+    }
   }
 
   const handleChange = (e) => {
@@ -129,6 +140,9 @@ export default function RegistrationForm() {
                 transition={{ duration: 0.55, delay: 0.1 }}
                 className="mt-12 rounded-2xl border border-slate-200 bg-white p-10 shadow-xl shadow-gray-200/50 dark:border-slate-700 dark:bg-slate-800 dark:shadow-none"
               >
+                {submitError && (
+                  <p className="mb-4 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-700 dark:text-red-300">{submitError}</p>
+                )}
                 <div className="space-y-6">
                   {['fullName', 'email', 'phone'].map((field) => (
                     <motion.div

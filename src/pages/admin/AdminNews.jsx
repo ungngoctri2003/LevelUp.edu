@@ -10,36 +10,25 @@ import {
   tableHeadAdmin,
 } from '../../components/dashboard/dashboardStyles'
 import { useAdminState } from '../../hooks/useAdminState'
-import { appendAdminActivity } from '../../utils/adminStorage'
 
 const emptyDraft = { title: '', category: 'Thông báo', excerpt: '' }
 
 export default function AdminNews() {
-  const { state, update } = useAdminState()
+  const { state, loading, error, addNews, updateNews, deleteNews } = useAdminState()
   const items = state.news
   const [draft, setDraft] = useState(emptyDraft)
   const [editModal, setEditModal] = useState(null)
   const [editForm, setEditForm] = useState(emptyDraft)
 
-  const add = (e) => {
+  const add = async (e) => {
     e.preventDefault()
     if (!draft.title.trim()) return
-    const nextId = Math.max(0, ...items.map((x) => Number(x.id) || 0)) + 1
-    update((prev) => ({
-      ...prev,
-      news: [
-        {
-          id: nextId,
-          title: draft.title.trim(),
-          date: new Date().toLocaleDateString('vi-VN'),
-          excerpt: draft.excerpt || 'Nội dung sẽ được biên tập sau.',
-          category: draft.category,
-        },
-        ...prev.news,
-      ],
-    }))
-    appendAdminActivity(`Đăng tin mới: ${draft.title.trim()}`)
-    setDraft(emptyDraft)
+    try {
+      await addNews(draft)
+      setDraft(emptyDraft)
+    } catch (err) {
+      alert(err.message)
+    }
   }
 
   const openEdit = (n) => {
@@ -47,34 +36,30 @@ export default function AdminNews() {
     setEditForm({ title: n.title, category: n.category, excerpt: n.excerpt })
   }
 
-  const saveEdit = (e) => {
+  const saveEdit = async (e) => {
     e.preventDefault()
     if (!editForm.title.trim() || editModal == null) return
-    update((prev) => ({
-      ...prev,
-      news: prev.news.map((x) =>
-        x.id === editModal
-          ? {
-              ...x,
-              title: editForm.title.trim(),
-              category: editForm.category,
-              excerpt: editForm.excerpt || x.excerpt,
-            }
-          : x,
-      ),
-    }))
-    appendAdminActivity(`Sửa tin: ${editForm.title.trim()}`)
-    setEditModal(null)
+    try {
+      await updateNews(editModal, {
+        title: editForm.title.trim(),
+        category: editForm.category,
+        excerpt: editForm.excerpt || '',
+        body: editForm.excerpt || '',
+      })
+      setEditModal(null)
+    } catch (err) {
+      alert(err.message)
+    }
   }
 
-  const remove = (id) => {
+  const remove = async (id) => {
     if (!confirm('Xóa tin này?')) return
     const row = items.find((x) => x.id === id)
-    update((prev) => ({
-      ...prev,
-      news: prev.news.filter((x) => x.id !== id),
-    }))
-    if (row) appendAdminActivity(`Xóa tin: ${row.title}`)
+    try {
+      await deleteNews(id, row?.title || '')
+    } catch (err) {
+      alert(err.message)
+    }
   }
 
   const field = `${inputAdmin} mt-1 w-full`
@@ -85,7 +70,7 @@ export default function AdminNews() {
         title="Tin tức & thông báo"
         description={
           <>
-            CRUD đầy đủ — hiển thị tại{' '}
+            Đồng bộ bảng news_posts — hiển thị tại{' '}
             <Link className="font-medium text-cyan-400 hover:text-cyan-300" to="/tin-tuc">
               /tin-tuc
             </Link>
@@ -94,6 +79,9 @@ export default function AdminNews() {
         }
         badge="CMS"
       />
+
+      {error && <p className="text-sm text-red-400">{error}</p>}
+      {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
 
       <Panel title="Đăng tin mới" subtitle="Tin sẽ xuất hiện trên trang Tin tức công khai.">
         <form onSubmit={add} className="space-y-4">
@@ -122,7 +110,7 @@ export default function AdminNews() {
             rows={3}
             className={`${inputAdmin} w-full`}
           />
-          <button type="submit" className={btnPrimaryAdmin}>
+          <button type="submit" className={btnPrimaryAdmin} disabled={loading}>
             Thêm tin
           </button>
         </form>
@@ -130,35 +118,35 @@ export default function AdminNews() {
 
       <Panel noDivider padding={false} className="overflow-hidden">
         <div className="overflow-x-auto">
-        <table className="w-full min-w-[640px] text-left text-sm">
-          <thead className={tableHeadAdmin}>
-            <tr>
-              <th className="px-4 py-3">ID</th>
-              <th className="px-4 py-3">Tiêu đề</th>
-              <th className="px-4 py-3">Danh mục</th>
-              <th className="px-4 py-3">Ngày</th>
-              <th className="px-4 py-3">Thao tác</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-white/5 text-slate-200">
-            {items.map((n) => (
-              <tr key={n.id} className="hover:bg-white/5">
-                <td className="px-4 py-3 font-mono text-xs">{n.id}</td>
-                <td className="px-4 py-3 max-w-xs truncate">{n.title}</td>
-                <td className="px-4 py-3 text-slate-400">{n.category}</td>
-                <td className="px-4 py-3 text-slate-400">{n.date}</td>
-                <td className="px-4 py-3 space-x-2">
-                  <button type="button" onClick={() => openEdit(n)} className="text-xs text-cyan-400 hover:text-cyan-300">
-                    Sửa
-                  </button>
-                  <button type="button" onClick={() => remove(n.id)} className="text-xs text-red-400 hover:text-red-300">
-                    Xóa
-                  </button>
-                </td>
+          <table className="w-full min-w-[640px] text-left text-sm">
+            <thead className={tableHeadAdmin}>
+              <tr>
+                <th className="px-4 py-3">ID</th>
+                <th className="px-4 py-3">Tiêu đề</th>
+                <th className="px-4 py-3">Danh mục</th>
+                <th className="px-4 py-3">Ngày</th>
+                <th className="px-4 py-3">Thao tác</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-white/5 text-slate-200">
+              {items.map((n) => (
+                <tr key={n.id} className="hover:bg-white/5">
+                  <td className="px-4 py-3 font-mono text-xs">{n.id}</td>
+                  <td className="max-w-xs truncate px-4 py-3">{n.title}</td>
+                  <td className="px-4 py-3 text-slate-400">{n.category}</td>
+                  <td className="px-4 py-3 text-slate-400">{n.date}</td>
+                  <td className="space-x-2 px-4 py-3">
+                    <button type="button" onClick={() => openEdit(n)} className="text-xs text-cyan-400 hover:text-cyan-300">
+                      Sửa
+                    </button>
+                    <button type="button" onClick={() => remove(n.id)} className="text-xs text-red-400 hover:text-red-300">
+                      Xóa
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </Panel>
 

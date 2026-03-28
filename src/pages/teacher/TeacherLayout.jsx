@@ -1,5 +1,6 @@
 import DashboardShell from '../../components/dashboard/DashboardShell'
 import ProtectedRoute from '../../components/ProtectedRoute'
+import { TeacherDataProvider } from '../../context/TeacherDataContext.jsx'
 
 export const teacherNavItems = [
   { to: '/giao-vien', label: 'Tổng quan', end: true, icon: 'dashboard' },
@@ -14,7 +15,9 @@ export const teacherNavItems = [
 export default function TeacherLayout() {
   return (
     <ProtectedRoute allowedRoles={['teacher']}>
-      <DashboardShell navItems={teacherNavItems} title="Khu vực giáo viên" accent="teacher" />
+      <TeacherDataProvider>
+        <DashboardShell navItems={teacherNavItems} title="Khu vực giáo viên" accent="teacher" />
+      </TeacherDataProvider>
     </ProtectedRoute>
   )
 }

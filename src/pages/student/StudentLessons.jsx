@@ -1,9 +1,13 @@
 import { Link } from 'react-router-dom'
 import PageHeader from '../../components/dashboard/PageHeader'
 import Panel from '../../components/dashboard/Panel'
-import { lessonsBySubject } from '../../data'
+import { usePublicContent } from '../../hooks/usePublicContent'
+import { buildLessonsBySubject } from '../../services/publicApi.js'
+import { useMemo } from 'react'
 
 export default function StudentLessons() {
+  const { subjects, lessons, loading } = usePublicContent()
+  const lessonsBySubject = useMemo(() => buildLessonsBySubject(subjects, lessons), [subjects, lessons])
   const first = lessonsBySubject[0]
   const sample = first?.lessons?.slice(0, 4) || []
 
@@ -11,10 +15,12 @@ export default function StudentLessons() {
     <div className="space-y-8">
       <PageHeader
         title="Bài giảng đang học"
-        description="Gợi ý từ khóa học bạn đã đăng ký — xem chi tiết hoặc mở thư viện bài giảng công khai."
+        description="Gợi ý từ API công khai — liên kết tới chi tiết bài giảng."
       />
 
-      <Panel title={`Tiếp tục — ${first?.name || 'Bài giảng'}`} subtitle="Các bài gần đây — chọn Xem để mở chi tiết.">
+      {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
+
+      <Panel title={`Tiếp tục — ${first?.name || 'Bài giảng'}`} subtitle="Các bài đầu tiên theo môn đầu danh sách.">
         <ul className="space-y-2">
           {sample.map((l) => (
             <li

@@ -1,18 +1,65 @@
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams, Navigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { getLessonDetail } from '../data/lessonDetails'
 import { Reveal } from '../components/motion/Reveal'
+import { usePublicContent } from '../hooks/usePublicContent'
+import { buildLessonsBySubject, fetchLessonDetail, findLessonContextFromGroups } from '../services/publicApi.js'
 
 export default function LessonDetailPage() {
   const { lessonId } = useParams()
-  const detail = getLessonDetail(lessonId ?? '')
+  const { subjects, lessons, loading: catLoading } = usePublicContent()
+  const groups = useMemo(() => buildLessonsBySubject(subjects, lessons), [subjects, lessons])
+  const ctx = findLessonContextFromGroups(groups, lessonId ?? '')
 
-  if (!detail) {
+  const [row, setRow] = useState(null)
+  const [loadErr, setLoadErr] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      if (!lessonId) return
+      setLoadErr(null)
+      const d = await fetchLessonDetail(lessonId)
+      if (cancelled) return
+      if (!d) {
+        setLoadErr('no-detail')
+        setRow(null)
+        return
+      }
+      setRow(d)
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [lessonId])
+
+  if (!ctx && !catLoading && groups.length) {
     return <Navigate to="/bai-giang" replace />
   }
 
-  const { subjectName, icon, lesson, summary, outline, sections, resources, teacherName, practiceHints } =
-    detail
+  if (catLoading && !ctx) {
+    return <div className="py-24 text-center text-slate-500">Đang tải…</div>
+  }
+
+  if (loadErr === 'no-detail' && ctx) {
+    return <Navigate to="/bai-giang" replace />
+  }
+
+  if (!ctx || !row) {
+    return (
+      <div className="py-24 text-center text-slate-500">
+        {loadErr ? 'Không tải được chi tiết bài giảng.' : 'Đang tải chi tiết…'}
+      </div>
+    )
+  }
+
+  const { subject, lesson } = ctx
+  const summary = row.summary || ''
+  const teacherName = row.teacher_name || '—'
+  const outline = Array.isArray(row.outline) ? row.outline : []
+  const sections = Array.isArray(row.sections) ? row.sections : []
+  const resources = Array.isArray(row.resources) ? row.resources : []
+  const practiceHints = Array.isArray(row.practice_hints) ? row.practice_hints : []
 
   return (
     <div className="py-12 sm:py-20">
@@ -32,7 +79,7 @@ export default function LessonDetailPage() {
         <Reveal>
           <div className="flex flex-wrap items-start gap-3">
             <span className="inline-flex items-center rounded-full bg-cyan-500/15 px-3 py-1 text-sm font-medium text-cyan-700 dark:text-cyan-300">
-              {icon} {subjectName}
+              {subject.icon} {subject.name}
             </span>
             <span className="inline-flex rounded-full border border-gray-200 bg-white px-3 py-1 text-sm text-gray-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300">
               {lesson.level}
@@ -41,9 +88,7 @@ export default function LessonDetailPage() {
               ⏱ {lesson.duration}
             </span>
           </div>
-          <h1 className="mt-4 text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-            {lesson.title}
-          </h1>
+          <h1 className="mt-4 text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">{lesson.title}</h1>
           <p className="mt-2 text-sm text-gray-500 dark:text-slate-400">
             Giảng viên: <span className="font-medium text-gray-700 dark:text-slate-300">{teacherName}</span>
           </p>
@@ -55,7 +100,7 @@ export default function LessonDetailPage() {
           transition={{ duration: 0.4 }}
           className="mt-10 overflow-hidden rounded-2xl border border-gray-200 bg-gradient-to-br from-slate-900 via-slate-800 to-cyan-900 shadow-xl dark:border-slate-600"
         >
-          <div className="relative aspect-video flex items-center justify-center">
+          <div className="relative flex aspect-video items-center justify-center">
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-cyan-500/20 via-transparent to-fuchsia-500/10" />
             <button
               type="button"
@@ -66,9 +111,6 @@ export default function LessonDetailPage() {
                 <path d="M8 5v14l11-7z" />
               </svg>
             </button>
-            <p className="absolute bottom-4 left-0 right-0 text-center text-xs text-white/70">
-              Nhấn để xem video bài giảng. Phần dưới là tóm tắt, dàn ý và tài liệu kèm theo.
-            </p>
           </div>
         </motion.div>
 
@@ -82,7 +124,7 @@ export default function LessonDetailPage() {
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Dàn ý bài giảng</h2>
             <ol className="mt-4 list-decimal space-y-2 pl-5 text-gray-600 dark:text-slate-300">
               {outline.map((item, i) => (
-                <li key={i}>{item}</li>
+                <li key={i}>{typeof item === 'string' ? item : JSON.stringify(item)}</li>
               ))}
             </ol>
           </section>
@@ -93,9 +135,7 @@ export default function LessonDetailPage() {
               className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800/80"
             >
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{sec.heading}</h2>
-              <p className="mt-3 whitespace-pre-line leading-relaxed text-gray-600 dark:text-slate-300">
-                {sec.body}
-              </p>
+              <p className="mt-3 whitespace-pre-line leading-relaxed text-gray-600 dark:text-slate-300">{sec.body}</p>
             </section>
           ))}
 
@@ -103,7 +143,7 @@ export default function LessonDetailPage() {
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Bài tập gợi ý</h2>
             <ul className="mt-3 list-disc space-y-2 pl-5 text-gray-700 dark:text-slate-300">
               {practiceHints.map((h, i) => (
-                <li key={i}>{h}</li>
+                <li key={i}>{typeof h === 'string' ? h : JSON.stringify(h)}</li>
               ))}
             </ul>
           </section>
@@ -120,9 +160,6 @@ export default function LessonDetailPage() {
                 </li>
               ))}
             </ul>
-            <p className="mt-3 text-xs text-gray-500 dark:text-slate-500">
-              Tệp được cung cấp theo khóa học; liên hệ giáo viên hoặc hỗ trợ nếu bạn chưa thấy liên kết tải.
-            </p>
           </section>
         </div>
 

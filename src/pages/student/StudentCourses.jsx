@@ -1,50 +1,82 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import PageHeader from '../../components/dashboard/PageHeader'
 import Panel from '../../components/dashboard/Panel'
 import { btnPrimaryStudent } from '../../components/dashboard/dashboardStyles'
 import { useAuthSession } from '../../context/AuthSessionContext'
-import { studentEnrolledCourses } from '../../data/studentBusinessData'
-import { getCourseProgressMap, setCourseProgress } from '../../utils/userBusinessStorage'
+import { usePublicContent } from '../../hooks/usePublicContent'
+import { getMyCourseProgress, patchMyCourseProgress } from '../../services/meApi.js'
 
 export default function StudentCourses() {
-  const { user } = useAuthSession()
-  const email = user?.email || ''
+  const { user, session } = useAuthSession()
+  const { courses: pubCourses, loading: pubLoading } = usePublicContent()
+  const [rows, setRows] = useState([])
   const [version, setVersion] = useState(0)
 
-  const rows = useMemo(() => {
-    const map = getCourseProgressMap(email)
-    return studentEnrolledCourses.map((c) => {
-      const stored = map[c.key]
-      const progress = typeof stored?.progress === 'number' ? stored.progress : c.defaultProgress
-      return { ...c, progress }
-    })
-  }, [email, version])
+  const load = useCallback(async () => {
+    const token = session?.access_token
+    if (!token || !user?.id) {
+      setRows(
+        (pubCourses || []).map((c) => ({
+          id: c.id,
+          title: c.title,
+          teacher: '—',
+          progress: 0,
+          nextLesson: 'Xem bài giảng công khai',
+        })),
+      )
+      return
+    }
+    let prog = []
+    try {
+      const { data } = await getMyCourseProgress(token)
+      prog = data || []
+    } catch {
+      prog = []
+    }
+    const pmap = Object.fromEntries((prog || []).map((p) => [p.course_id, p]))
+    setRows(
+      (pubCourses || []).map((c) => {
+        const p = pmap[c.id]
+        return {
+          id: c.id,
+          title: c.title,
+          teacher: '—',
+          progress: p ? Number(p.progress_pct) : 0,
+          nextLesson: 'Cập nhật tiến độ hoặc xem bài giảng',
+        }
+      }),
+    )
+  }, [user?.id, pubCourses, session?.access_token])
 
-  const bump = (key, delta) => {
-    const map = getCourseProgressMap(email)
-    const c = studentEnrolledCourses.find((x) => x.key === key)
-    const base = typeof map[key]?.progress === 'number' ? map[key].progress : c?.defaultProgress ?? 0
+  useEffect(() => {
+    load()
+  }, [load, version])
+
+  const bump = async (courseId, delta) => {
+    const token = session?.access_token
+    if (!token || !user?.id) return
+    const row = rows.find((r) => r.id === courseId)
+    const base = row?.progress ?? 0
     const next = Math.min(100, Math.max(0, base + delta))
-    setCourseProgress(email, key, { progress: next })
+    try {
+      await patchMyCourseProgress(token, courseId, { progress_pct: next })
+    } catch (e) {
+      alert(e.message || 'Không cập nhật được tiến độ')
+      return
+    }
     setVersion((v) => v + 1)
   }
 
   return (
     <div className="space-y-8">
-      <PageHeader
-        title="Khóa học của tôi"
-        description="Tiến độ học được lưu trên trình duyệt của bạn và đồng bộ khi đăng nhập cùng tài khoản."
-      />
+      <PageHeader title="Khóa học của tôi" description="Khóa hiển thị công khai + tiến độ trong student_course_progress." />
+
+      {pubLoading && <p className="text-sm text-slate-400">Đang tải…</p>}
 
       <div className="grid gap-4">
         {rows.map((c) => (
-          <Panel
-            key={c.key}
-            noDivider
-            className="transition hover:border-sky-500/20"
-            padding
-          >
+          <Panel key={c.id} noDivider className="transition hover:border-sky-500/20" padding>
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0">
                 <h3 className="text-lg font-semibold text-white">{c.title}</h3>
@@ -66,7 +98,7 @@ export default function StudentCourses() {
             <div className="mt-5 flex flex-wrap gap-2">
               <button
                 type="button"
-                onClick={() => bump(c.key, 5)}
+                onClick={() => bump(c.id, 5)}
                 className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-xs font-medium text-slate-200 transition hover:bg-white/10"
               >
                 +5% tiến độ

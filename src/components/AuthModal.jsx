@@ -4,22 +4,12 @@ import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuthModal } from '../context/AuthModalContext'
 import { useAuthSession } from '../context/AuthSessionContext'
-import { registerStudentFromSignup } from '../utils/adminStorage'
-
-const ROLES = [
-  { value: 'user', label: 'Học viên' },
-  { value: 'teacher', label: 'Giáo viên' },
-  { value: 'admin', label: 'Quản trị viên' },
-]
 
 function LoginForm({ onSwitchToRegister, onSuccess, titleId }) {
   const fieldIds = useId()
-  const [form, setForm] = useState({
-    email: '',
-    password: '',
-    role: 'user',
-  })
+  const [form, setForm] = useState({ email: '', password: '' })
   const [errors, setErrors] = useState({})
+  const [busy, setBusy] = useState(false)
 
   const validate = () => {
     const newErrors = {}
@@ -30,10 +20,15 @@ function LoginForm({ onSwitchToRegister, onSuccess, titleId }) {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (!validate()) return
-    onSuccess({ email: form.email.trim(), role: form.role })
+    setBusy(true)
+    try {
+      await onSuccess({ email: form.email.trim(), password: form.password })
+    } finally {
+      setBusy(false)
+    }
   }
 
   return (
@@ -46,25 +41,11 @@ function LoginForm({ onSwitchToRegister, onSuccess, titleId }) {
           Đăng nhập
         </h2>
         <p className="mt-1 text-sm text-gray-600 dark:text-slate-400">
-          Chọn loại tài khoản và đăng nhập bằng email đã đăng ký.
+          Dùng tài khoản Supabase Auth. Vai trò lấy từ bảng profiles.
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-slate-300">Loại tài khoản</label>
-          <select
-            value={form.role}
-            onChange={(e) => setForm((p) => ({ ...p, role: e.target.value }))}
-            className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm transition-all focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-          >
-            {ROLES.map((r) => (
-              <option key={r.value} value={r.value}>
-                {r.label}
-              </option>
-            ))}
-          </select>
-        </div>
         <div>
           <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-slate-300">Email</label>
           <input
@@ -76,50 +57,33 @@ function LoginForm({ onSwitchToRegister, onSuccess, titleId }) {
             placeholder="email@example.com"
             autoComplete="email"
             data-auth-autofocus
-            aria-invalid={errors.email ? true : undefined}
-            aria-describedby={errors.email ? `${fieldIds}-email-err` : undefined}
           />
-          {errors.email && (
-            <p id={`${fieldIds}-email-err`} className="mt-1 text-sm text-red-600 dark:text-red-400" role="alert">
-              {errors.email}
-            </p>
-          )}
+          {errors.email && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email}</p>}
         </div>
         <div>
           <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-slate-300">Mật khẩu</label>
           <input
-            id={`${fieldIds}-password`}
             type="password"
             value={form.password}
             onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
-            className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm transition-all focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-            placeholder="••••••••"
+            className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
             autoComplete="current-password"
-            aria-invalid={errors.password ? true : undefined}
-            aria-describedby={errors.password ? `${fieldIds}-password-err` : undefined}
           />
-          {errors.password && (
-            <p id={`${fieldIds}-password-err`} className="mt-1 text-sm text-red-600 dark:text-red-400" role="alert">
-              {errors.password}
-            </p>
-          )}
+          {errors.password && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.password}</p>}
         </div>
         <button
           type="submit"
-          className="w-full rounded-xl bg-gradient-to-r from-cyan-500 to-fuchsia-600 py-3 text-sm font-semibold text-white shadow-lg shadow-fuchsia-500/25 transition-all hover:from-cyan-600 hover:to-fuchsia-700"
+          disabled={busy}
+          className="w-full rounded-xl bg-gradient-to-r from-cyan-500 to-fuchsia-600 py-3 text-sm font-semibold text-white shadow-lg disabled:opacity-60"
         >
-          Đăng nhập
+          {busy ? 'Đang đăng nhập…' : 'Đăng nhập'}
         </button>
       </form>
 
       <p className="mt-5 text-center text-sm text-gray-600 dark:text-slate-400">
         Chưa có tài khoản?{' '}
-        <button
-          type="button"
-          onClick={onSwitchToRegister}
-          className="font-medium text-cyan-600 hover:text-fuchsia-600 dark:text-cyan-400 dark:hover:text-fuchsia-400"
-        >
-          Đăng ký ngay
+        <button type="button" onClick={onSwitchToRegister} className="font-medium text-cyan-600 dark:text-cyan-400">
+          Đăng ký học viên
         </button>
       </p>
     </>
@@ -134,9 +98,9 @@ function RegisterForm({ onSwitchToLogin, onSuccess, titleId }) {
     phone: '',
     password: '',
     confirmPassword: '',
-    role: 'user',
   })
   const [errors, setErrors] = useState({})
+  const [busy, setBusy] = useState(false)
 
   const validate = () => {
     const newErrors = {}
@@ -151,128 +115,96 @@ function RegisterForm({ onSwitchToLogin, onSuccess, titleId }) {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (!validate()) return
-    onSuccess({
-      email: form.email.trim(),
-      role: form.role,
-      name: form.fullName.trim(),
-      phone: form.phone.trim(),
-      fromRegister: true,
-    })
+    setBusy(true)
+    try {
+      await onSuccess({
+        email: form.email.trim(),
+        password: form.password,
+        name: form.fullName.trim(),
+        phone: form.phone.trim(),
+      })
+    } finally {
+      setBusy(false)
+    }
   }
 
   return (
     <>
       <div className="mb-6 text-center">
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-fuchsia-600 to-cyan-600 text-xl text-white shadow-lg">
-          +
-        </div>
         <h2 id={titleId} className="text-xl font-bold text-gray-900 dark:text-white">
-          Đăng ký tài khoản
+          Đăng ký học viên
         </h2>
-        <p className="mt-1 text-sm text-gray-600 dark:text-slate-400">Chọn quyền và điền thông tin đăng ký</p>
+        <p className="mt-1 text-sm text-gray-600 dark:text-slate-400">
+          Tài khoản mới có role <strong>student</strong> (trigger CSDL). Giáo viên / admin do quản trị tạo trong Supabase.
+        </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-3">
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-slate-300">Loại tài khoản (Quyền)</label>
-          <select
-            value={form.role}
-            onChange={(e) => setForm((p) => ({ ...p, role: e.target.value }))}
-            className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm focus:border-cyan-500 focus:ring-cyan-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-          >
-            {ROLES.map((r) => (
-              <option key={r.value} value={r.value}>
-                {r.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-slate-300">Họ và tên</label>
+          <label className="mb-1 block text-sm text-gray-700 dark:text-slate-300">Họ và tên</label>
           <input
-            id={`${fieldIds}-fullname`}
-            type="text"
             value={form.fullName}
             onChange={(e) => setForm((p) => ({ ...p, fullName: e.target.value }))}
-            className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm focus:border-cyan-500 focus:ring-cyan-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-            placeholder="Nguyễn Văn A"
-            autoComplete="name"
+            className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
             data-auth-autofocus
-            aria-invalid={errors.fullName ? true : undefined}
-            aria-describedby={errors.fullName ? `${fieldIds}-fullname-err` : undefined}
           />
-          {errors.fullName && (
-            <p id={`${fieldIds}-fullname-err`} className="mt-1 text-sm text-red-600 dark:text-red-400" role="alert">
-              {errors.fullName}
-            </p>
-          )}
+          {errors.fullName && <p className="mt-1 text-sm text-red-600">{errors.fullName}</p>}
         </div>
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-slate-300">Email</label>
+          <label className="mb-1 block text-sm text-gray-700 dark:text-slate-300">Email</label>
           <input
             type="email"
             value={form.email}
             onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
-            className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm focus:border-cyan-500 focus:ring-cyan-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-            placeholder="email@example.com"
-            autoComplete="email"
+            className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
           />
           {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
         </div>
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-slate-300">Số điện thoại</label>
+          <label className="mb-1 block text-sm text-gray-700 dark:text-slate-300">Số điện thoại</label>
           <input
             type="tel"
             value={form.phone}
             onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
-            className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm focus:border-cyan-500 focus:ring-cyan-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-            placeholder="0901234567"
-            autoComplete="tel"
+            className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
           />
           {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
         </div>
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-slate-300">Mật khẩu</label>
+          <label className="mb-1 block text-sm text-gray-700 dark:text-slate-300">Mật khẩu</label>
           <input
             type="password"
             value={form.password}
             onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
-            className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm focus:border-cyan-500 focus:ring-cyan-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-            placeholder="••••••••"
-            autoComplete="new-password"
+            className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
           />
           {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
         </div>
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-slate-300">Xác nhận mật khẩu</label>
+          <label className="mb-1 block text-sm text-gray-700 dark:text-slate-300">Xác nhận mật khẩu</label>
           <input
             type="password"
             value={form.confirmPassword}
             onChange={(e) => setForm((p) => ({ ...p, confirmPassword: e.target.value }))}
-            className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm focus:border-cyan-500 focus:ring-cyan-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-            placeholder="••••••••"
-            autoComplete="new-password"
+            className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
           />
           {errors.confirmPassword && <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>}
         </div>
         <button
           type="submit"
-          className="w-full rounded-xl bg-gradient-to-r from-cyan-500 to-fuchsia-600 py-3 text-sm font-semibold text-white shadow-lg shadow-fuchsia-500/25 hover:from-cyan-600 hover:to-fuchsia-700"
+          disabled={busy}
+          className="w-full rounded-xl bg-gradient-to-r from-cyan-500 to-fuchsia-600 py-3 text-sm font-semibold text-white disabled:opacity-60"
         >
-          Đăng ký
+          {busy ? 'Đang xử lý…' : 'Đăng ký'}
         </button>
       </form>
 
       <p className="mt-5 text-center text-sm text-gray-600 dark:text-slate-400">
         Đã có tài khoản?{' '}
-        <button
-          type="button"
-          onClick={onSwitchToLogin}
-          className="font-medium text-cyan-600 hover:text-fuchsia-600 dark:text-cyan-400 dark:hover:text-fuchsia-400"
-        >
+        <button type="button" onClick={onSwitchToLogin} className="font-medium text-cyan-600 dark:text-cyan-400">
           Đăng nhập
         </button>
       </p>
@@ -282,25 +214,41 @@ function RegisterForm({ onSwitchToLogin, onSuccess, titleId }) {
 
 export default function AuthModal() {
   const { authView, openLogin, openRegister, closeAuth } = useAuthModal()
-  const { login } = useAuthSession()
+  const { login, register } = useAuthSession()
   const navigate = useNavigate()
   const titleId = useId()
+  const [msg, setMsg] = useState(null)
 
-  const handleAuthSuccess = (payload) => {
-    const { fromRegister, ...sessionPayload } = payload
-    if (fromRegister && sessionPayload.role === 'user') {
-      registerStudentFromSignup({
-        email: sessionPayload.email,
-        name: sessionPayload.name,
-        phone: sessionPayload.phone,
-        role: sessionPayload.role,
-      })
-    }
-    login(sessionPayload)
-    closeAuth()
-    if (payload.role === 'admin') navigate('/admin', { replace: true })
-    else if (payload.role === 'teacher') navigate('/giao-vien', { replace: true })
+  const redirectForRole = (role) => {
+    if (role === 'admin') navigate('/admin', { replace: true })
+    else if (role === 'teacher') navigate('/giao-vien', { replace: true })
     else navigate('/hoc-vien', { replace: true })
+  }
+
+  const handleLogin = async ({ email, password }) => {
+    setMsg(null)
+    const { error, role } = await login(email, password)
+    if (error) {
+      setMsg(error.message || 'Đăng nhập thất bại')
+      return
+    }
+    closeAuth()
+    redirectForRole(role || 'user')
+  }
+
+  const handleRegister = async ({ email, password, name, phone }) => {
+    setMsg(null)
+    const { error, needsEmailConfirm } = await register({ email, password, fullName: name, phone })
+    if (error) {
+      setMsg(error.message || 'Đăng ký thất bại')
+      return
+    }
+    if (needsEmailConfirm) {
+      setMsg('Đã gửi email xác nhận. Vui lòng mở link trong hộp thư rồi đăng nhập.')
+      return
+    }
+    closeAuth()
+    redirectForRole('user')
   }
 
   useEffect(() => {
@@ -318,16 +266,10 @@ export default function AuthModal() {
   }, [authView, closeAuth])
 
   useEffect(() => {
-    if (!authView) return
-    const id = window.requestAnimationFrame(() => {
-      document.querySelector('[data-auth-autofocus]')?.focus()
-    })
-    return () => cancelAnimationFrame(id)
+    setMsg(null)
   }, [authView])
 
-  const node =
-    typeof document !== 'undefined' ? document.body : null
-
+  const node = typeof document !== 'undefined' ? document.body : null
   if (!node) return null
 
   return createPortal(
@@ -339,14 +281,8 @@ export default function AuthModal() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
         >
-          <button
-            type="button"
-            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
-            aria-label="Đóng"
-            onClick={closeAuth}
-          />
+          <button type="button" className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" aria-label="Đóng" onClick={closeAuth} />
           <motion.div
             role="dialog"
             aria-modal="true"
@@ -355,24 +291,21 @@ export default function AuthModal() {
             initial={{ opacity: 0, scale: 0.96, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.98, y: 8 }}
-            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             onClick={(e) => e.stopPropagation()}
           >
             <button
               type="button"
               onClick={closeAuth}
-              className="absolute right-3 top-3 rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white"
-              aria-label="Đóng hộp thoại"
+              className="absolute right-3 top-3 rounded-lg p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-700"
+              aria-label="Đóng"
             >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              ✕
             </button>
-
+            {msg && <p className="mb-4 rounded-lg bg-amber-500/15 px-3 py-2 text-sm text-amber-800 dark:text-amber-200">{msg}</p>}
             {authView === 'login' ? (
-              <LoginForm titleId={titleId} onSwitchToRegister={openRegister} onSuccess={handleAuthSuccess} />
+              <LoginForm titleId={titleId} onSwitchToRegister={openRegister} onSuccess={handleLogin} />
             ) : (
-              <RegisterForm titleId={titleId} onSwitchToLogin={openLogin} onSuccess={handleAuthSuccess} />
+              <RegisterForm titleId={titleId} onSwitchToLogin={openLogin} onSuccess={handleRegister} />
             )}
           </motion.div>
         </motion.div>

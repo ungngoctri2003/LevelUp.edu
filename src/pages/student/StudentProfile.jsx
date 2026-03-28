@@ -14,10 +14,10 @@ export default function StudentProfile() {
   }, [user?.name, user?.phone])
   const [msg, setMsg] = useState('')
 
-  const save = (e) => {
+  const save = async (e) => {
     e.preventDefault()
-    updateProfile({ name: name.trim() || user?.name, phone: phone.trim() })
-    setMsg('Đã cập nhật (lưu phiên đăng nhập).')
+    await updateProfile({ name: name.trim() || user?.name, phone: phone.trim() })
+    setMsg('Đã cập nhật hồ sơ trên Supabase.')
     setTimeout(() => setMsg(''), 2500)
   }
 

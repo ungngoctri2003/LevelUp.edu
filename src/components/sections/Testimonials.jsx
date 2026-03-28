@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { Reveal, RevealStagger, RevealItem } from '../motion/Reveal'
-import { testimonials } from '../../data'
+import { usePublicContent } from '../../hooks/usePublicContent'
 
 function AvatarPlaceholder({ initial, color }) {
   const bgClass = color === 'purple' ? 'bg-fuchsia-400' : 'bg-cyan-400'
@@ -14,6 +14,8 @@ function AvatarPlaceholder({ initial, color }) {
 }
 
 export default function Testimonials() {
+  const { testimonials } = usePublicContent()
+  const list = Array.isArray(testimonials) ? testimonials : []
   return (
     <section
       id="testimonials"
@@ -39,7 +41,7 @@ export default function Testimonials() {
           </p>
         </Reveal>
         <RevealStagger className="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {testimonials.map((item) => (
+          {list.map((item) => (
             <RevealItem key={item.id}>
               <motion.div
                 whileHover={{ y: -6, scale: 1.02 }}

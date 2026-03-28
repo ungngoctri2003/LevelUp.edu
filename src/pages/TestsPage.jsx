@@ -2,61 +2,67 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuthSession } from '../context/AuthSessionContext'
 import { usePublicContent } from '../hooks/usePublicContent'
-import { appendTestResult } from '../utils/userBusinessStorage'
-
-const practiceQuestions = [
-  { id: 1, text: 'Phương trình x² - 4 = 0 có nghiệm là?', options: ['x = ±2', 'x = 2', 'x = -2', 'x = 4'] },
-  { id: 2, text: 'Đạo hàm của hàm số f(x) = x³ là?', options: ['3x²', 'x²', '3x', '2x²'] },
-  { id: 3, text: 'Giá trị của sin(90°) là?', options: ['0', '1', '-1', '√2/2'] },
-]
-
-const ANSWER_KEY = {
-  1: 'x = ±2',
-  2: '3x²',
-  3: '1',
-}
+import { fetchPublicExamById, normalizeExamQuestions } from '../services/publicApi.js'
+import { postMyExamAttempt } from '../services/meApi.js'
 
 export default function TestsPage() {
-  const { exams } = usePublicContent()
-  const { user } = useAuthSession()
+  const { exams, loading: examsLoading } = usePublicContent()
+  const { user, session } = useAuthSession()
   const [selectedExam, setSelectedExam] = useState(null)
   const [answers, setAnswers] = useState({})
   const [submitted, setSubmitted] = useState(false)
   const [result, setResult] = useState(null)
+  const [loadingQuestions, setLoadingQuestions] = useState(false)
 
-  const handleStartExam = (exam) => {
-    setSelectedExam(exam)
-    setAnswers({})
-    setSubmitted(false)
-    setResult(null)
+  const handleStartExam = async (exam) => {
+    setLoadingQuestions(true)
+    try {
+      const detail = await fetchPublicExamById(exam.id)
+      const qs = normalizeExamQuestions(detail?.questions)
+      if (!qs.length) {
+        alert('Đề này chưa có câu hỏi trong CSDL. Vui lòng chọn đề khác hoặc liên hệ quản trị.')
+        return
+      }
+      setSelectedExam({ ...exam, questions: qs })
+      setAnswers({})
+      setSubmitted(false)
+      setResult(null)
+    } finally {
+      setLoadingQuestions(false)
+    }
   }
 
-  const handleSubmitExam = () => {
+  const handleSubmitExam = async () => {
+    const qs = selectedExam?.questions || []
     let correct = 0
-    practiceQuestions.forEach((q) => {
-      if (answers[q.id] === ANSWER_KEY[q.id]) correct += 1
-    })
-    const total = practiceQuestions.length
+    for (const q of qs) {
+      if (answers[q.id] === q.answer) correct += 1
+    }
+    const total = qs.length
     const maxScore = 10
-    const score = Math.round((correct / total) * maxScore * 10) / 10
+    const score = total > 0 ? Math.round((correct / total) * maxScore * 10) / 10 : 0
 
     setResult({ correct, total, score, maxScore })
     setSubmitted(true)
 
-    if (user?.role === 'user' && user?.email && selectedExam) {
-      appendTestResult(user.email, {
-        examId: selectedExam.id,
-        title: selectedExam.title,
-        score,
-        maxScore,
-        correct,
-        total,
-      })
+    const token = session?.access_token
+    if (token && user?.id && selectedExam?.id != null) {
+      try {
+        await postMyExamAttempt(token, {
+          exam_id: selectedExam.id,
+          score,
+          max_score: maxScore,
+          correct_count: correct,
+          total_count: total,
+        })
+      } catch (e) {
+        console.warn('[exam_attempts]', e.message)
+      }
     }
-    console.log('Exam submitted:', { exam: selectedExam, answers, correct, score })
   }
 
   if (selectedExam && !submitted) {
+    const qs = selectedExam.questions || []
     return (
       <div className="py-16 sm:py-24">
         <div className="mx-auto max-w-3xl px-6">
@@ -73,7 +79,7 @@ export default function TestsPage() {
             </div>
 
             <div className="space-y-8">
-              {practiceQuestions.map((q, idx) => (
+              {qs.map((q, idx) => (
                 <div key={q.id} className="border-b border-gray-100 pb-6 dark:border-slate-700">
                   <p className="mb-3 font-medium text-gray-900 dark:text-white">
                     Câu {idx + 1}: {q.text}
@@ -139,7 +145,7 @@ export default function TestsPage() {
             <p className="mt-2 text-gray-600 dark:text-slate-400">
               Trả lời đúng {result.correct}/{result.total} câu
             </p>
-            {user?.role === 'user' && (
+            {user?.role === 'user' && session?.access_token && (
               <p className="mt-3 text-sm text-fuchsia-600 dark:text-fuchsia-400">
                 Đã lưu vào &quot;Khu học viên → Kiểm tra&quot;.
               </p>
@@ -179,12 +185,17 @@ export default function TestsPage() {
             Bài kiểm tra
           </h1>
           <p className="mt-6 mx-auto max-w-2xl text-lg text-gray-600 dark:text-slate-400">
-            Làm bài kiểm tra trực tiếp trên web. Học viên đăng nhập sẽ được lưu điểm vào khu học viên.
+            Câu hỏi lấy từ CSDL theo từng đề. Học viên đăng nhập được lưu điểm qua API máy chủ.
           </p>
         </div>
 
+        {loadingQuestions && (
+          <p className="mb-6 text-center text-sm text-slate-500">Đang tải câu hỏi đề…</p>
+        )}
+
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {exams.length === 0 && (
+          {examsLoading && <p className="col-span-full text-center text-slate-500">Đang tải đề…</p>}
+          {!examsLoading && exams.length === 0 && (
             <p className="col-span-full text-center text-slate-500">
               Chưa có đề công khai. Admin có thể thêm đề tại khu vực quản trị.
             </p>
@@ -212,10 +223,11 @@ export default function TestsPage() {
               </div>
               <button
                 type="button"
+                disabled={loadingQuestions}
                 onClick={() => handleStartExam(exam)}
-                className="mt-6 w-full rounded-xl bg-gradient-to-r from-cyan-500 to-fuchsia-600 py-3 font-medium text-white shadow-md transition-opacity hover:opacity-95"
+                className="mt-6 w-full rounded-xl bg-gradient-to-r from-cyan-500 to-fuchsia-600 py-3 font-medium text-white shadow-md transition-opacity hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Làm bài
+                {loadingQuestions ? 'Đang tải…' : 'Làm bài'}
               </button>
             </div>
           ))}

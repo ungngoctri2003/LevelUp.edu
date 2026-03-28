@@ -4,7 +4,7 @@ const url = import.meta.env.VITE_SUPABASE_URL
 const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY
 
 /**
- * Supabase browser client. Null if env is missing (e.g. CI without secrets).
+ * Supabase browser client. Null if env is missing.
  * @type {import('@supabase/supabase-js').SupabaseClient | null}
  */
 export const supabase =
@@ -12,7 +12,14 @@ export const supabase =
   url.length > 0 &&
   typeof key === 'string' &&
   key.length > 0
-    ? createClient(url, key)
+    ? createClient(url, key, {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true,
+          storage: typeof localStorage !== 'undefined' ? localStorage : undefined,
+        },
+      })
     : null
 
 if (import.meta.env.DEV && !supabase) {

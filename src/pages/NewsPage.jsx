@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { usePublicContent } from '../hooks/usePublicContent'
 
 export default function NewsPage() {
-  const { news } = usePublicContent()
+  const { news, loading, error } = usePublicContent()
   return (
     <div className="py-16 sm:py-24">
       <div className="mx-auto max-w-7xl px-6">
@@ -14,6 +14,16 @@ export default function NewsPage() {
             Cập nhật tin tức mới nhất từ LevelUp.edu
           </p>
         </div>
+
+        {loading && news.length === 0 && (
+          <p className="text-center text-slate-500 dark:text-slate-400">Đang tải tin…</p>
+        )}
+        {error && news.length === 0 && (
+          <p className="text-center text-red-600 dark:text-red-400">{error}</p>
+        )}
+        {!loading && news.length === 0 && !error && (
+          <p className="text-center text-slate-500 dark:text-slate-400">Chưa có tin tức.</p>
+        )}
 
         <div className="grid gap-6 md:grid-cols-2">
           {news.map((item) => (

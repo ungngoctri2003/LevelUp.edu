@@ -9,6 +9,7 @@ export const studentNavItems = [
   { to: '/hoc-vien', label: 'Tổng quan', end: true, icon: 'dashboard' },
   { to: '/hoc-vien/khoa-hoc', label: 'Khóa học', icon: 'course' },
   { to: '/hoc-vien/bai-giang', label: 'Bài giảng', icon: 'lesson' },
+  { to: '/hoc-vien/bai-tap', label: 'Bài tập', icon: 'assignment' },
   { to: '/hoc-vien/bai-kiem-tra', label: 'Kiểm tra', icon: 'test' },
   { to: '/hoc-vien/ho-so', label: 'Hồ sơ', icon: 'profile' },
 ]

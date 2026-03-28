@@ -1,66 +1,164 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react'
-
-const STORAGE_KEY = 'levelup-session'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
+import { supabase } from '../lib/supabaseClient.js'
 
 const AuthSessionContext = createContext(null)
 
+/** Map DB role → role route (học viên = user) */
+function routeRole(dbRole) {
+  if (dbRole === 'student') return 'user'
+  return dbRole
+}
+
 export function AuthSessionProvider({ children }) {
-  const [user, setUser] = useState(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw) return JSON.parse(raw)
-    } catch {
-      /* ignore */
-    }
-    return null
-  })
+  const [session, setSession] = useState(null)
+  const [profile, setProfile] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [authError, setAuthError] = useState(null)
 
-  const login = useCallback((payload) => {
-    const u = {
-      email: payload.email,
-      name: payload.name || String(payload.email || '').split('@')[0] || 'Người dùng',
-      role: payload.role,
-      phone: payload.phone || '',
+  const loadProfile = useCallback(async (userId) => {
+    if (!supabase || !userId) {
+      setProfile(null)
+      return
     }
-    setUser(u)
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(u))
-    } catch {
-      /* ignore */
+    const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
+    if (error) {
+      console.warn('[auth] profile', error.message)
+      setProfile(null)
+      return
     }
+    setProfile(data)
   }, [])
 
-  const updateProfile = useCallback((updates) => {
-    setUser((prev) => {
-      if (!prev) return null
-      const next = { ...prev, ...updates }
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
-      } catch {
-        /* ignore */
-      }
-      return next
+  useEffect(() => {
+    if (!supabase) {
+      setLoading(false)
+      return
+    }
+    let cancelled = false
+    supabase.auth.getSession().then(({ data: { session: s } }) => {
+      if (cancelled) return
+      setSession(s)
+      if (s?.user?.id) loadProfile(s.user.id)
+      setLoading(false)
     })
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, s) => {
+      setSession(s)
+      if (s?.user?.id) loadProfile(s.user.id)
+      else setProfile(null)
+    })
+    return () => {
+      cancelled = true
+      subscription.unsubscribe()
+    }
+  }, [loadProfile])
+
+  const user = useMemo(() => {
+    if (!session?.user || !profile) return null
+    const rr = routeRole(profile.role)
+    return {
+      id: profile.id,
+      email: profile.email,
+      name: profile.full_name,
+      phone: profile.phone || '',
+      role: rr,
+      dbRole: profile.role,
+      accountStatus: profile.account_status,
+    }
+  }, [session, profile])
+
+  const login = useCallback(async (email, password) => {
+    setAuthError(null)
+    if (!supabase) {
+      setAuthError('Chưa cấu hình Supabase')
+      return { error: new Error('no supabase'), role: null }
+    }
+    const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
+    if (error) {
+      setAuthError(error.message)
+      return { error, role: null }
+    }
+    setSession(data.session)
+    if (data.user?.id) {
+      const { data: prof } = await supabase.from('profiles').select('*').eq('id', data.user.id).maybeSingle()
+      setProfile(prof || null)
+      const rr = routeRole(prof?.role)
+      return { error: null, role: rr }
+    }
+    return { error: null, role: null }
   }, [])
 
-  const logout = useCallback(() => {
-    setUser(null)
-    try {
-      localStorage.removeItem(STORAGE_KEY)
-    } catch {
-      /* ignore */
+  const register = useCallback(async ({ email, password, fullName, phone }) => {
+    setAuthError(null)
+    if (!supabase) {
+      setAuthError('Chưa cấu hình Supabase')
+      return { error: new Error('no supabase') }
     }
+    const { data, error } = await supabase.auth.signUp({
+      email: email.trim(),
+      password,
+      options: {
+        data: {
+          full_name: fullName.trim(),
+          phone: phone.trim(),
+        },
+      },
+    })
+    if (error) {
+      setAuthError(error.message)
+      return { error }
+    }
+    if (data.session && data.user?.id) {
+      setSession(data.session)
+      const { data: prof } = await supabase.from('profiles').select('*').eq('id', data.user.id).maybeSingle()
+      setProfile(prof || null)
+    }
+    return { error: null, needsEmailConfirm: !data.session }
   }, [])
+
+  const logout = useCallback(async () => {
+    setAuthError(null)
+    if (supabase) await supabase.auth.signOut()
+    setSession(null)
+    setProfile(null)
+  }, [])
+
+  const updateProfile = useCallback(
+    async (updates) => {
+      if (!supabase || !profile?.id) return
+      const patch = {}
+      if (updates.name != null) patch.full_name = updates.name
+      if (updates.phone != null) patch.phone = updates.phone
+      if (Object.keys(patch).length === 0) return
+      const { data, error } = await supabase.from('profiles').update(patch).eq('id', profile.id).select().single()
+      if (!error && data) setProfile(data)
+    },
+    [profile],
+  )
 
   const value = useMemo(
     () => ({
+      session,
+      profile,
       user,
+      loading,
+      authError,
+      setAuthError,
       isAuthenticated: !!user,
       login,
+      register,
       logout,
       updateProfile,
     }),
-    [user, login, logout, updateProfile],
+    [session, profile, user, loading, authError, login, register, logout, updateProfile],
   )
 
   return <AuthSessionContext.Provider value={value}>{children}</AuthSessionContext.Provider>
