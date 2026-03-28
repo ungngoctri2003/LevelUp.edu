@@ -79,7 +79,7 @@ export function AuthSessionProvider({ children }) {
   const login = useCallback(async (email, password) => {
     setAuthError(null)
     if (!supabase) {
-      setAuthError('Chưa cấu hình Supabase')
+      setAuthError('Đăng nhập chưa khả dụng trên trang này. Vui lòng thử lại sau.')
       return { error: new Error('no supabase'), role: null }
     }
     const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
@@ -100,7 +100,7 @@ export function AuthSessionProvider({ children }) {
   const register = useCallback(async ({ email, password, fullName, phone }) => {
     setAuthError(null)
     if (!supabase) {
-      setAuthError('Chưa cấu hình Supabase')
+      setAuthError('Đăng nhập chưa khả dụng trên trang này. Vui lòng thử lại sau.')
       return { error: new Error('no supabase') }
     }
     const { data, error } = await supabase.auth.signUp({
@@ -156,7 +156,7 @@ export function AuthSessionProvider({ children }) {
     async (email) => {
       setAuthError(null)
       if (!supabase) {
-        const err = new Error('Chưa cấu hình Supabase')
+        const err = new Error('Chức năng chưa sẵn sàng. Vui lòng thử lại sau.')
         setAuthError(err.message)
         return { error: err }
       }
@@ -171,7 +171,7 @@ export function AuthSessionProvider({ children }) {
   const updatePassword = useCallback(async (password) => {
     setAuthError(null)
     if (!supabase) {
-      const err = new Error('Chưa cấu hình Supabase')
+      const err = new Error('Chức năng chưa sẵn sàng. Vui lòng thử lại sau.')
       setAuthError(err.message)
       return { error: err }
     }

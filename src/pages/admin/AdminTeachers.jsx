@@ -26,7 +26,7 @@ const emptyForm = {
 }
 
 export default function AdminTeachers() {
-  const { state, loading, error, updateTeacher, setTeacherApproval, removeTeacher } = useAdminState()
+  const { state, loading, error, refresh, updateTeacher, setTeacherApproval, removeTeacher } = useAdminState()
   const [q, setQ] = useState('')
   const [modal, setModal] = useState(null)
   const [form, setForm] = useState(emptyForm)
@@ -37,10 +37,16 @@ export default function AdminTeachers() {
     if (!s) return rows
     return rows.filter(
       (r) =>
-        r.name.toLowerCase().includes(s) ||
-        r.email.toLowerCase().includes(s) ||
+        String(r.name || '')
+          .toLowerCase()
+          .includes(s) ||
+        String(r.email || '')
+          .toLowerCase()
+          .includes(s) ||
         String(r.id).toLowerCase().includes(s) ||
-        r.subjects.toLowerCase().includes(s),
+        String(r.subjects || '')
+          .toLowerCase()
+          .includes(s),
     )
   }, [q, state.teachers])
 
@@ -95,7 +101,7 @@ export default function AdminTeachers() {
     <div className="space-y-8">
       <PageHeader
         title="Quản lý giáo viên"
-        description="Tài khoản giáo viên cần có role=teacher trong Supabase (SQL hoặc Dashboard). Tại đây chỉnh duyệt và hồ sơ."
+        description="Duyệt hồ sơ, cập nhật môn dạy và trạng thái làm việc."
         badge="Nhân sự"
       />
 
@@ -116,7 +122,7 @@ export default function AdminTeachers() {
           <table className="w-full min-w-[900px] text-left text-sm">
             <thead className={tableHeadAdmin}>
               <tr>
-                <th className="px-4 py-3">UUID</th>
+                <th className="px-4 py-3">Mã</th>
                 <th className="px-4 py-3">Họ tên</th>
                 <th className="px-4 py-3">Email</th>
                 <th className="px-4 py-3">Môn</th>
@@ -126,6 +132,33 @@ export default function AdminTeachers() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5 text-slate-200">
+              {!loading && filtered.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="px-4 py-14 text-center align-top">
+                    <p className="text-slate-300">
+                      {state.teachers.length === 0
+                        ? 'Chưa có giáo viên nào.'
+                        : 'Không có dòng nào khớp tìm kiếm.'}
+                    </p>
+                    {state.teachers.length === 0 && (
+                      <div className="mx-auto mt-4 max-w-lg space-y-2 text-sm text-slate-500">
+                        <p>
+                          Khi tài khoản giáo viên được thêm vào hệ thống, họ sẽ hiển thị tại đây. Bạn có thể sửa hồ
+                          sơ, duyệt hoặc tạm khóa từ cột Thao tác.
+                        </p>
+                        <p>Nếu vừa thêm tài khoản mới, hãy bấm tải lại bên dưới.</p>
+                        <button
+                          type="button"
+                          onClick={() => refresh()}
+                          className="mt-3 rounded-xl border border-white/20 px-4 py-2 text-sm text-slate-200 hover:bg-white/10"
+                        >
+                          Tải lại danh sách
+                        </button>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              )}
               {filtered.map((r) => (
                 <tr key={r.id} className="hover:bg-white/5">
                   <td className="max-w-[100px] truncate px-4 py-3 font-mono text-[10px] text-fuchsia-300" title={r.id}>
@@ -183,7 +216,7 @@ export default function AdminTeachers() {
         <div className={modalBackdrop}>
           <form onSubmit={save} className={`${modalPanelAdmin} max-w-md`}>
             <h3 className="text-lg font-semibold text-white">Sửa giáo viên</h3>
-            <p className="mt-1 text-xs text-slate-500">UUID: {form.id}</p>
+            <p className="mt-1 text-xs text-slate-500">Mã tài khoản: {form.id}</p>
             <label className="mt-4 block text-sm text-slate-400">
               Họ tên
               <input

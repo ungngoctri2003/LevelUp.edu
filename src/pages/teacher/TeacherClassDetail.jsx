@@ -91,7 +91,7 @@ export default function TeacherClassDetail() {
       {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
 
       <p className="text-xs text-slate-500">
-        Thêm học viên: dán UUID user (profiles.id). Cần policy SQL `rls_teacher_profiles_students.sql` để hiện tên đầy đủ.
+        Thêm học viên bằng mã tài khoản nội bộ (do quản trị hoặc danh sách học viên cung cấp).
       </p>
 
       <div className="flex justify-end">
@@ -103,7 +103,7 @@ export default function TeacherClassDetail() {
           }}
           className="rounded-xl border border-dashed border-emerald-500/40 px-4 py-2 text-sm text-emerald-300 hover:bg-emerald-500/10"
         >
-          + Thêm học viên (UUID)
+          + Thêm học viên
         </button>
       </div>
 
@@ -147,7 +147,7 @@ export default function TeacherClassDetail() {
             </h3>
             {editing === 'new' ? (
               <label className="mt-4 block text-sm text-slate-400">
-                UUID học viên (profiles.id)
+                Mã tài khoản học viên
                 <input
                   value={form.studentId}
                   onChange={(e) => setForm((f) => ({ ...f, studentId: e.target.value }))}

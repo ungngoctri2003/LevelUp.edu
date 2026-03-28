@@ -70,11 +70,11 @@ export default function AdminAdmissions() {
         title="Hồ sơ tuyển sinh"
         description={
           <>
-            Bảng admission_applications — form công khai{' '}
+            Theo dõi hồ sơ gửi từ{' '}
             <Link className="font-medium text-cyan-400 hover:text-cyan-300" to="/tuyen-sinh">
-              /tuyen-sinh
+              trang Tuyển sinh
             </Link>
-            .
+            , và có thể nhập thêm hồ sơ thủ công bên dưới.
           </>
         }
         badge="Tuyển sinh"
@@ -92,7 +92,7 @@ export default function AdminAdmissions() {
         />
       </div>
 
-      <Panel variant="highlight" title="Thêm hồ sơ (nhập tay)" subtitle="Ghi trực tiếp vào CSDL.">
+      <Panel variant="highlight" title="Thêm hồ sơ (nhập tay)" subtitle="Dùng khi tiếp nhận hồ sơ ngoài form online.">
         <form onSubmit={addRow} className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <input

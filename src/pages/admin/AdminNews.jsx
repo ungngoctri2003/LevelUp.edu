@@ -70,9 +70,9 @@ export default function AdminNews() {
         title="Tin tức & thông báo"
         description={
           <>
-            Đồng bộ bảng news_posts — hiển thị tại{' '}
+            Bài viết đăng tại đây sẽ xuất hiện trên{' '}
             <Link className="font-medium text-cyan-400 hover:text-cyan-300" to="/tin-tuc">
-              /tin-tuc
+              trang Tin tức
             </Link>
             .
           </>

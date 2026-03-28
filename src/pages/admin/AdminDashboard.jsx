@@ -49,7 +49,7 @@ export default function AdminDashboard() {
       <PageHeader
         eyebrow="Bảng điều khiển"
         title="Tổng quan hệ thống"
-        description="Số liệu từ PostgreSQL + system_settings (admin_stats_snapshot)."
+        description="Tổng hợp nhanh số liệu vận hành và lối tắt tới các mục quản trị."
       >
         <button
           type="button"
@@ -66,9 +66,9 @@ export default function AdminDashboard() {
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <StatCard
           accent="admin"
-          label="Học viên (đang/trial)"
+          label="Học viên đang học / học thử"
           value={stats.totalStudents.toLocaleString('vi-VN')}
-          hint="Theo student_profiles.status"
+          hint="Đếm theo trạng thái học tập"
         />
         <StatCard accent="admin" label="Giáo viên đã duyệt" value={String(stats.totalTeachers)} />
         <StatCard accent="admin" label="Khóa hiển thị web" value={String(stats.activeCourses)} />
@@ -83,7 +83,7 @@ export default function AdminDashboard() {
       </div>
 
       <form onSubmit={applySettings} className="space-y-0">
-        <Panel title="Chỉ số nhanh" subtitle="Lưu vào system_settings.admin_stats_snapshot.">
+        <Panel title="Chỉ số nhanh" subtitle="Các con số ước tính hiển thị trên tổng quan (lưu cùng hệ thống).">
           <div className="mt-4 flex flex-wrap gap-4">
             <label className="flex flex-col gap-1 text-sm">
               <span className="text-slate-400">Doanh thu tháng (VND)</span>
@@ -119,7 +119,7 @@ export default function AdminDashboard() {
         </Panel>
       </form>
 
-      <Panel title="Hoạt động gần đây" subtitle="admin_activity_logs">
+      <Panel title="Hoạt động gần đây" subtitle="Nhật ký thao tác gần nhất">
         <ul className="divide-y divide-white/5 text-sm text-slate-300">
           {(state.activity || []).slice(0, 12).map((a) => (
             <li key={a.id} className="flex flex-wrap gap-2 py-3">

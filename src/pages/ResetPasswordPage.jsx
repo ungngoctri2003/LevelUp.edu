@@ -99,7 +99,7 @@ export default function ResetPasswordPage() {
   if (!supabase) {
     return (
       <div className="mx-auto max-w-md px-4 py-16 text-center text-slate-600 dark:text-slate-400">
-        <p>Chưa cấu hình Supabase. Không thể đặt lại mật khẩu trên trình duyệt này.</p>
+        <p>Trang này chưa sẵn sàng để đặt lại mật khẩu. Vui lòng thử lại sau hoặc liên hệ hỗ trợ.</p>
         <Link to="/" className="mt-4 inline-block text-cyan-600 dark:text-cyan-400">
           Về trang chủ
         </Link>

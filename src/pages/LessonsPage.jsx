@@ -32,7 +32,7 @@ export default function LessonsPage() {
         <Reveal className="mb-16 text-center">
           <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl">Bài giảng</h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-gray-600 dark:text-slate-400">
-            Danh sách theo môn — dữ liệu từ API / Supabase.
+            Danh sách bài giảng theo từng môn học.
           </p>
         </Reveal>
 

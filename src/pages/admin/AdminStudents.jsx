@@ -22,6 +22,7 @@ export default function AdminStudents() {
     state,
     loading,
     error,
+    refresh,
     attemptCounts,
     updateStudent,
     toggleStudentActive,
@@ -70,8 +71,12 @@ export default function AdminStudents() {
     if (!s) return rows
     return rows.filter(
       (r) =>
-        r.name.toLowerCase().includes(s) ||
-        r.email.toLowerCase().includes(s) ||
+        String(r.name || '')
+          .toLowerCase()
+          .includes(s) ||
+        String(r.email || '')
+          .toLowerCase()
+          .includes(s) ||
         String(r.id).toLowerCase().includes(s) ||
         (r.phone && String(r.phone).includes(s)),
     )
@@ -93,7 +98,7 @@ export default function AdminStudents() {
     <div className="space-y-8">
       <PageHeader
         title="Quản lý học viên"
-        description="Danh sách từ bảng profiles + student_profiles (đăng ký qua Supabase Auth). Thêm tài khoản mới: Authentication trong Supabase."
+        description="Theo dõi học viên đăng ký trên website: chỉnh thông tin, trạng thái học tập và tài khoản."
         badge="CRUD"
       />
 
@@ -114,7 +119,7 @@ export default function AdminStudents() {
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Tìm theo tên, email, UUID..."
+          placeholder="Tìm theo tên, email, mã..."
           className={`${inputCls} w-full min-w-0 sm:max-w-md sm:flex-1`}
         />
       </div>
@@ -124,7 +129,7 @@ export default function AdminStudents() {
           <table className="w-full min-w-[880px] text-left text-sm">
             <thead className="border-b border-white/10 bg-black/20 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
               <tr>
-                <th className="px-4 py-3">UUID</th>
+                <th className="px-4 py-3">Mã</th>
                 <th className="px-4 py-3">Họ tên</th>
                 <th className="px-4 py-3">Email</th>
                 <th className="px-4 py-3">SĐT</th>
@@ -136,6 +141,33 @@ export default function AdminStudents() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5 text-slate-200">
+              {!loading && filtered.length === 0 && (
+                <tr>
+                  <td colSpan={9} className="px-4 py-14 text-center align-top">
+                    <p className="text-slate-300">
+                      {state.students.length === 0
+                        ? 'Chưa có học viên nào.'
+                        : 'Không có dòng nào khớp bộ lọc hoặc tìm kiếm.'}
+                    </p>
+                    {state.students.length === 0 && (
+                      <div className="mx-auto mt-4 max-w-lg space-y-2 text-sm text-slate-500">
+                        <p>Học viên đăng ký trên website sẽ xuất hiện trong danh sách này.</p>
+                        <p>
+                          Khi đã có dữ liệu, bạn có thể sửa thông tin, khóa hoặc mở học tập, vô hiệu hóa tài khoản ở
+                          cột Thao tác.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => refresh()}
+                          className="mt-3 rounded-xl border border-white/20 px-4 py-2 text-sm text-slate-200 hover:bg-white/10"
+                        >
+                          Tải lại danh sách
+                        </button>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              )}
               {filtered.map((r) => (
                 <tr key={r.id} className="hover:bg-white/5">
                   <td className="max-w-[120px] truncate px-4 py-3 font-mono text-[10px] text-cyan-300" title={r.id}>
@@ -195,7 +227,7 @@ export default function AdminStudents() {
             className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-white/15 bg-gradient-to-b from-slate-900 to-slate-950 p-6 shadow-2xl shadow-cyan-500/10 ring-1 ring-white/10"
           >
             <h3 className="text-lg font-semibold text-white">Sửa học viên</h3>
-            <p className="mt-1 text-xs text-slate-500">UUID: {form.id}</p>
+            <p className="mt-1 text-xs text-slate-500">Mã tài khoản: {form.id}</p>
             <label className="mt-4 block text-sm text-slate-400">
               Họ tên
               <input

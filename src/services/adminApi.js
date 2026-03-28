@@ -10,12 +10,15 @@ function viDate(d) {
 }
 
 export async function logAdminActivity(sb, action, type = 'admin', actorEmail = null, actorUserId = null) {
-  await sb.from('admin_activity_logs').insert({
+  const { error } = await sb.from('admin_activity_logs').insert({
     action,
     type,
     actor_email: actorEmail,
     actor_user_id: actorUserId,
   })
+  if (error && typeof console !== 'undefined' && console.warn) {
+    console.warn('[admin log]', error.message)
+  }
 }
 
 export async function fetchSubjects(sb) {
@@ -335,8 +338,10 @@ export async function adminUpdateStudent(sb, profileId, { name, email, phone, gr
 export async function adminToggleStudentActive(sb, profileId, makeLearningActive, user) {
   const acc = makeLearningActive ? 'active' : 'inactive'
   const st = makeLearningActive ? 'active' : 'inactive'
-  await sb.from('profiles').update({ account_status: acc }).eq('id', profileId)
-  await sb.from('student_profiles').update({ status: st }).eq('user_id', profileId)
+  const { error: e1 } = await sb.from('profiles').update({ account_status: acc }).eq('id', profileId)
+  if (e1) throw new Error(e1.message)
+  const { error: e2 } = await sb.from('student_profiles').update({ status: st }).eq('user_id', profileId)
+  if (e2) throw new Error(e2.message)
   await logAdminActivity(sb, `${makeLearningActive ? 'Mở' : 'Khóa'} tài khoản học viên`, 'user', user?.email, user?.id)
 }
 

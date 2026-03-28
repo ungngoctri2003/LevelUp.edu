@@ -108,7 +108,7 @@ function LoginForm({ onSwitchToRegister, onForgotPassword, onSuccess, titleId })
           Đăng nhập
         </h2>
         <p className="mt-1 text-sm text-gray-600 dark:text-slate-400">
-          Dùng tài khoản Supabase Auth. Vai trò lấy từ bảng profiles.
+          Đăng nhập bằng email và mật khẩu đã đăng ký.
         </p>
       </div>
 
@@ -214,7 +214,7 @@ function RegisterForm({ onSwitchToLogin, onSuccess, titleId }) {
           Đăng ký học viên
         </h2>
         <p className="mt-1 text-sm text-gray-600 dark:text-slate-400">
-          Tài khoản mới có role <strong>student</strong> (trigger CSDL). Giáo viên / admin do quản trị tạo trong Supabase.
+          Tài khoản đăng ký tại đây là học viên. Tài khoản giáo viên hoặc quản trị do đơn vị vận hành cấp.
         </p>
       </div>
 

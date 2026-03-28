@@ -12,7 +12,7 @@ export default function TeacherDashboard() {
       <PageHeader
         eyebrow="Giáo viên"
         title="Tổng quan lớp học"
-        description="Dữ liệu từ Supabase (classes, enrollments, lịch, bài nộp)."
+        description="Tóm tắt lớp học, học sinh, lịch dạy và bài cần chấm."
       />
 
       {error && <p className="text-sm text-red-400">{error}</p>}
@@ -24,13 +24,13 @@ export default function TeacherDashboard() {
           accent="teacher"
           label="Học sinh (ước)"
           value={String(stats.totalStudents)}
-          hint="Từ class_enrollments"
+          hint="Ước tính theo danh sách lớp"
         />
         <StatCard accent="teacher" label="Chờ chấm" value={String(stats.pendingGrading)} />
         <StatCard accent="teacher" label="Buổi trong lịch" value={String(stats.upcomingSessions)} />
       </div>
 
-      <Panel title="Lịch dạy gần nhất" subtitle="schedule_slots">
+      <Panel title="Lịch dạy gần nhất" subtitle="Các buổi sắp tới">
         <ul className="space-y-0">
           {state.schedule.slice(0, 4).map((s) => (
             <li

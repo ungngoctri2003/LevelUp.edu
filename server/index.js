@@ -3,6 +3,7 @@ import express from 'express'
 import { supabaseEnv } from './env.js'
 import meRoutes from './routes/me.js'
 import publicRoutes from './routes/public.js'
+import adminRoutes from './routes/admin.js'
 
 const app = express()
 const PORT = Number(process.env.PORT) || 3001
@@ -23,12 +24,14 @@ app.get('/api/health', (_req, res) => {
       urlConfigured: Boolean(url),
       anonKeyConfigured: Boolean(anonKey),
       serviceRoleConfigured: Boolean(serviceRoleKey),
+      adminWriteReady: Boolean(url && serviceRoleKey),
     },
   })
 })
 
 app.use('/api/public', publicRoutes)
 app.use('/api/me', meRoutes)
+app.use('/api/admin', adminRoutes)
 
 app.use((err, _req, res, _next) => {
   console.error(err)

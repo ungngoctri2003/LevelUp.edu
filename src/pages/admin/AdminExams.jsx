@@ -94,9 +94,9 @@ export default function AdminExams() {
         title="Bài kiểm tra & đề"
         description={
           <>
-            Bảng exams — hiển thị tại{' '}
+            Đề thi tạo tại đây sẽ hiển thị cho học viên trên{' '}
             <Link className="font-medium text-cyan-400 hover:text-cyan-300" to="/bai-kiem-tra">
-              /bai-kiem-tra
+              trang Bài kiểm tra
             </Link>
             .
           </>
@@ -107,7 +107,7 @@ export default function AdminExams() {
       {error && <p className="text-sm text-red-400">{error}</p>}
       {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
 
-      <Panel title="Tạo đề mới" subtitle="Thêm đề vào kho PostgreSQL.">
+      <Panel title="Tạo đề mới" subtitle="Thêm đề vào kho đề dùng chung cho website.">
         <form onSubmit={addExamSubmit} className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <label className="text-sm text-slate-400">

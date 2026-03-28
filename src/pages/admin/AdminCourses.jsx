@@ -49,7 +49,7 @@ export default function AdminCourses() {
     if (!createDraft.title.trim()) return
     const sid = Number(createDraft.subject_id) || firstSubjectId
     if (!sid) {
-      alert('Chưa có môn trong hệ thống — chạy seed SQL.')
+      alert('Chưa có môn học trong danh mục. Vui lòng liên hệ quản trị để thiết lập danh mục môn.')
       return
     }
     try {
@@ -87,7 +87,7 @@ export default function AdminCourses() {
     <div className="space-y-8">
       <PageHeader
         title="Khóa học"
-        description="Đồng bộ PostgreSQL / Supabase — hiển thị công khai theo cờ visible."
+        description="Quản lý khóa học hiển thị trên trang công khai: có thể ẩn hoặc hiện từng khóa."
         badge="Website"
       >
         <Link to="/" className={`${btnPrimaryAdmin} inline-block text-center`}>
@@ -98,7 +98,7 @@ export default function AdminCourses() {
       {error && <p className="text-sm text-red-400">{error}</p>}
       {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
 
-      <Panel variant="highlight" title="Thêm khóa học mới" subtitle="Chọn môn từ danh mục subjects.">
+      <Panel variant="highlight" title="Thêm khóa học mới" subtitle="Chọn môn từ danh mục bên dưới.">
         <form onSubmit={handleAdd} className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2">
             <input
@@ -132,7 +132,7 @@ export default function AdminCourses() {
         </form>
       </Panel>
 
-      <Panel title="Danh sách khóa học" subtitle="Ẩn = không hiện trên landing (RLS).">
+      <Panel title="Danh sách khóa học" subtitle="Khóa đang ẩn sẽ không hiển thị cho khách truy cập trang chủ.">
         <div className="grid gap-4 md:grid-cols-2">
           {state.courses.map((c) => (
             <div

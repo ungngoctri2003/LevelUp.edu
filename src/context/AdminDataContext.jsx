@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { supabase } from '../lib/supabaseClient.js'
 import { useAuthSession } from './AuthSessionContext.jsx'
 import * as api from '../services/adminApi.js'
+import * as srv from '../services/adminServerApi.js'
 
 function computeDashboardStats(s) {
   const activeStudents = s.students.filter(
@@ -23,7 +24,8 @@ function computeDashboardStats(s) {
 const AdminDataContext = createContext(null)
 
 export function AdminDataProvider({ children }) {
-  const { user } = useAuthSession()
+  const { user, session } = useAuthSession()
+  const accessToken = session?.access_token
   const [state, setState] = useState({
     courses: [],
     exams: [],
@@ -44,6 +46,31 @@ export function AdminDataProvider({ children }) {
     setLoading(true)
     setError(null)
     try {
+      const loadRoster = async () => {
+        if (accessToken) {
+          try {
+            const [stRes, teRes, cntRes] = await Promise.all([
+              srv.adminListStudents(accessToken),
+              srv.adminListTeachers(accessToken),
+              srv.adminListExamAttemptCounts(accessToken),
+            ])
+            return {
+              students: stRes.data,
+              teachers: teRes.data,
+              counts: cntRes.data,
+            }
+          } catch {
+            /* API tắt / thiếu service role — fallback RLS trên trình duyệt */
+          }
+        }
+        const [students, teachers, counts] = await Promise.all([
+          api.fetchStudentsAdmin(supabase),
+          api.fetchTeachersAdmin(supabase),
+          api.fetchAttemptCounts(supabase),
+        ])
+        return { students, teachers, counts }
+      }
+
       const [
         subjects,
         courses,
@@ -51,10 +78,8 @@ export function AdminDataProvider({ children }) {
         news,
         admissions,
         activity,
-        students,
-        teachers,
+        roster,
         settings,
-        counts,
       ] = await Promise.all([
         api.fetchSubjects(supabase),
         api.fetchCoursesAdmin(supabase),
@@ -62,11 +87,11 @@ export function AdminDataProvider({ children }) {
         api.fetchNewsAdmin(supabase),
         api.fetchAdmissionsAdmin(supabase),
         api.fetchActivityAdmin(supabase),
-        api.fetchStudentsAdmin(supabase),
-        api.fetchTeachersAdmin(supabase),
+        loadRoster(),
         api.fetchAdminSettings(supabase),
-        api.fetchAttemptCounts(supabase),
       ])
+
+      const { students, teachers, counts } = roster
       setAttemptCounts(counts)
       setState({
         courses,
@@ -84,14 +109,14 @@ export function AdminDataProvider({ children }) {
     } finally {
       setLoading(false)
     }
-  }, [user?.id])
+  }, [user?.id, accessToken])
 
   useEffect(() => {
     refresh()
   }, [refresh])
 
   const ctx = useMemo(() => {
-    const u = { id: user?.id, email: user?.email }
+    const t = accessToken
 
     return {
       state,
@@ -102,110 +127,102 @@ export function AdminDataProvider({ children }) {
       computeDashboardStats: () => computeDashboardStats(state),
 
       async addCourse(payload) {
-        await api.adminInsertCourse(supabase, { ...payload, user: u })
+        await srv.adminCreateCourse(t, payload)
         await refresh()
       },
       async updateCourse(id, patch) {
-        await api.adminUpdateCourse(supabase, id, patch, u)
+        await srv.adminPatchCourse(t, id, patch)
         await refresh()
       },
       async deleteCourse(id, title) {
-        await api.adminDeleteCourse(supabase, id, title, u)
+        await srv.adminDeleteCourseApi(t, id, title)
         await refresh()
       },
 
       async addExam(row) {
-        await api.adminInsertExam(supabase, row, u)
+        await srv.adminCreateExam(t, row)
         await refresh()
       },
       async updateExam(id, row) {
-        await api.adminUpdateExam(supabase, id, row, u)
+        await srv.adminPatchExam(t, id, row)
         await refresh()
       },
       async deleteExam(id, title) {
-        await api.adminDeleteExam(supabase, id, title, u)
+        await srv.adminDeleteExamApi(t, id, title)
         await refresh()
       },
 
       async addNews(row) {
-        await api.adminInsertNews(supabase, row, u)
+        await srv.adminCreateNews(t, row)
         await refresh()
       },
       async updateNews(id, row) {
-        await api.adminUpdateNews(supabase, id, row, u)
+        await srv.adminPatchNews(t, id, row)
         await refresh()
       },
       async deleteNews(id, title) {
-        await api.adminDeleteNews(supabase, id, title, u)
+        await srv.adminDeleteNewsApi(t, id, title)
         await refresh()
       },
 
       async addAdmission(row) {
-        await api.adminInsertAdmission(supabase, row, u)
+        await srv.adminCreateAdmission(t, row)
         await refresh()
       },
       async setAdmissionStatus(id, status) {
-        await api.adminUpdateAdmissionStatus(supabase, id, status, u)
+        await srv.adminPatchAdmissionStatus(t, id, status)
         await refresh()
       },
       async deleteAdmission(id) {
-        await api.adminDeleteAdmission(supabase, id, u)
+        await srv.adminDeleteAdmissionApi(t, id)
         await refresh()
       },
 
       async updateStudent(profileId, row) {
-        await api.adminUpdateStudent(supabase, profileId, row, u)
+        await srv.adminPatchStudent(t, profileId, row)
         await refresh()
       },
       async setStudentSuspended(profileId, suspended) {
-        await api.adminSetStudentAccountStatus(
-          supabase,
-          profileId,
-          suspended ? 'inactive' : 'active',
-          u,
-        )
-        await supabase
-          .from('student_profiles')
-          .update({ status: suspended ? 'inactive' : 'active' })
-          .eq('user_id', profileId)
+        await srv.adminPostStudentAccount(t, profileId, suspended ? 'inactive' : 'active')
+        await srv.adminPostStudentProfileStatus(t, profileId, suspended ? 'inactive' : 'active')
         await refresh()
       },
       async removeStudent(profileId) {
         if (!confirm('Vô hiệu hóa tài khoản học viên này?')) return
-        await api.adminSetStudentAccountStatus(supabase, profileId, 'suspended', u)
+        await srv.adminPostStudentAccount(t, profileId, 'suspended')
         await refresh()
       },
 
       async toggleStudentActive(profileId, makeActive) {
-        await api.adminToggleStudentActive(supabase, profileId, makeActive, u)
+        await srv.adminPostStudentToggleLearning(t, profileId, makeActive)
         await refresh()
       },
 
       async updateTeacher(profileId, row) {
-        await api.adminUpdateTeacher(supabase, profileId, row, u)
+        await srv.adminPatchTeacher(t, profileId, row)
         await refresh()
       },
       async setTeacherApproval(profileId, status) {
-        await api.adminSetTeacherApproval(supabase, profileId, status, u)
+        await srv.adminPostTeacherApproval(t, profileId, status)
         await refresh()
       },
       async removeTeacher(profileId) {
         if (!confirm('Đặt trạng thái giáo viên tạm khóa?')) return
-        await api.adminSetTeacherApproval(supabase, profileId, 'suspended', u)
+        await srv.adminPostTeacherApproval(t, profileId, 'suspended')
         await refresh()
       },
 
       async saveDashboardSettings(partial) {
-        await api.upsertAdminStats(supabase, partial, u)
+        await srv.adminPatchDashboardSettings(t, partial)
         await refresh()
       },
 
       appendAdminActivity: async (action, type = 'admin') => {
-        await api.logAdminActivity(supabase, action, type, user?.email, user?.id)
+        await srv.adminPostActivity(t, action, type)
         await refresh()
       },
     }
-  }, [state, loading, error, refresh, attemptCounts, user])
+  }, [state, loading, error, refresh, attemptCounts, accessToken])
 
   return <AdminDataContext.Provider value={ctx}>{children}</AdminDataContext.Provider>
 }

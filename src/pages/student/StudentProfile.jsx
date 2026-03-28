@@ -17,7 +17,7 @@ export default function StudentProfile() {
   const save = async (e) => {
     e.preventDefault()
     await updateProfile({ name: name.trim() || user?.name, phone: phone.trim() })
-    setMsg('Đã cập nhật hồ sơ trên Supabase.')
+    setMsg('Đã lưu thông tin hồ sơ.')
     setTimeout(() => setMsg(''), 2500)
   }
 

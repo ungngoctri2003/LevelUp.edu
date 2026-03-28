@@ -58,7 +58,7 @@ export default function StudentDashboard() {
       <PageHeader
         eyebrow="Học viên"
         title="Tổng quan học tập"
-        description="Tiến độ và điểm thi từ Supabase (student_course_progress, exam_attempts)."
+        description="Theo dõi tiến độ khóa học và kết quả các bài kiểm tra của bạn."
       />
 
       <div className="grid gap-4 sm:grid-cols-3">
