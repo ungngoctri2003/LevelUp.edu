@@ -22,7 +22,7 @@ router.get('/cms', async (_req, res) => {
       error: 'Chưa cấu hình SUPABASE_SERVICE_ROLE_KEY cho endpoint CMS công khai',
     })
   }
-  const keys = ['testimonials', 'video_preview', 'admissions_info']
+  const keys = ['testimonials', 'video_preview', 'admissions_info', 'landing_hero_stats', 'landing_benefits']
   const { data, error } = await svc.from('system_settings').select('key, value').in('key', keys)
   if (error) return res.status(500).json({ error: error.message })
   const out = {}
@@ -34,6 +34,8 @@ router.get('/cms', async (_req, res) => {
       testimonials: out.testimonials ?? [],
       video_preview: out.video_preview ?? {},
       admissions_info: out.admissions_info ?? {},
+      landing_hero_stats: out.landing_hero_stats ?? null,
+      landing_benefits: Array.isArray(out.landing_benefits) ? out.landing_benefits : [],
     },
   })
 })

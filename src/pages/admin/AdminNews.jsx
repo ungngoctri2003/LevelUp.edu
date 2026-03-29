@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
+import { toastActionError } from '../../lib/appToast.js'
 import { Link } from 'react-router-dom'
 import PageHeader from '../../components/dashboard/PageHeader'
 import Panel from '../../components/dashboard/Panel'
@@ -27,7 +29,7 @@ export default function AdminNews() {
       await addNews(draft)
       setDraft(emptyDraft)
     } catch (err) {
-      alert(err.message)
+      toastActionError(err, 'Không đăng được tin.')
     }
   }
 
@@ -48,7 +50,7 @@ export default function AdminNews() {
       })
       setEditModal(null)
     } catch (err) {
-      alert(err.message)
+      toastActionError(err, 'Không lưu được tin.')
     }
   }
 
@@ -58,9 +60,13 @@ export default function AdminNews() {
     try {
       await deleteNews(id, row?.title || '')
     } catch (err) {
-      alert(err.message)
+      toastActionError(err, 'Không xóa được tin.')
     }
   }
+
+  useEffect(() => {
+    if (error) toast.error(error)
+  }, [error])
 
   const field = `${inputAdmin} mt-1 w-full`
 
@@ -80,7 +86,6 @@ export default function AdminNews() {
         badge="CMS"
       />
 
-      {error && <p className="text-sm text-red-400">{error}</p>}
       {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
 
       <Panel title="Đăng tin mới" subtitle="Tin sẽ xuất hiện trên trang Tin tức công khai.">

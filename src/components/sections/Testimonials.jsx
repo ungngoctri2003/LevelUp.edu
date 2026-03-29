@@ -41,8 +41,14 @@ export default function Testimonials() {
           </p>
         </Reveal>
         <RevealStagger className="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {list.map((item) => (
-            <RevealItem key={item.id}>
+          {list.map((item, idx) => (
+            <RevealItem
+              key={
+                item.id != null && String(item.id).length
+                  ? `t-${item.id}`
+                  : `t-${idx}-${String(item.name || 'anon')}-${String(item.quote || '').slice(0, 24)}`
+              }
+            >
               <motion.div
                 whileHover={{ y: -6, scale: 1.02 }}
                 transition={{ duration: 0.25 }}

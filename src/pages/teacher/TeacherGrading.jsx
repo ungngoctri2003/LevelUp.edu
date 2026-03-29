@@ -1,7 +1,14 @@
+import { useEffect } from 'react'
+import { toast } from 'sonner'
+import { toastActionError } from '../../lib/appToast.js'
 import { useTeacherState } from '../../hooks/useTeacherState'
 
 export default function TeacherGrading() {
   const { state, loading, error, gradeSubmission, reopenSubmission, deleteSubmission } = useTeacherState()
+
+  useEffect(() => {
+    if (error) toast.error(error)
+  }, [error])
 
   return (
     <div className="space-y-6">
@@ -10,7 +17,6 @@ export default function TeacherGrading() {
         <p className="text-sm text-slate-400">assignment_submissions — học viên nộp bài từ khu học viên.</p>
       </div>
 
-      {error && <p className="text-sm text-red-400">{error}</p>}
       {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
 
       <div className="overflow-x-auto rounded-2xl border border-white/10 bg-white/5">
@@ -52,7 +58,7 @@ export default function TeacherGrading() {
                           try {
                             await gradeSubmission(r.id, v, 'graded')
                           } catch (err) {
-                            alert(err.message)
+                            toastActionError(err, 'Không lưu được điểm.')
                           }
                         }}
                         className="text-xs font-medium text-emerald-400 hover:text-emerald-300"
@@ -66,7 +72,7 @@ export default function TeacherGrading() {
                           try {
                             await deleteSubmission(r.id)
                           } catch (err) {
-                            alert(err.message)
+                            toastActionError(err, 'Không xóa được bài nộp.')
                           }
                         }}
                         className="text-xs text-red-400 hover:text-red-300"
@@ -83,7 +89,7 @@ export default function TeacherGrading() {
                           try {
                             await reopenSubmission(r.id)
                           } catch (err) {
-                            alert(err.message)
+                            toastActionError(err, 'Không mở lại chấm được.')
                           }
                         }}
                         className="text-xs text-amber-400 hover:text-amber-300"

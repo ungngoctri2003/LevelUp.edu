@@ -90,10 +90,18 @@ export async function fetchPublicCms() {
         testimonials: [],
         video_preview: {},
         admissions_info: {},
+        landing_hero_stats: null,
+        landing_benefits: [],
       }
     )
   } catch {
-    return { testimonials: [], video_preview: {}, admissions_info: {} }
+    return {
+      testimonials: [],
+      video_preview: {},
+      admissions_info: {},
+      landing_hero_stats: null,
+      landing_benefits: [],
+    }
   }
 }
 

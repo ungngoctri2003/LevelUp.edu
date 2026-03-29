@@ -1,43 +1,83 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
+import { toastActionError } from '../../lib/appToast.js'
 import { useTeacherState } from '../../hooks/useTeacherState'
+import QuestionBankEditor from '../../components/dashboard/QuestionBankEditor.jsx'
 
-const empty = { classId: '', title: '', due: '' }
+const empty = { classId: '', title: '', due: '', questionItems: [] }
 
 export default function TeacherAssignments() {
-  const { state, loading, error, addAssignment, deleteAssignment } = useTeacherState()
+  const { state, loading, error, addAssignment, updateAssignment, deleteAssignment } = useTeacherState()
   const [form, setForm] = useState(empty)
-  const [showForm, setShowForm] = useState(false)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [editingId, setEditingId] = useState(null)
+
+  const openCreate = () => {
+    setForm(empty)
+    setEditingId(null)
+    setModalOpen(true)
+  }
+
+  const openEdit = (a) => {
+    setForm({
+      classId: a.classId,
+      title: a.title,
+      due: a.dueInput || '',
+      questionItems: JSON.parse(JSON.stringify(a.questionItems?.length ? a.questionItems : [])),
+    })
+    setEditingId(a.id)
+    setModalOpen(true)
+  }
+
+  const closeModal = () => {
+    setModalOpen(false)
+    setEditingId(null)
+    setForm(empty)
+  }
 
   const save = async (e) => {
     e.preventDefault()
-    if (!form.title.trim() || !form.classId) return
+    if (!form.title.trim()) return
+    if (!editingId && !form.classId) return
     try {
       const dueAt = form.due.trim() ? new Date(form.due).toISOString() : null
-      await addAssignment(form.classId, form.title.trim(), dueAt)
-      setForm(empty)
-      setShowForm(false)
+      if (editingId) {
+        await updateAssignment(editingId, {
+          title: form.title.trim(),
+          dueAt,
+          questionItems: form.questionItems,
+        })
+      } else {
+        await addAssignment(form.classId, form.title.trim(), dueAt, form.questionItems)
+      }
+      closeModal()
     } catch (err) {
-      alert(err.message)
+      toastActionError(err, editingId ? 'Không lưu được bài tập.' : 'Không giao được bài tập.')
     }
   }
+
+  useEffect(() => {
+    if (error) toast.error(error)
+  }, [error])
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-xl font-bold text-white">Bài tập & kiểm tra</h2>
-          <p className="text-sm text-slate-400">Bảng assignments.</p>
+          <p className="text-sm text-slate-400">
+            Giao bài mới hoặc <span className="text-slate-300">Sửa</span> để đổi tiêu đề, hạn nộp và bộ câu hỏi.
+          </p>
         </div>
         <button
           type="button"
-          onClick={() => setShowForm(true)}
+          onClick={openCreate}
           className="rounded-xl border border-dashed border-emerald-500/40 px-4 py-2 text-sm text-emerald-300 hover:bg-emerald-500/10"
         >
           + Giao bài
         </button>
       </div>
 
-      {error && <p className="text-sm text-red-400">{error}</p>}
       {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
 
       <div className="overflow-x-auto rounded-2xl border border-white/10 bg-white/5">
@@ -47,6 +87,7 @@ export default function TeacherAssignments() {
               <th className="px-4 py-3">Bài</th>
               <th className="px-4 py-3">Lớp</th>
               <th className="px-4 py-3">Hạn</th>
+              <th className="px-4 py-3">TN</th>
               <th className="px-4 py-3">Nộp</th>
               <th className="px-4 py-3" />
             </tr>
@@ -57,10 +98,18 @@ export default function TeacherAssignments() {
                 <td className="px-4 py-3 font-medium">{a.title}</td>
                 <td className="px-4 py-3 text-slate-400">{a.className}</td>
                 <td className="px-4 py-3 text-slate-400">{a.due}</td>
+                <td className="px-4 py-3 text-slate-400">{a.mcqCount > 0 ? `${a.mcqCount} câu` : '—'}</td>
                 <td className="px-4 py-3">
                   {a.submitted}/{a.total}
                 </td>
-                <td className="px-4 py-3 text-right">
+                <td className="space-x-2 px-4 py-3 text-right">
+                  <button
+                    type="button"
+                    onClick={() => openEdit(a)}
+                    className="rounded-lg border border-emerald-500/35 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-200 hover:bg-emerald-500/20"
+                  >
+                    Sửa
+                  </button>
                   <button
                     type="button"
                     onClick={async () => {
@@ -68,10 +117,10 @@ export default function TeacherAssignments() {
                       try {
                         await deleteAssignment(a.id)
                       } catch (err) {
-                        alert(err.message)
+                        toastActionError(err, 'Không xóa được bài tập.')
                       }
                     }}
-                    className="text-xs text-red-400"
+                    className="text-xs text-red-400 hover:text-red-300"
                   >
                     Xóa
                   </button>
@@ -82,16 +131,23 @@ export default function TeacherAssignments() {
         </table>
       </div>
 
-      {showForm && (
+      {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-          <form onSubmit={save} className="w-full max-w-md rounded-2xl border border-white/15 bg-slate-900 p-6 shadow-xl">
-            <h3 className="text-lg font-semibold text-white">Giao bài mới</h3>
+          <form
+            onSubmit={save}
+            className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-white/15 bg-slate-900 p-6 shadow-xl"
+          >
+            <h3 className="text-lg font-semibold text-white">{editingId ? 'Sửa bài tập' : 'Giao bài mới'}</h3>
+            {editingId && (
+              <p className="mt-1 text-sm text-slate-400">Lớp không đổi khi sửa. Có thể chỉnh tiêu đề, hạn nộp và bộ câu hỏi.</p>
+            )}
             <label className="mt-4 block text-sm text-slate-400">
               Lớp
               <select
                 value={form.classId}
+                disabled={!!editingId}
                 onChange={(e) => setForm((f) => ({ ...f, classId: e.target.value }))}
-                className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white"
+                className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <option value="">— Chọn —</option>
                 {state.classes.map((c) => (
@@ -118,12 +174,23 @@ export default function TeacherAssignments() {
                 className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white"
               />
             </label>
+            <div className="mt-6 border-t border-white/10 pt-4">
+              <p className="mb-3 text-sm text-slate-400">
+                Bộ câu hỏi (tùy chọn): nếu có, học viên làm trắc nghiệm và hệ thống chấm tự động (thang 10). Không thêm câu
+                thì giữ kiểu xác nhận nộp bài như trước.
+              </p>
+              <QuestionBankEditor
+                value={form.questionItems}
+                onChange={(questionItems) => setForm((f) => ({ ...f, questionItems }))}
+                disabled={loading}
+              />
+            </div>
             <div className="mt-6 flex justify-end gap-2">
-              <button type="button" onClick={() => setShowForm(false)} className="rounded-xl border border-white/20 px-4 py-2 text-sm text-slate-300">
+              <button type="button" onClick={closeModal} className="rounded-xl border border-white/20 px-4 py-2 text-sm text-slate-300">
                 Hủy
               </button>
               <button type="submit" className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white">
-                Lưu
+                {editingId ? 'Lưu thay đổi' : 'Lưu'}
               </button>
             </div>
           </form>

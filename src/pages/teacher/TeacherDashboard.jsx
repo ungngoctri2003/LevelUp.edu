@@ -1,3 +1,5 @@
+import { useEffect } from 'react'
+import { toast } from 'sonner'
 import StatCard from '../../components/dashboard/StatCard'
 import PageHeader from '../../components/dashboard/PageHeader'
 import Panel from '../../components/dashboard/Panel'
@@ -15,7 +17,6 @@ export default function TeacherDashboard() {
         description="Tóm tắt lớp học, học sinh, lịch dạy và bài cần chấm."
       />
 
-      {error && <p className="text-sm text-red-400">{error}</p>}
       {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

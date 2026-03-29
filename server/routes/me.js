@@ -1,5 +1,11 @@
 import { Router } from 'express'
 import { requireAuth } from '../middleware/auth.js'
+import {
+  allMcqSourceIndicesAnswered,
+  gradeMcqAttempt,
+  normalizeMcqForTaking,
+  stripMcqAnswersForClient,
+} from '../../src/lib/mcqQuestions.js'
 
 const router = Router()
 
@@ -158,13 +164,17 @@ router.get('/assignments', async (req, res) => {
     .from('assignments')
     .select(
       `
-      id, class_id, title, due_at, submitted_count, total_students, created_at,
+      id, class_id, title, due_at, questions, submitted_count, total_students, created_at,
       classes ( id, name, code, subject, teacher_id )
     `,
     )
     .order('due_at', { ascending: true, nullsFirst: false })
   if (error) return res.status(500).json({ error: error.message })
-  res.json({ data })
+  const mapped = (data || []).map((row) => ({
+    ...row,
+    questions: stripMcqAnswersForClient(row.questions),
+  }))
+  res.json({ data: mapped })
 })
 
 /** GET /api/me/assignment-submissions */
@@ -175,7 +185,7 @@ router.get('/assignment-submissions', async (req, res) => {
     .from('assignment_submissions')
     .select(
       `
-      id, assignment_id, student_id, submitted_at, score, status,
+      id, assignment_id, student_id, submitted_at, score, status, answers,
       assignments ( id, title, class_id, due_at )
     `,
     )
@@ -192,15 +202,39 @@ router.get('/assignment-submissions', async (req, res) => {
 router.post('/assignment-submissions', async (req, res) => {
   const sb = req.supabaseUser
   const uid = req.authUser.id
-  const { assignment_id, score, status } = req.body || {}
+  const { assignment_id, score, status, answers } = req.body || {}
   const aid = Number(assignment_id)
   if (!Number.isFinite(aid)) return res.status(400).json({ error: 'assignment_id không hợp lệ' })
+
+  const { data: asg, error: aErr } = await sb
+    .from('assignments')
+    .select('id, questions')
+    .eq('id', aid)
+    .maybeSingle()
+  if (aErr) return res.status(500).json({ error: aErr.message })
+  if (!asg) return res.status(404).json({ error: 'Không tìm thấy bài tập' })
+
+  const qs = Array.isArray(asg.questions) ? asg.questions : []
+  const taking = normalizeMcqForTaking(qs)
+
   const row = {
     assignment_id: aid,
     student_id: uid,
     score: score !== undefined && score !== null ? Number(score) : null,
     status: typeof status === 'string' ? status : 'pending',
+    answers: answers != null && typeof answers === 'object' ? answers : null,
   }
+
+  if (taking.length > 0) {
+    if (!allMcqSourceIndicesAnswered(taking, answers)) {
+      return res.status(400).json({ error: 'Vui lòng trả lời đủ các câu hỏi trắc nghiệm' })
+    }
+    const graded = gradeMcqAttempt(qs, answers)
+    row.score = graded.score
+    row.status = 'graded'
+    row.answers = answers
+  }
+
   const { data, error } = await sb.from('assignment_submissions').insert(row).select('*').single()
   if (error) {
     if (error.code === '23505') {

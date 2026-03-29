@@ -12,10 +12,16 @@ import AdminLayout from './pages/admin/AdminLayout'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminStudents from './pages/admin/AdminStudents'
 import AdminTeachers from './pages/admin/AdminTeachers'
+import AdminTeacherClasses from './pages/admin/AdminTeacherClasses'
 import AdminCourses from './pages/admin/AdminCourses'
 import AdminNews from './pages/admin/AdminNews'
 import AdminExams from './pages/admin/AdminExams'
 import AdminAdmissions from './pages/admin/AdminAdmissions'
+import AdminSubjects from './pages/admin/AdminSubjects'
+import AdminLessons from './pages/admin/AdminLessons'
+import AdminLandingTeachers from './pages/admin/AdminLandingTeachers'
+import AdminLeads from './pages/admin/AdminLeads'
+import AdminCmsLanding from './pages/admin/AdminCmsLanding'
 import TeacherLayout from './pages/teacher/TeacherLayout'
 import TeacherDashboard from './pages/teacher/TeacherDashboard'
 import TeacherClasses from './pages/teacher/TeacherClasses'
@@ -56,10 +62,16 @@ function App() {
           <Route index element={<AdminDashboard />} />
           <Route path="hoc-vien" element={<AdminStudents />} />
           <Route path="giao-vien" element={<AdminTeachers />} />
+          <Route path="lop-hoc" element={<AdminTeacherClasses />} />
           <Route path="khoa-hoc" element={<AdminCourses />} />
           <Route path="tin-tuc" element={<AdminNews />} />
           <Route path="bai-kiem-tra" element={<AdminExams />} />
           <Route path="tuyen-sinh" element={<AdminAdmissions />} />
+          <Route path="mon-hoc" element={<AdminSubjects />} />
+          <Route path="bai-giang-noi-dung" element={<AdminLessons />} />
+          <Route path="doi-ngu-trang-chu" element={<AdminLandingTeachers />} />
+          <Route path="lead-dang-ky" element={<AdminLeads />} />
+          <Route path="cms-trang-chu" element={<AdminCmsLanding />} />
         </Route>
 
         <Route path="/giao-vien" element={<TeacherLayout />}>

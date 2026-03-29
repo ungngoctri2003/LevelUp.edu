@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import PageHeader from '../../components/dashboard/PageHeader'
 import Panel from '../../components/dashboard/Panel'
+import { toast } from 'sonner'
 import { useAuthSession } from '../../context/AuthSessionContext'
 
 export default function StudentProfile() {
@@ -12,13 +13,10 @@ export default function StudentProfile() {
     setName(user?.name || '')
     setPhone(user?.phone || '')
   }, [user?.name, user?.phone])
-  const [msg, setMsg] = useState('')
-
   const save = async (e) => {
     e.preventDefault()
     await updateProfile({ name: name.trim() || user?.name, phone: phone.trim() })
-    setMsg('Đã lưu thông tin hồ sơ.')
-    setTimeout(() => setMsg(''), 2500)
+    toast.success('Đã lưu thông tin hồ sơ.')
   }
 
   return (
@@ -58,7 +56,6 @@ export default function StudentProfile() {
           >
             Lưu thay đổi
           </button>
-          {msg && <p className="text-center text-sm font-medium text-emerald-400">{msg}</p>}
         </form>
       </Panel>
     </div>

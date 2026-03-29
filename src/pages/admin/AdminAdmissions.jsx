@@ -1,4 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { toast } from 'sonner'
+import { toastActionError } from '../../lib/appToast.js'
 import { Link } from 'react-router-dom'
 import PageHeader from '../../components/dashboard/PageHeader'
 import Panel from '../../components/dashboard/Panel'
@@ -43,7 +45,7 @@ export default function AdminAdmissions() {
       await addAdmission(draft)
       setDraft(emptyForm)
     } catch (err) {
-      alert(err.message)
+      toastActionError(err, 'Không thêm được hồ sơ.')
     }
   }
 
@@ -51,7 +53,7 @@ export default function AdminAdmissions() {
     try {
       await setAdmissionStatus(id, status)
     } catch (err) {
-      alert(err.message)
+      toastActionError(err, 'Không cập nhật được trạng thái hồ sơ.')
     }
   }
 
@@ -60,9 +62,13 @@ export default function AdminAdmissions() {
     try {
       await deleteAdmission(r.id)
     } catch (err) {
-      alert(err.message)
+      toastActionError(err, 'Không xóa được hồ sơ.')
     }
   }
+
+  useEffect(() => {
+    if (error) toast.error(error)
+  }, [error])
 
   return (
     <div className="space-y-8">
@@ -80,7 +86,6 @@ export default function AdminAdmissions() {
         badge="Tuyển sinh"
       />
 
-      {error && <p className="text-sm text-red-400">{error}</p>}
       {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
 
       <div className="flex justify-end">

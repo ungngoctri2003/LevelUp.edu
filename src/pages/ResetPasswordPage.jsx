@@ -2,6 +2,8 @@ import { useEffect, useId, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import { useAuthSession } from '../context/AuthSessionContext'
+import { authErrorMessageForUser } from '../lib/authErrorMessages.js'
+import { toast } from 'sonner'
 
 /**
  * Trang đặt mật khẩu mới sau khi bấm link trong email (Supabase recovery).
@@ -14,7 +16,6 @@ export default function ResetPasswordPage() {
   const [status, setStatus] = useState('checking') // checking | form | invalid
   const [form, setForm] = useState({ password: '', confirm: '' })
   const [errors, setErrors] = useState({})
-  const [msg, setMsg] = useState(null)
   const [busy, setBusy] = useState(false)
 
   useEffect(() => {
@@ -83,13 +84,13 @@ export default function ResetPasswordPage() {
     e.preventDefault()
     if (!validate()) return
     setBusy(true)
-    setMsg(null)
     try {
       const { error } = await updatePassword(form.password)
       if (error) {
-        setMsg(error.message || 'Không thể cập nhật mật khẩu')
+        toast.error(authErrorMessageForUser(error, 'updatePassword'))
         return
       }
+      toast.success('Đã đặt lại mật khẩu. Vui lòng đăng nhập bằng mật khẩu mới.')
       navigate('/', { replace: true })
     } finally {
       setBusy(false)
@@ -146,10 +147,6 @@ export default function ResetPasswordPage() {
         <h1 className="text-xl font-bold text-slate-900 dark:text-white">Đặt lại mật khẩu</h1>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Nhập mật khẩu mới cho tài khoản của bạn.</p>
       </div>
-
-      {msg && (
-        <p className="mb-4 rounded-lg bg-red-500/15 px-3 py-2 text-sm text-red-800 dark:text-red-200">{msg}</p>
-      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>

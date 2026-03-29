@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 
 const ease = [0.22, 1, 0.36, 1]
 
@@ -9,12 +9,17 @@ export function Reveal({
   y = 32,
   once = true,
 }) {
+  const reduce = useReducedMotion()
+  const duration = reduce ? 0.01 : 0.55
+  const d = reduce ? 0 : delay
+  const yMove = reduce ? 0 : y
+
   return (
     <motion.div
-      initial={{ opacity: 0, y }}
+      initial={{ opacity: reduce ? 1 : 0, y: yMove }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once, margin: '-60px' }}
-      transition={{ duration: 0.65, delay, ease }}
+      viewport={{ once, margin: '-50px' }}
+      transition={{ duration: duration, delay: d, ease }}
       className={className}
     >
       {children}
@@ -22,26 +27,29 @@ export function Reveal({
   )
 }
 
-const staggerItemVariants = {
-  hidden: { opacity: 0, y: 28 },
+const staggerItemVariants = (reduce) => ({
+  hidden: { opacity: reduce ? 1 : 0, y: reduce ? 0 : 22 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.5, ease },
+    transition: { duration: reduce ? 0.01 : 0.45, ease },
   },
-}
+})
 
 export function RevealStagger({ children, className = '', stagger = 0.1 }) {
+  const reduce = useReducedMotion()
+  const st = reduce ? 0 : stagger
+
   return (
     <motion.div
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, margin: '-40px' }}
       variants={{
-        hidden: { opacity: 0 },
+        hidden: { opacity: reduce ? 1 : 0 },
         visible: {
           opacity: 1,
-          transition: { staggerChildren: stagger, delayChildren: 0.06 },
+          transition: { staggerChildren: st, delayChildren: reduce ? 0 : 0.04 },
         },
       }}
       className={className}
@@ -52,11 +60,13 @@ export function RevealStagger({ children, className = '', stagger = 0.1 }) {
 }
 
 export function RevealItem({ children, className = '' }) {
+  const reduce = useReducedMotion()
+  const variants = staggerItemVariants(reduce)
   return (
-    <motion.div variants={staggerItemVariants} className={className}>
+    <motion.div variants={variants} className={className}>
       {children}
     </motion.div>
   )
 }
 
-export const itemVariants = staggerItemVariants
+export const itemVariants = staggerItemVariants(false)

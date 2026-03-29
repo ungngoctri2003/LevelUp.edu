@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Reveal } from '../components/motion/Reveal'
@@ -14,6 +15,10 @@ export default function LessonsPage() {
   const activeId = selectedSubject || firstId
   const subject = lessonsBySubject.find((s) => s.id === activeId) || lessonsBySubject[0]
 
+  useEffect(() => {
+    if (error && !lessonsBySubject.length) toast.error(error)
+  }, [error, lessonsBySubject.length])
+
   if (loading && !lessonsBySubject.length) {
     return (
       <div className="py-24 text-center text-gray-600 dark:text-slate-400">
@@ -23,7 +28,11 @@ export default function LessonsPage() {
   }
 
   if (error && !lessonsBySubject.length) {
-    return <div className="py-24 text-center text-red-600">{error}</div>
+    return (
+      <div className="py-24 text-center text-gray-600 dark:text-slate-400">
+        Hiện không tải được danh sách bài giảng. Vui lòng thử tải lại trang.
+      </div>
+    )
   }
 
   return (

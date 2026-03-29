@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
+import { toastActionError } from '../../lib/appToast.js'
 import { Link } from 'react-router-dom'
 import PageHeader from '../../components/dashboard/PageHeader'
 import Panel from '../../components/dashboard/Panel'
@@ -40,7 +42,7 @@ export default function AdminCourses() {
       })
       setEditing(null)
     } catch (err) {
-      alert(err.message)
+      toastActionError(err, 'Không lưu được khóa học.')
     }
   }
 
@@ -49,7 +51,7 @@ export default function AdminCourses() {
     if (!createDraft.title.trim()) return
     const sid = Number(createDraft.subject_id) || firstSubjectId
     if (!sid) {
-      alert('Chưa có môn học trong danh mục. Vui lòng liên hệ quản trị để thiết lập danh mục môn.')
+      toast.warning('Chưa có môn học trong danh mục. Vui lòng thiết lập môn học trước.')
       return
     }
     try {
@@ -60,7 +62,7 @@ export default function AdminCourses() {
       })
       setCreateDraft({ title: '', description: '', subject_id: '' })
     } catch (err) {
-      alert(err.message)
+      toastActionError(err, 'Không thêm được khóa học.')
     }
   }
 
@@ -69,7 +71,7 @@ export default function AdminCourses() {
     try {
       await deleteCourse(c.id, c.title)
     } catch (err) {
-      alert(err.message)
+      toastActionError(err, 'Không xóa được khóa học.')
     }
   }
 
@@ -77,9 +79,13 @@ export default function AdminCourses() {
     try {
       await updateCourse(c.id, { visible: c.visible === false, title: c.title, description: c.description, subject_id: c.subject_id })
     } catch (err) {
-      alert(err.message)
+      toastActionError(err, 'Không cập nhật được trạng thái hiển thị.')
     }
   }
+
+  useEffect(() => {
+    if (error) toast.error(error)
+  }, [error])
 
   const field = `${inputAdmin} mt-1 w-full`
 
@@ -95,7 +101,6 @@ export default function AdminCourses() {
         </Link>
       </PageHeader>
 
-      {error && <p className="text-sm text-red-400">{error}</p>}
       {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
 
       <Panel variant="highlight" title="Thêm khóa học mới" subtitle="Chọn môn từ danh mục bên dưới.">

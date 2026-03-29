@@ -4,6 +4,7 @@ import { useAuthSession } from '../context/AuthSessionContext'
 import { usePublicContent } from '../hooks/usePublicContent'
 import { fetchPublicExamById, normalizeExamQuestions } from '../services/publicApi.js'
 import { postMyExamAttempt } from '../services/meApi.js'
+import { toast } from 'sonner'
 
 export default function TestsPage() {
   const { exams, loading: examsLoading } = usePublicContent()
@@ -20,7 +21,7 @@ export default function TestsPage() {
       const detail = await fetchPublicExamById(exam.id)
       const qs = normalizeExamQuestions(detail?.questions)
       if (!qs.length) {
-        alert('Đề này chưa có câu hỏi trong CSDL. Vui lòng chọn đề khác hoặc liên hệ quản trị.')
+        toast.warning('Đề này chưa có câu hỏi. Vui lòng chọn đề khác hoặc liên hệ quản trị.')
         return
       }
       setSelectedExam({ ...exam, questions: qs })

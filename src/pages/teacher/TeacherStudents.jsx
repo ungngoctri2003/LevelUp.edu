@@ -1,7 +1,13 @@
+import { useEffect } from 'react'
+import { toast } from 'sonner'
 import { useTeacherState } from '../../hooks/useTeacherState'
 
 export default function TeacherStudents() {
   const { state, loading, error } = useTeacherState()
+
+  useEffect(() => {
+    if (error) toast.error(error)
+  }, [error])
 
   return (
     <div className="space-y-6">
@@ -10,7 +16,6 @@ export default function TeacherStudents() {
         <p className="text-sm text-slate-400">Gom từ class_enrollments các lớp bạn phụ trách.</p>
       </div>
 
-      {error && <p className="text-sm text-red-400">{error}</p>}
       {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
 
       <div className="overflow-x-auto rounded-2xl border border-white/10 bg-white/5">

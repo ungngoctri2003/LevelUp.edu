@@ -329,6 +329,7 @@ create table public.assignments (
   class_id         bigint not null references public.classes (id) on delete cascade,
   title            text not null,
   due_at           timestamptz,
+  questions        jsonb not null default '[]'::jsonb,
   submitted_count  integer not null default 0,
   total_students   integer not null default 0,
   created_at       timestamptz not null default now(),
@@ -346,6 +347,7 @@ create table public.assignment_submissions (
   submitted_at   timestamptz not null default now(),
   score          numeric(4, 2),
   status         public.grading_status not null default 'pending',
+  answers        jsonb,
   unique (assignment_id, student_id)
 );
 

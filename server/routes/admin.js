@@ -32,6 +32,79 @@ router.get(
   jsonData(async (req) => adminApi.fetchAttemptCounts(req.sbAdmin)),
 )
 
+router.get('/classes', jsonData(async (req) => adminApi.fetchClassesAdmin(req.sbAdmin)))
+
+router.get(
+  '/classes/:id/enrollments',
+  jsonData(async (req) => adminApi.fetchClassEnrollmentsAdmin(req.sbAdmin, req.params.id)),
+)
+
+router.post('/classes', async (req, res) => {
+  try {
+    await adminApi.adminInsertClass(req.sbAdmin, req.body || {}, actor(req))
+    res.json({ ok: true })
+  } catch (e) {
+    res.status(400).json({ error: e?.message || 'Lỗi' })
+  }
+})
+
+router.patch(
+  '/classes/:id',
+  handle(async (req) => {
+    const id = Number(req.params.id)
+    if (!Number.isFinite(id)) throw new Error('ID lớp không hợp lệ')
+    await adminApi.adminUpdateClass(req.sbAdmin, id, req.body || {}, actor(req))
+  }),
+)
+
+router.delete(
+  '/classes/:id',
+  handle(async (req) => {
+    const id = Number(req.params.id)
+    if (!Number.isFinite(id)) throw new Error('ID lớp không hợp lệ')
+    await adminApi.adminDeleteClass(req.sbAdmin, id, actor(req))
+  }),
+)
+
+router.post('/classes/:id/enrollments', async (req, res) => {
+  try {
+    const id = Number(req.params.id)
+    if (!Number.isFinite(id)) throw new Error('ID lớp không hợp lệ')
+    const student_id = (req.body || {}).student_id
+    await adminApi.adminAddClassEnrollment(req.sbAdmin, id, student_id, actor(req))
+    res.json({ ok: true })
+  } catch (e) {
+    res.status(400).json({ error: e?.message || 'Lỗi' })
+  }
+})
+
+router.delete(
+  '/classes/:id/enrollments/:studentId',
+  handle(async (req) => {
+    const id = Number(req.params.id)
+    if (!Number.isFinite(id)) throw new Error('ID lớp không hợp lệ')
+    await adminApi.adminRemoveClassEnrollment(req.sbAdmin, id, req.params.studentId, actor(req))
+  }),
+)
+
+router.post('/users/student', async (req, res) => {
+  try {
+    const data = await adminApi.adminProvisionStudent(req.sbAdmin, req.body || {}, actor(req))
+    res.json({ ok: true, data })
+  } catch (e) {
+    res.status(400).json({ error: e?.message || 'Lỗi' })
+  }
+})
+
+router.post('/users/teacher', async (req, res) => {
+  try {
+    const data = await adminApi.adminProvisionTeacher(req.sbAdmin, req.body || {}, actor(req))
+    res.json({ ok: true, data })
+  } catch (e) {
+    res.status(400).json({ error: e?.message || 'Lỗi' })
+  }
+})
+
 function actor(req) {
   return { id: req.authUser.id, email: req.authUser.email }
 }
@@ -229,6 +302,135 @@ router.post(
     const { action, type } = req.body || {}
     if (!action) throw new Error('Thiếu action')
     await adminApi.logAdminActivity(req.sbAdmin, action, type || 'admin', req.authUser.email, req.authUser.id)
+  }),
+)
+
+// --- Subjects ---
+router.get('/subjects', jsonData(async (req) => adminApi.fetchSubjects(req.sbAdmin)))
+
+router.post(
+  '/subjects',
+  handle(async (req) => {
+    await adminApi.adminInsertSubject(req.sbAdmin, req.body || {}, actor(req))
+  }),
+)
+
+router.patch(
+  '/subjects/:id',
+  handle(async (req) => {
+    const id = Number(req.params.id)
+    if (!Number.isFinite(id)) throw new Error('ID môn không hợp lệ')
+    await adminApi.adminUpdateSubject(req.sbAdmin, id, req.body || {}, actor(req))
+  }),
+)
+
+router.delete(
+  '/subjects/:id',
+  handle(async (req) => {
+    const id = Number(req.params.id)
+    const name = typeof req.query.name === 'string' ? req.query.name : ''
+    if (!Number.isFinite(id)) throw new Error('ID môn không hợp lệ')
+    await adminApi.adminDeleteSubject(req.sbAdmin, id, name, actor(req))
+  }),
+)
+
+// --- Lessons ---
+router.get(
+  '/lessons',
+  jsonData(async (req) => adminApi.fetchLessonsAdmin(req.sbAdmin)),
+)
+
+router.get(
+  '/lessons/:id/details',
+  jsonData(async (req) => {
+    const id = Number(req.params.id)
+    if (!Number.isFinite(id)) throw new Error('ID bài giảng không hợp lệ')
+    const row = await adminApi.fetchLessonDetailsRow(req.sbAdmin, id)
+    return row || { lesson_id: id, summary: '', teacher_name: '', outline: [], sections: [], resources: [], practice_hints: [] }
+  }),
+)
+
+router.post(
+  '/lessons',
+  handle(async (req) => {
+    await adminApi.adminInsertLesson(req.sbAdmin, req.body || {}, actor(req))
+  }),
+)
+
+router.patch(
+  '/lessons/:id',
+  handle(async (req) => {
+    const id = Number(req.params.id)
+    if (!Number.isFinite(id)) throw new Error('ID bài giảng không hợp lệ')
+    await adminApi.adminUpdateLesson(req.sbAdmin, id, req.body || {}, actor(req))
+  }),
+)
+
+router.delete(
+  '/lessons/:id',
+  handle(async (req) => {
+    const id = Number(req.params.id)
+    const title = typeof req.query.title === 'string' ? req.query.title : ''
+    if (!Number.isFinite(id)) throw new Error('ID bài giảng không hợp lệ')
+    await adminApi.adminDeleteLesson(req.sbAdmin, id, title, actor(req))
+  }),
+)
+
+router.put(
+  '/lessons/:id/details',
+  handle(async (req) => {
+    const id = Number(req.params.id)
+    if (!Number.isFinite(id)) throw new Error('ID bài giảng không hợp lệ')
+    await adminApi.adminUpsertLessonDetails(req.sbAdmin, id, req.body || {}, actor(req))
+  }),
+)
+
+// --- Public teacher cards (landing) ---
+router.get(
+  '/public-teachers',
+  jsonData(async (req) => adminApi.fetchPublicTeachersAdmin(req.sbAdmin)),
+)
+
+router.post(
+  '/public-teachers',
+  handle(async (req) => {
+    await adminApi.adminInsertPublicTeacher(req.sbAdmin, req.body || {}, actor(req))
+  }),
+)
+
+router.patch(
+  '/public-teachers/:id',
+  handle(async (req) => {
+    const id = Number(req.params.id)
+    if (!Number.isFinite(id)) throw new Error('ID không hợp lệ')
+    await adminApi.adminUpdatePublicTeacher(req.sbAdmin, id, req.body || {}, actor(req))
+  }),
+)
+
+router.delete(
+  '/public-teachers/:id',
+  handle(async (req) => {
+    const id = Number(req.params.id)
+    const name = typeof req.query.name === 'string' ? req.query.name : ''
+    if (!Number.isFinite(id)) throw new Error('ID không hợp lệ')
+    await adminApi.adminDeletePublicTeacher(req.sbAdmin, id, name, actor(req))
+  }),
+)
+
+// --- Marketing leads ---
+router.get('/marketing-leads', jsonData(async (req) => {
+  const limit = Number(req.query.limit) || 200
+  const offset = Number(req.query.offset) || 0
+  return adminApi.fetchMarketingLeadsAdmin(req.sbAdmin, limit, offset)
+}))
+
+// --- CMS trang chủ ---
+router.get('/cms-landing', jsonData(async (req) => adminApi.fetchCmsLandingAdmin(req.sbAdmin)))
+
+router.patch(
+  '/cms-landing',
+  handle(async (req) => {
+    await adminApi.upsertCmsLandingAdmin(req.sbAdmin, req.body || {}, actor(req))
   }),
 )
 

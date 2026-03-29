@@ -6,6 +6,7 @@ import {
   useMemo,
   useState,
 } from 'react'
+import { authErrorMessageForUser } from '../lib/authErrorMessages.js'
 import { supabase } from '../lib/supabaseClient.js'
 
 const AuthSessionContext = createContext(null)
@@ -84,7 +85,7 @@ export function AuthSessionProvider({ children }) {
     }
     const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
     if (error) {
-      setAuthError(error.message)
+      setAuthError(authErrorMessageForUser(error, 'login'))
       return { error, role: null }
     }
     setSession(data.session)
@@ -114,7 +115,7 @@ export function AuthSessionProvider({ children }) {
       },
     })
     if (error) {
-      setAuthError(error.message)
+      setAuthError(authErrorMessageForUser(error, 'register'))
       return { error }
     }
     if (data.session && data.user?.id) {
@@ -162,7 +163,7 @@ export function AuthSessionProvider({ children }) {
       }
       const redirectTo = getPasswordResetRedirectUrl()
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo })
-      if (error) setAuthError(error.message)
+      if (error) setAuthError(authErrorMessageForUser(error, 'resetEmail'))
       return { error }
     },
     [getPasswordResetRedirectUrl],
@@ -176,7 +177,7 @@ export function AuthSessionProvider({ children }) {
       return { error: err }
     }
     const { error } = await supabase.auth.updateUser({ password })
-    if (error) setAuthError(error.message)
+    if (error) setAuthError(authErrorMessageForUser(error, 'updatePassword'))
     return { error }
   }, [])
 

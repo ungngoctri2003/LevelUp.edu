@@ -199,3 +199,86 @@ df-messenger {
   --df-messenger-chat-background-color: #fafafa;
   z-index: 99999;
 }
+
+/* Hero: hiệu ứng nền bằng CSS (GPU), tránh nhiều vòng lặp Framer trên main thread */
+@keyframes hero-blob-pulse-a {
+  0%,
+  100% {
+    transform: scale3d(1, 1, 1);
+    opacity: 0.25;
+  }
+  50% {
+    transform: scale3d(1.12, 1.12, 1);
+    opacity: 0.42;
+  }
+}
+@keyframes hero-blob-pulse-b {
+  0%,
+  100% {
+    transform: scale3d(1.08, 1.08, 1);
+    opacity: 0.2;
+  }
+  50% {
+    transform: scale3d(1, 1, 1);
+    opacity: 0.36;
+  }
+}
+@keyframes hero-float-y {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.45;
+  }
+  50% {
+    transform: translate3d(0, -12px, 0);
+    opacity: 0.85;
+  }
+}
+@keyframes hero-float-xy {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(6px, 10px, 0);
+  }
+}
+@keyframes hero-diamond {
+  0%,
+  100% {
+    transform: rotate(45deg) scale3d(1, 1, 1);
+  }
+  50% {
+    transform: rotate(50deg) scale3d(1.08, 1.08, 1);
+  }
+}
+
+.hero-blob-fuchsia {
+  animation: hero-blob-pulse-a 10s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+.hero-blob-cyan {
+  animation: hero-blob-pulse-b 12s ease-in-out infinite 1s;
+  will-change: transform, opacity;
+}
+.hero-float-dot-sm {
+  animation: hero-float-y 4s ease-in-out infinite;
+}
+.hero-float-dot-md {
+  animation: hero-float-xy 5s ease-in-out infinite 0.5s;
+}
+.hero-float-diamond {
+  animation: hero-diamond 6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-blob-fuchsia,
+  .hero-blob-cyan,
+  .hero-float-dot-sm,
+  .hero-float-dot-md,
+  .hero-float-diamond {
+    animation: none !important;
+    transform: none !important;
+    opacity: 0.35;
+  }
+}

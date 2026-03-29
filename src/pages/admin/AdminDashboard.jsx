@@ -1,4 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { toast } from 'sonner'
+import { toastActionError } from '../../lib/appToast.js'
 import { Link } from 'react-router-dom'
 import StatCard from '../../components/dashboard/StatCard'
 import PageHeader from '../../components/dashboard/PageHeader'
@@ -7,9 +9,14 @@ import { useAdminState } from '../../hooks/useAdminState'
 import { computeDashboardStats } from '../../utils/adminStorage'
 
 const quickLinks = [
+  { to: '/admin/cms-trang-chu', label: 'CMS trang chủ', desc: 'Hero, lợi ích, video, đánh giá' },
   { to: '/admin/hoc-vien', label: 'Học viên', desc: 'Tìm kiếm, trạng thái tài khoản' },
   { to: '/admin/giao-vien', label: 'Giáo viên', desc: 'Duyệt hồ sơ, phân lớp' },
+  { to: '/admin/mon-hoc', label: 'Môn học', desc: 'Slug, icon, thứ tự' },
   { to: '/admin/khoa-hoc', label: 'Khóa học', desc: 'Hiển thị web, chỉnh nội dung' },
+  { to: '/admin/bai-giang-noi-dung', label: 'Bài giảng', desc: 'lessons + lesson_details' },
+  { to: '/admin/doi-ngu-trang-chu', label: 'Đội ngũ landing', desc: 'Thẻ giáo viên trang chủ' },
+  { to: '/admin/lead-dang-ky', label: 'Lead đăng ký', desc: 'Form trang chủ' },
   { to: '/admin/tin-tuc', label: 'Tin tức', desc: 'Đăng bài, thông báo' },
   { to: '/admin/bai-kiem-tra', label: 'Bài kiểm tra', desc: 'Đề, giao bài, hiển thị công khai' },
   { to: '/admin/tuyen-sinh', label: 'Tuyển sinh', desc: 'Hồ sơ, trạng thái xét duyệt' },
@@ -40,9 +47,13 @@ export default function AdminDashboard() {
       setRevDraft('')
       setTickDraft('')
     } catch (err) {
-      alert(err.message)
+      toastActionError(err, 'Không lưu được cài đặt. Vui lòng thử lại.')
     }
   }
+
+  useEffect(() => {
+    if (error) toast.error(error)
+  }, [error])
 
   return (
     <div className="space-y-10">
@@ -60,7 +71,6 @@ export default function AdminDashboard() {
         </button>
       </PageHeader>
 
-      {error && <p className="text-sm text-red-400">{error}</p>}
       {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

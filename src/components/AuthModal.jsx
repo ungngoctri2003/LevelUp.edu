@@ -3,7 +3,9 @@ import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuthModal } from '../context/AuthModalContext'
+import { toast } from 'sonner'
 import { useAuthSession } from '../context/AuthSessionContext'
+import { authErrorMessageForUser } from '../lib/authErrorMessages.js'
 
 function ForgotPasswordForm({ onBackToLogin, onSubmitEmail, titleId }) {
   const fieldIds = useId()
@@ -293,7 +295,6 @@ export default function AuthModal() {
   const { login, register, requestPasswordReset } = useAuthSession()
   const navigate = useNavigate()
   const titleId = useId()
-  const [msg, setMsg] = useState(null)
 
   const redirectForRole = (role) => {
     if (role === 'admin') navigate('/admin', { replace: true })
@@ -302,10 +303,9 @@ export default function AuthModal() {
   }
 
   const handleLogin = async ({ email, password }) => {
-    setMsg(null)
     const { error, role } = await login(email, password)
     if (error) {
-      setMsg(error.message || 'Đăng nhập thất bại')
+      toast.error(authErrorMessageForUser(error, 'login'))
       return
     }
     closeAuth()
@@ -313,26 +313,25 @@ export default function AuthModal() {
   }
 
   const handleForgotPassword = async (email) => {
-    setMsg(null)
     const { error } = await requestPasswordReset(email)
     if (error) {
-      setMsg(error.message || 'Không gửi được email. Thử lại sau.')
+      toast.error(authErrorMessageForUser(error, 'resetEmail'))
       return
     }
-    setMsg(
-      'Nếu email có trong hệ thống, bạn sẽ nhận được hướng dẫn đặt lại mật khẩu. Kiểm tra cả thư mục spam.',
+    toast.success(
+      'Nếu email có trong hệ thống, bạn sẽ nhận hướng dẫn đặt lại mật khẩu. Kiểm tra cả thư mục spam.',
+      { duration: 8000 },
     )
   }
 
   const handleRegister = async ({ email, password, name, phone }) => {
-    setMsg(null)
     const { error, needsEmailConfirm } = await register({ email, password, fullName: name, phone })
     if (error) {
-      setMsg(error.message || 'Đăng ký thất bại')
+      toast.error(authErrorMessageForUser(error, 'register'))
       return
     }
     if (needsEmailConfirm) {
-      setMsg('Đã gửi email xác nhận. Vui lòng mở link trong hộp thư rồi đăng nhập.')
+      toast.success('Đã gửi email xác nhận. Mở link trong hộp thư rồi đăng nhập.', { duration: 8000 })
       return
     }
     closeAuth()
@@ -352,10 +351,6 @@ export default function AuthModal() {
       window.removeEventListener('keydown', onKey)
     }
   }, [authView, closeAuth])
-
-  useEffect(() => {
-    setMsg(null)
-  }, [authView])
 
   const node = typeof document !== 'undefined' ? document.body : null
   if (!node) return null
@@ -389,7 +384,6 @@ export default function AuthModal() {
             >
               ✕
             </button>
-            {msg && <p className="mb-4 rounded-lg bg-amber-500/15 px-3 py-2 text-sm text-amber-800 dark:text-amber-200">{msg}</p>}
             {authView === 'login' ? (
               <LoginForm
                 titleId={titleId}

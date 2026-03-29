@@ -5,6 +5,8 @@ import Panel from '../../components/dashboard/Panel'
 import { btnPrimaryStudent } from '../../components/dashboard/dashboardStyles'
 import { useAuthSession } from '../../context/AuthSessionContext'
 import { usePublicContent } from '../../hooks/usePublicContent'
+import { PUBLIC_ACTION_ERROR } from '../../lib/publicUserMessages.js'
+import { toast } from 'sonner'
 import { getMyCourseProgress, patchMyCourseProgress } from '../../services/meApi.js'
 
 export default function StudentCourses() {
@@ -12,19 +14,20 @@ export default function StudentCourses() {
   const { courses: pubCourses, loading: pubLoading } = usePublicContent()
   const [rows, setRows] = useState([])
   const [version, setVersion] = useState(0)
+  const [draftPct, setDraftPct] = useState({})
 
   const load = useCallback(async () => {
     const token = session?.access_token
     if (!token || !user?.id) {
-      setRows(
-        (pubCourses || []).map((c) => ({
-          id: c.id,
-          title: c.title,
-          teacher: '—',
-          progress: 0,
-          nextLesson: 'Xem bài giảng công khai',
-        })),
-      )
+      const guestRows = (pubCourses || []).map((c) => ({
+        id: c.id,
+        title: c.title,
+        teacher: '—',
+        progress: 0,
+        nextLesson: 'Xem bài giảng công khai',
+      }))
+      setRows(guestRows)
+      setDraftPct(Object.fromEntries(guestRows.map((r) => [r.id, '0'])))
       return
     }
     let prog = []
@@ -35,34 +38,39 @@ export default function StudentCourses() {
       prog = []
     }
     const pmap = Object.fromEntries((prog || []).map((p) => [p.course_id, p]))
-    setRows(
-      (pubCourses || []).map((c) => {
-        const p = pmap[c.id]
-        return {
-          id: c.id,
-          title: c.title,
-          teacher: '—',
-          progress: p ? Number(p.progress_pct) : 0,
-          nextLesson: 'Cập nhật tiến độ hoặc xem bài giảng',
-        }
-      }),
-    )
+    const nextRows = (pubCourses || []).map((c) => {
+      const p = pmap[c.id]
+      return {
+        id: c.id,
+        title: c.title,
+        teacher: '—',
+        progress: p ? Number(p.progress_pct) : 0,
+        nextLesson: 'Cập nhật tiến độ hoặc xem bài giảng',
+      }
+    })
+    setRows(nextRows)
+    setDraftPct(Object.fromEntries(nextRows.map((r) => [r.id, String(Math.round(r.progress))])))
   }, [user?.id, pubCourses, session?.access_token])
 
   useEffect(() => {
     load()
   }, [load, version])
 
-  const bump = async (courseId, delta) => {
+  const saveProgress = async (courseId) => {
     const token = session?.access_token
     if (!token || !user?.id) return
-    const row = rows.find((r) => r.id === courseId)
-    const base = row?.progress ?? 0
-    const next = Math.min(100, Math.max(0, base + delta))
+    const raw = draftPct[courseId]
+    const n = Math.min(100, Math.max(0, Number(raw)))
+    if (Number.isNaN(n)) {
+      toast.warning('Nhập số từ 0 đến 100')
+      return
+    }
     try {
-      await patchMyCourseProgress(token, courseId, { progress_pct: next })
+      await patchMyCourseProgress(token, courseId, { progress_pct: n })
+      toast.success('Đã cập nhật tiến độ.')
     } catch (e) {
-      alert(e.message || 'Không cập nhật được tiến độ')
+      if (import.meta.env.DEV) console.error('[StudentCourses]', e)
+      toast.error(PUBLIC_ACTION_ERROR)
       return
     }
     setVersion((v) => v + 1)
@@ -70,7 +78,10 @@ export default function StudentCourses() {
 
   return (
     <div className="space-y-8">
-      <PageHeader title="Khóa học của tôi" description="Khóa hiển thị công khai + tiến độ trong student_course_progress." />
+      <PageHeader
+        title="Khóa học của tôi"
+        description="Theo dõi tiến độ từng khóa. Nhập phần trăm hoàn thành (0–100) và bấm Lưu."
+      />
 
       {pubLoading && <p className="text-sm text-slate-400">Đang tải…</p>}
 
@@ -95,13 +106,24 @@ export default function StudentCourses() {
             <p className="mt-4 text-sm text-slate-300">
               <span className="text-slate-500">Tiếp theo:</span> {c.nextLesson}
             </p>
-            <div className="mt-5 flex flex-wrap gap-2">
+            <div className="mt-5 flex flex-wrap items-center gap-2">
+              <label className="flex items-center gap-2 text-xs text-slate-400">
+                <span>Tiến độ %</span>
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={draftPct[c.id] ?? ''}
+                  onChange={(e) => setDraftPct((p) => ({ ...p, [c.id]: e.target.value }))}
+                  className="w-20 rounded-lg border border-white/15 bg-black/30 px-2 py-1.5 text-white"
+                />
+              </label>
               <button
                 type="button"
-                onClick={() => bump(c.id, 5)}
-                className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-xs font-medium text-slate-200 transition hover:bg-white/10"
+                onClick={() => saveProgress(c.id)}
+                className="rounded-xl border border-sky-500/40 bg-sky-500/15 px-4 py-2 text-xs font-medium text-sky-200 transition hover:bg-sky-500/25"
               >
-                +5% tiến độ
+                Lưu tiến độ
               </button>
               <Link to="/bai-giang" className={`${btnPrimaryStudent} inline-block text-xs`}>
                 Xem bài giảng

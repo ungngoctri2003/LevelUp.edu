@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Reveal } from '../motion/Reveal'
 import { usePublicContent } from '../../hooks/usePublicContent'
+import { toast } from 'sonner'
+import { PUBLIC_SUBMIT_ERROR } from '../../lib/publicUserMessages.js'
 import { postMarketingLead } from '../../services/publicApi.js'
 
 const initialForm = {
@@ -16,7 +18,6 @@ export default function RegistrationForm() {
   const [form, setForm] = useState(initialForm)
   const [errors, setErrors] = useState({})
   const [submitted, setSubmitted] = useState(false)
-  const [submitError, setSubmitError] = useState('')
 
   const validate = () => {
     const newErrors = {}
@@ -43,7 +44,6 @@ export default function RegistrationForm() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!validate()) return
-    setSubmitError('')
     try {
       await postMarketingLead({
         full_name: form.fullName.trim(),
@@ -55,7 +55,8 @@ export default function RegistrationForm() {
       setForm(initialForm)
       setErrors({})
     } catch (err) {
-      setSubmitError(err.message || 'Gửi thất bại')
+      if (import.meta.env.DEV) console.error('[RegistrationForm]', err)
+      toast.error(PUBLIC_SUBMIT_ERROR)
     }
   }
 
@@ -140,9 +141,6 @@ export default function RegistrationForm() {
                 transition={{ duration: 0.55, delay: 0.1 }}
                 className="mt-12 rounded-2xl border border-slate-200 bg-white p-10 shadow-xl shadow-gray-200/50 dark:border-slate-700 dark:bg-slate-800 dark:shadow-none"
               >
-                {submitError && (
-                  <p className="mb-4 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-700 dark:text-red-300">{submitError}</p>
-                )}
                 <div className="space-y-6">
                   {['fullName', 'email', 'phone'].map((field) => (
                     <motion.div

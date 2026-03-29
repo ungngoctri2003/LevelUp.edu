@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
+import { toastActionError } from '../../lib/appToast.js'
 import { Link } from 'react-router-dom'
 import PageHeader from '../../components/dashboard/PageHeader'
 import Panel from '../../components/dashboard/Panel'
@@ -10,12 +12,14 @@ import {
   tableHeadAdmin,
 } from '../../components/dashboard/dashboardStyles'
 import { useAdminState } from '../../hooks/useAdminState'
+import QuestionBankEditor from '../../components/dashboard/QuestionBankEditor.jsx'
+import { questionBankDraftsFromStored, sanitizeMcqBankForDatabase } from '../../lib/mcqQuestions.js'
 
 const emptyForm = {
   title: '',
   subject: '',
   duration: 45,
-  questions: 20,
+  questionItems: [],
   level: 'Lớp 10',
   assigned: false,
   published: true,
@@ -32,6 +36,7 @@ export default function AdminExams() {
     subject: ex.subject,
     duration: ex.duration,
     questions: ex.questions,
+    questionItems: questionBankDraftsFromStored(ex.questionItems),
     level: ex.level,
     assigned: !!ex.assigned,
     published: ex.published !== false,
@@ -41,10 +46,15 @@ export default function AdminExams() {
     e.preventDefault()
     if (!form.title.trim()) return
     try {
-      await addExam(form)
+      const sanitized = sanitizeMcqBankForDatabase(form.questionItems)
+      await addExam({
+        ...form,
+        questionItems: form.questionItems,
+        questions: sanitized.length,
+      })
       setForm(emptyForm)
     } catch (err) {
-      alert(err.message)
+      toastActionError(err, 'Không tạo được đề.')
     }
   }
 
@@ -57,7 +67,7 @@ export default function AdminExams() {
     try {
       await updateExam(id, next)
     } catch (err) {
-      alert(err.message)
+      toastActionError(err, 'Không cập nhật được đề.')
     }
   }
 
@@ -70,10 +80,15 @@ export default function AdminExams() {
     e.preventDefault()
     if (!editForm.title.trim() || editId == null) return
     try {
-      await updateExam(editId, editForm)
+      const sanitized = sanitizeMcqBankForDatabase(editForm.questionItems)
+      await updateExam(editId, {
+        ...editForm,
+        questionItems: editForm.questionItems,
+        questions: sanitized.length,
+      })
       setEditId(null)
     } catch (err) {
-      alert(err.message)
+      toastActionError(err, 'Không lưu được đề.')
     }
   }
 
@@ -82,9 +97,13 @@ export default function AdminExams() {
     try {
       await deleteExam(ex.id, ex.title)
     } catch (err) {
-      alert(err.message)
+      toastActionError(err, 'Không xóa được đề.')
     }
   }
+
+  useEffect(() => {
+    if (error) toast.error(error)
+  }, [error])
 
   const field = `${inputAdmin} mt-1 w-full`
 
@@ -98,13 +117,13 @@ export default function AdminExams() {
             <Link className="font-medium text-cyan-400 hover:text-cyan-300" to="/bai-kiem-tra">
               trang Bài kiểm tra
             </Link>
-            .
+            . Dùng nút <span className="text-slate-200">Sửa đề</span> trong bảng để chỉnh tiêu đề, thời gian và
+            bộ câu hỏi trắc nghiệm.
           </>
         }
         badge="Đề thi"
       />
 
-      {error && <p className="text-sm text-red-400">{error}</p>}
       {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
 
       <Panel title="Tạo đề mới" subtitle="Thêm đề vào kho đề dùng chung cho website.">
@@ -146,17 +165,18 @@ export default function AdminExams() {
                 className={field}
               />
             </label>
-            <label className="text-sm text-slate-400">
-              Số câu
-              <input
-                type="number"
-                min={1}
-                value={form.questions}
-                onChange={(e) => setForm((f) => ({ ...f, questions: e.target.value }))}
-                className={field}
-              />
-            </label>
+            <p className="flex items-end text-sm text-slate-500 sm:col-span-1">
+              Số câu hợp lệ sẽ lưu:{' '}
+              <span className="ml-1 font-medium text-slate-300">
+                {sanitizeMcqBankForDatabase(form.questionItems).length}
+              </span>
+            </p>
           </div>
+          <QuestionBankEditor
+            value={form.questionItems}
+            onChange={(questionItems) => setForm((f) => ({ ...f, questionItems }))}
+            disabled={loading}
+          />
           <div className="mt-4 flex flex-wrap gap-6 text-sm text-slate-300">
             <label className="flex cursor-pointer items-center gap-2">
               <input
@@ -229,8 +249,12 @@ export default function AdminExams() {
                     </button>
                   </td>
                   <td className="space-x-2 px-4 py-3">
-                    <button type="button" onClick={() => openEdit(e)} className="text-xs text-cyan-400 hover:text-cyan-300">
-                      Sửa
+                    <button
+                      type="button"
+                      onClick={() => openEdit(e)}
+                      className="rounded-lg border border-cyan-500/40 bg-cyan-500/10 px-2.5 py-1 text-xs font-medium text-cyan-200 hover:bg-cyan-500/20"
+                    >
+                      Sửa đề
                     </button>
                     <button type="button" onClick={() => del(e)} className="text-xs text-red-400 hover:text-red-300">
                       Xóa
@@ -245,8 +269,12 @@ export default function AdminExams() {
 
       {editId != null && (
         <div className={modalBackdrop}>
-          <form onSubmit={saveEdit} className={`${modalPanelAdmin} max-h-[90vh] max-w-lg overflow-y-auto`}>
-            <h3 className="text-lg font-semibold text-white">Sửa đề thi</h3>
+          <form
+          onSubmit={saveEdit}
+          className={`${modalPanelAdmin} max-h-[90vh] max-w-3xl overflow-y-auto`}
+        >
+            <h3 className="text-lg font-semibold text-white">Sửa đề thi &amp; bộ câu hỏi</h3>
+            <p className="mt-1 text-sm text-slate-400">Thay đổi nội dung câu hỏi, đáp án hoặc metadata — nhấn Lưu để cập nhật.</p>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <label className="text-sm text-slate-400 sm:col-span-2">
                 Tên đề
@@ -282,16 +310,19 @@ export default function AdminExams() {
                   className={field}
                 />
               </label>
-              <label className="text-sm text-slate-400">
-                Số câu
-                <input
-                  type="number"
-                  min={1}
-                  value={editForm.questions}
-                  onChange={(e) => setEditForm((f) => ({ ...f, questions: e.target.value }))}
-                  className={field}
-                />
-              </label>
+              <p className="flex items-end text-sm text-slate-500 sm:col-span-2">
+                Số câu hợp lệ sẽ lưu:{' '}
+                <span className="ml-1 font-medium text-slate-300">
+                  {sanitizeMcqBankForDatabase(editForm.questionItems).length}
+                </span>
+              </p>
+            </div>
+            <div className="mt-4 border-t border-white/10 pt-4">
+              <QuestionBankEditor
+                value={editForm.questionItems}
+                onChange={(questionItems) => setEditForm((f) => ({ ...f, questionItems }))}
+                disabled={loading}
+              />
             </div>
             <div className="mt-4 flex flex-wrap gap-6 text-sm text-slate-300">
               <label className="flex cursor-pointer items-center gap-2">

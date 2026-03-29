@@ -2,12 +2,22 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { supabase } from '../lib/supabaseClient.js'
 import { useAuthSession } from './AuthSessionContext.jsx'
 import * as tq from '../services/teacherQueries.js'
+import { questionBankDraftsFromStored, sanitizeMcqBankForDatabase } from '../lib/mcqQuestions.js'
 
-function computeTeacherDashboardStats(classes, submissions) {
+function isoToDatetimeLocalValue(iso) {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+function computeTeacherDashboardStats(classes, submissions, scheduleSlotCount) {
   const myClasses = classes.length
   const totalStudents = classes.reduce((acc, c) => acc + (Number(c.students) || 0), 0)
   const pendingGrading = submissions.filter((g) => g.status === 'pending').length
-  return { myClasses, totalStudents, pendingGrading, upcomingSessions: 0 }
+  const upcomingSessions = Number(scheduleSlotCount) || 0
+  return { myClasses, totalStudents, pendingGrading, upcomingSessions }
 }
 
 const TeacherDataContext = createContext(null)
@@ -99,15 +109,22 @@ export function TeacherDataProvider({ children }) {
       updated: new Date(p.updated_at).toLocaleDateString('vi-VN'),
     }))
 
-    const assignments = (bundle.assignments || []).map((a) => ({
-      id: String(a.id),
-      classId: String(a.class_id),
-      className: classesById[a.class_id]?.name || `Lớp ${a.class_id}`,
-      title: a.title,
-      due: a.due_at ? new Date(a.due_at).toLocaleString('vi-VN') : '—',
-      submitted: a.submitted_count ?? 0,
-      total: a.total_students ?? 0,
-    }))
+    const assignments = (bundle.assignments || []).map((a) => {
+      const rawQ = Array.isArray(a.questions) ? a.questions : []
+      const qBank = sanitizeMcqBankForDatabase(rawQ)
+      return {
+        id: String(a.id),
+        classId: String(a.class_id),
+        className: classesById[a.class_id]?.name || `Lớp ${a.class_id}`,
+        title: a.title,
+        due: a.due_at ? new Date(a.due_at).toLocaleString('vi-VN') : '—',
+        dueInput: isoToDatetimeLocalValue(a.due_at),
+        submitted: a.submitted_count ?? 0,
+        total: a.total_students ?? 0,
+        mcqCount: qBank.length,
+        questionItems: questionBankDraftsFromStored(rawQ),
+      }
+    })
 
     const gradingQueue = (bundle.submissions || []).map((s) => ({
       id: String(s.id),
@@ -148,8 +165,7 @@ export function TeacherDataProvider({ children }) {
       rosters,
     }
 
-    const statsBase = computeTeacherDashboardStats(classesUi, bundle.submissions || [])
-    statsBase.upcomingSessions = schedule.length
+    const statsBase = computeTeacherDashboardStats(classesUi, bundle.submissions || [], schedule.length)
 
     return {
       state,
@@ -267,12 +283,14 @@ export function TeacherDataProvider({ children }) {
         await refresh()
       },
 
-      async addAssignment(classIdStr, title, dueAt) {
+      async addAssignment(classIdStr, title, dueAt, questionItems) {
         const cid = Number(classIdStr)
+        const questions = sanitizeMcqBankForDatabase(Array.isArray(questionItems) ? questionItems : [])
         const { error: err } = await supabase.from('assignments').insert({
           class_id: cid,
           title: title.trim(),
           due_at: dueAt || null,
+          questions,
         })
         if (err) throw new Error(err.message)
         await refresh()
@@ -280,6 +298,21 @@ export function TeacherDataProvider({ children }) {
 
       async deleteAssignment(asgId) {
         const { error: err } = await supabase.from('assignments').delete().eq('id', Number(asgId))
+        if (err) throw new Error(err.message)
+        await refresh()
+      },
+
+      async updateAssignment(asgId, { title, dueAt, questionItems }) {
+        const id = Number(asgId)
+        const questions = sanitizeMcqBankForDatabase(Array.isArray(questionItems) ? questionItems : [])
+        const { error: err } = await supabase
+          .from('assignments')
+          .update({
+            title: title.trim(),
+            due_at: dueAt || null,
+            questions,
+          })
+          .eq('id', id)
         if (err) throw new Error(err.message)
         await refresh()
       },

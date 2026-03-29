@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
+import { toastActionError } from '../../lib/appToast.js'
 import { useTeacherState } from '../../hooks/useTeacherState'
 
 const empty = { classId: '', day: 'Thứ 2', time: '', room: 'Online - Zoom' }
@@ -16,9 +18,13 @@ export default function TeacherSchedule() {
       setForm(empty)
       setShowForm(false)
     } catch (err) {
-      alert(err.message)
+      toastActionError(err, 'Không thêm được buổi học.')
     }
   }
+
+  useEffect(() => {
+    if (error) toast.error(error)
+  }, [error])
 
   return (
     <div className="space-y-6">
@@ -36,7 +42,6 @@ export default function TeacherSchedule() {
         </button>
       </div>
 
-      {error && <p className="text-sm text-red-400">{error}</p>}
       {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
 
       <div className="overflow-x-auto rounded-2xl border border-white/10 bg-white/5">
@@ -65,7 +70,7 @@ export default function TeacherSchedule() {
                       try {
                         await deleteScheduleSlot(s.id)
                       } catch (err) {
-                        alert(err.message)
+                        toastActionError(err, 'Không xóa được buổi học.')
                       }
                     }}
                     className="text-xs text-red-400"

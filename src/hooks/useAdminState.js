@@ -1,1 +1,1 @@
-export { useAdminData as useAdminState } from '../context/AdminDataContext.jsx'
+export { useAdminData as useAdminState } from '../context/useAdminData.js'

@@ -1,8 +1,15 @@
+import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { toast } from 'sonner'
 import { usePublicContent } from '../hooks/usePublicContent'
 
 export default function NewsPage() {
   const { news, loading, error } = usePublicContent()
+
+  useEffect(() => {
+    if (error) toast.error(error)
+  }, [error])
+
   return (
     <div className="py-16 sm:py-24">
       <div className="mx-auto max-w-7xl px-6">
@@ -17,9 +24,6 @@ export default function NewsPage() {
 
         {loading && news.length === 0 && (
           <p className="text-center text-slate-500 dark:text-slate-400">Đang tải tin…</p>
-        )}
-        {error && news.length === 0 && (
-          <p className="text-center text-red-600 dark:text-red-400">{error}</p>
         )}
         {!loading && news.length === 0 && !error && (
           <p className="text-center text-slate-500 dark:text-slate-400">Chưa có tin tức.</p>

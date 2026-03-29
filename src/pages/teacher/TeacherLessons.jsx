@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
+import { toastActionError } from '../../lib/appToast.js'
 import PageHeader from '../../components/dashboard/PageHeader'
 import Panel from '../../components/dashboard/Panel'
 import { useTeacherState } from '../../hooks/useTeacherState'
@@ -18,9 +20,13 @@ export default function TeacherLessons() {
       setForm(empty)
       setShowForm(false)
     } catch (err) {
-      alert(err.message)
+      toastActionError(err, 'Không thêm được bài giảng.')
     }
   }
+
+  useEffect(() => {
+    if (error) toast.error(error)
+  }, [error])
 
   const field =
     'mt-1 w-full rounded-xl border border-white/15 bg-black/35 px-3 py-2 text-sm text-white focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/15'
@@ -37,7 +43,6 @@ export default function TeacherLessons() {
         </button>
       </PageHeader>
 
-      {error && <p className="text-sm text-red-400">{error}</p>}
       {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
 
       <Panel noDivider padding={false} className="overflow-hidden">
@@ -69,7 +74,7 @@ export default function TeacherLessons() {
                         try {
                           await deleteLessonPost(l.id)
                         } catch (err) {
-                          alert(err.message)
+                          toastActionError(err, 'Không xóa được bài giảng.')
                         }
                       }}
                       className="text-xs text-red-400"

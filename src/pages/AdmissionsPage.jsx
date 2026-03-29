@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { usePublicContent } from '../hooks/usePublicContent'
+import { PUBLIC_SUBMIT_ERROR } from '../lib/publicUserMessages.js'
+import { toast } from 'sonner'
 import { postAdmissionApplication } from '../services/publicApi.js'
 
 export default function AdmissionsPage() {
@@ -11,11 +13,9 @@ export default function AdmissionsPage() {
 
   const [form, setForm] = useState({ student_name: '', parent_phone: '', grade_label: 'Lớp 10', notes: '' })
   const [sent, setSent] = useState(false)
-  const [err, setErr] = useState('')
 
   const submit = async (e) => {
     e.preventDefault()
-    setErr('')
     try {
       await postAdmissionApplication({
         student_name: form.student_name.trim(),
@@ -25,7 +25,8 @@ export default function AdmissionsPage() {
       })
       setSent(true)
     } catch (e2) {
-      setErr(e2.message || 'Không gửi được — kiểm tra server có SUPABASE_SERVICE_ROLE_KEY.')
+      if (import.meta.env.DEV) console.error('[AdmissionsPage]', e2)
+      toast.error(PUBLIC_SUBMIT_ERROR)
     }
   }
 
@@ -35,7 +36,7 @@ export default function AdmissionsPage() {
         <div className="mb-16 text-center">
           <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl">Tuyển sinh</h1>
           <p className="mt-6 text-lg text-gray-600 dark:text-slate-400">
-            Thông tin từ CSDL (system_settings) và form gửi hồ sơ trực tuyến.
+            Thông tin tuyển sinh và form gửi hồ sơ trực tuyến.
           </p>
         </div>
 
@@ -86,7 +87,6 @@ export default function AdmissionsPage() {
                 <p className="mt-3 text-green-600 dark:text-green-400">Đã gửi — chúng tôi sẽ liên hệ sớm.</p>
               ) : (
                 <form onSubmit={submit} className="mt-4 grid gap-3 sm:grid-cols-2">
-                  {err && <p className="sm:col-span-2 text-sm text-red-600">{err}</p>}
                   <input
                     required
                     placeholder="Họ tên học sinh"

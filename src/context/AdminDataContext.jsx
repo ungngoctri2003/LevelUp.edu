@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
 import { useAuthSession } from './AuthSessionContext.jsx'
 import * as api from '../services/adminApi.js'
@@ -21,7 +21,7 @@ function computeDashboardStats(s) {
   }
 }
 
-const AdminDataContext = createContext(null)
+export const AdminDataContext = createContext(null)
 
 export function AdminDataProvider({ children }) {
   const { user, session } = useAuthSession()
@@ -34,6 +34,7 @@ export function AdminDataProvider({ children }) {
     activity: [],
     students: [],
     teachers: [],
+    classes: [],
     subjects: [],
     settings: { monthlyRevenue: 0, openTickets: 0 },
   })
@@ -49,26 +50,36 @@ export function AdminDataProvider({ children }) {
       const loadRoster = async () => {
         if (accessToken) {
           try {
-            const [stRes, teRes, cntRes] = await Promise.all([
+            const [stRes, teRes, cntRes, clRes] = await Promise.all([
               srv.adminListStudents(accessToken),
               srv.adminListTeachers(accessToken),
               srv.adminListExamAttemptCounts(accessToken),
+              srv.adminListClasses(accessToken),
             ])
             return {
               students: stRes.data,
               teachers: teRes.data,
               counts: cntRes.data,
+              classes: clRes.data,
             }
           } catch {
             /* API tắt / thiếu service role — fallback RLS trên trình duyệt */
+            const [students, teachers, counts, classes] = await Promise.all([
+              api.fetchStudentsAdmin(supabase),
+              api.fetchTeachersAdmin(supabase),
+              api.fetchAttemptCounts(supabase),
+              api.fetchClassesAdmin(supabase),
+            ])
+            return { students, teachers, counts, classes }
           }
         }
-        const [students, teachers, counts] = await Promise.all([
+        const [students, teachers, counts, classes] = await Promise.all([
           api.fetchStudentsAdmin(supabase),
           api.fetchTeachersAdmin(supabase),
           api.fetchAttemptCounts(supabase),
+          api.fetchClassesAdmin(supabase),
         ])
-        return { students, teachers, counts }
+        return { students, teachers, counts, classes }
       }
 
       const [
@@ -91,7 +102,7 @@ export function AdminDataProvider({ children }) {
         api.fetchAdminSettings(supabase),
       ])
 
-      const { students, teachers, counts } = roster
+      const { students, teachers, counts, classes } = roster
       setAttemptCounts(counts)
       setState({
         courses,
@@ -101,6 +112,7 @@ export function AdminDataProvider({ children }) {
         activity,
         students,
         teachers,
+        classes: classes || [],
         subjects,
         settings,
       })
@@ -198,6 +210,16 @@ export function AdminDataProvider({ children }) {
         await refresh()
       },
 
+      async createStudentUser(payload) {
+        await srv.adminCreateStudentUser(t, payload)
+        await refresh()
+      },
+
+      async createTeacherUser(payload) {
+        await srv.adminCreateTeacherUser(t, payload)
+        await refresh()
+      },
+
       async updateTeacher(profileId, row) {
         await srv.adminPatchTeacher(t, profileId, row)
         await refresh()
@@ -209,6 +231,35 @@ export function AdminDataProvider({ children }) {
       async removeTeacher(profileId) {
         if (!confirm('Đặt trạng thái giáo viên tạm khóa?')) return
         await srv.adminPostTeacherApproval(t, profileId, 'suspended')
+        await refresh()
+      },
+
+      async createSchoolClass(body) {
+        await srv.adminCreateSchoolClass(t, body)
+        await refresh()
+      },
+      async updateSchoolClass(id, patch) {
+        await srv.adminPatchSchoolClass(t, id, patch)
+        await refresh()
+      },
+      async deleteSchoolClass(id) {
+        if (!confirm('Xóa lớp này? Toàn bộ đăng ký, lịch, bài tập liên quan sẽ bị xóa theo.')) return
+        await srv.adminDeleteSchoolClass(t, id)
+        await refresh()
+      },
+      async fetchClassEnrollments(classId) {
+        if (t) {
+          const res = await srv.adminListClassEnrollments(t, classId)
+          return res.data
+        }
+        return api.fetchClassEnrollmentsAdmin(supabase, classId)
+      },
+      async addClassEnrollment(classId, studentId) {
+        await srv.adminPostClassEnrollment(t, classId, studentId)
+        await refresh()
+      },
+      async removeClassEnrollment(classId, studentId) {
+        await srv.adminDeleteClassEnrollment(t, classId, studentId)
         await refresh()
       },
 
@@ -225,10 +276,4 @@ export function AdminDataProvider({ children }) {
   }, [state, loading, error, refresh, attemptCounts, accessToken])
 
   return <AdminDataContext.Provider value={ctx}>{children}</AdminDataContext.Provider>
-}
-
-export function useAdminData() {
-  const c = useContext(AdminDataContext)
-  if (!c) throw new Error('useAdminData trong AdminDataProvider')
-  return c
 }

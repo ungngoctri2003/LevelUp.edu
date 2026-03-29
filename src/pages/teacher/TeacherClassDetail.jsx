@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
+import { toastActionError } from '../../lib/appToast.js'
 import { Link, useParams } from 'react-router-dom'
 import { useTeacherState } from '../../hooks/useTeacherState'
 
@@ -29,7 +31,7 @@ export default function TeacherClassDetail() {
         setEditing(null)
         setForm(emptyRoster)
       } catch (err) {
-        alert(err.message)
+        toastActionError(err, 'Không thêm được học viên vào lớp.')
       }
       return
     }
@@ -40,7 +42,7 @@ export default function TeacherClassDetail() {
         setEditing(null)
         setForm(emptyRoster)
       } catch (err) {
-        alert(err.message)
+        toastActionError(err, 'Không lưu được điểm / chuyên cần.')
       }
     }
   }
@@ -51,9 +53,13 @@ export default function TeacherClassDetail() {
     try {
       await removeEnrollment(classId, sid)
     } catch (err) {
-      alert(err.message)
+      toastActionError(err, 'Không gỡ được học viên khỏi lớp.')
     }
   }
+
+  useEffect(() => {
+    if (error) toast.error(error)
+  }, [error])
 
   const openEdit = (s) => {
     setEditing(s.id)
@@ -87,7 +93,6 @@ export default function TeacherClassDetail() {
         </p>
       </div>
 
-      {error && <p className="text-sm text-red-400">{error}</p>}
       {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
 
       <p className="text-xs text-slate-500">
