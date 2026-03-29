@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo } from 'react'
 import { toast } from 'sonner'
-import { toastActionError } from '../../lib/appToast.js'
 import { Link } from 'react-router-dom'
 import StatCard from '../../components/dashboard/StatCard'
 import PageHeader from '../../components/dashboard/PageHeader'
@@ -31,25 +30,8 @@ function formatMoney(n) {
 }
 
 export default function AdminDashboard() {
-  const { state, loading, error, refresh, saveDashboardSettings } = useAdminState()
+  const { state, loading, error, refresh } = useAdminState()
   const stats = useMemo(() => computeDashboardStats(state), [state])
-  const [revDraft, setRevDraft] = useState('')
-  const [tickDraft, setTickDraft] = useState('')
-
-  const applySettings = async (e) => {
-    e.preventDefault()
-    const monthlyRevenue =
-      revDraft === '' ? state.settings.monthlyRevenue : Number(revDraft.replace(/\D/g, '')) || 0
-    const openTickets =
-      tickDraft === '' ? state.settings.openTickets : Math.max(0, parseInt(tickDraft, 10) || 0)
-    try {
-      await saveDashboardSettings({ monthlyRevenue, openTickets })
-      setRevDraft('')
-      setTickDraft('')
-    } catch (err) {
-      toastActionError(err, 'Không lưu được cài đặt. Vui lòng thử lại.')
-    }
-  }
 
   useEffect(() => {
     if (error) toast.error(error)
@@ -91,43 +73,6 @@ export default function AdminDashboard() {
         />
         <StatCard accent="admin" label="Ticket hỗ trợ mở" value={String(stats.openTickets)} />
       </div>
-
-      <form onSubmit={applySettings} className="space-y-0">
-        <Panel title="Chỉ số nhanh" subtitle="Các con số ước tính hiển thị trên tổng quan (lưu cùng hệ thống).">
-          <div className="mt-4 flex flex-wrap gap-4">
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-slate-400">Doanh thu tháng (VND)</span>
-              <input
-                name="revenue"
-                placeholder={String(state.settings?.monthlyRevenue ?? '')}
-                value={revDraft}
-                onChange={(e) => setRevDraft(e.target.value)}
-                className="w-48 rounded-xl border border-white/15 bg-black/30 px-3 py-2 text-white placeholder:text-slate-600 focus:border-cyan-500/50 focus:outline-none"
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-slate-400">Ticket mở</span>
-              <input
-                name="tickets"
-                type="number"
-                min={0}
-                placeholder={String(state.settings?.openTickets ?? '')}
-                value={tickDraft}
-                onChange={(e) => setTickDraft(e.target.value)}
-                className="w-32 rounded-xl border border-white/15 bg-black/30 px-3 py-2 text-white placeholder:text-slate-600 focus:border-cyan-500/50 focus:outline-none"
-              />
-            </label>
-            <div className="flex items-end">
-              <button
-                type="submit"
-                className="rounded-xl bg-gradient-to-r from-cyan-500 to-fuchsia-600 px-5 py-2 text-sm font-semibold text-white"
-              >
-                Lưu chỉ số
-              </button>
-            </div>
-          </div>
-        </Panel>
-      </form>
 
       <Panel title="Hoạt động gần đây" subtitle="Nhật ký thao tác gần nhất">
         <ul className="divide-y divide-white/5 text-sm text-slate-300">
