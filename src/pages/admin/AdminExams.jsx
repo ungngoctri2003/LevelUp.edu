@@ -14,6 +14,7 @@ import {
 import { useAdminState } from '../../hooks/useAdminState'
 import QuestionBankEditor from '../../components/dashboard/QuestionBankEditor.jsx'
 import { questionBankDraftsFromStored, sanitizeMcqBankForDatabase } from '../../lib/mcqQuestions.js'
+import { parseEmbedFromPaste } from '../../lib/examEmbed.js'
 
 const emptyForm = {
   title: '',
@@ -23,6 +24,8 @@ const emptyForm = {
   level: 'Lớp 10',
   assigned: false,
   published: true,
+  contentMode: 'mcq',
+  embedInput: '',
 }
 
 export default function AdminExams() {
@@ -40,18 +43,36 @@ export default function AdminExams() {
     level: ex.level,
     assigned: !!ex.assigned,
     published: ex.published !== false,
+    contentMode: ex.contentMode === 'embed' ? 'embed' : 'mcq',
+    embedInput: typeof ex.embedSrc === 'string' ? ex.embedSrc : '',
   })
 
   const addExamSubmit = async (e) => {
     e.preventDefault()
     if (!form.title.trim()) return
     try {
-      const sanitized = sanitizeMcqBankForDatabase(form.questionItems)
-      await addExam({
-        ...form,
-        questionItems: form.questionItems,
-        questions: sanitized.length,
-      })
+      if (form.contentMode === 'embed') {
+        const embedSrc = parseEmbedFromPaste(form.embedInput)
+        if (!embedSrc) {
+          toast.error('Link nhúng không hợp lệ. Dán URL https://view.genially.com/... hoặc đoạn HTML có thẻ iframe.')
+          return
+        }
+        await addExam({
+          ...form,
+          questionItems: [],
+          questions: 0,
+          contentMode: 'embed',
+          embedSrc,
+        })
+      } else {
+        const sanitized = sanitizeMcqBankForDatabase(form.questionItems)
+        await addExam({
+          ...form,
+          questionItems: form.questionItems,
+          questions: sanitized.length,
+          contentMode: 'mcq',
+        })
+      }
       setForm(emptyForm)
     } catch (err) {
       toastActionError(err, 'Không tạo được đề.')
@@ -80,12 +101,28 @@ export default function AdminExams() {
     e.preventDefault()
     if (!editForm.title.trim() || editId == null) return
     try {
-      const sanitized = sanitizeMcqBankForDatabase(editForm.questionItems)
-      await updateExam(editId, {
-        ...editForm,
-        questionItems: editForm.questionItems,
-        questions: sanitized.length,
-      })
+      if (editForm.contentMode === 'embed') {
+        const embedSrc = parseEmbedFromPaste(editForm.embedInput)
+        if (!embedSrc) {
+          toast.error('Link nhúng không hợp lệ. Dán URL https://view.genially.com/... hoặc đoạn HTML có thẻ iframe.')
+          return
+        }
+        await updateExam(editId, {
+          ...editForm,
+          questionItems: [],
+          questions: 0,
+          contentMode: 'embed',
+          embedSrc,
+        })
+      } else {
+        const sanitized = sanitizeMcqBankForDatabase(editForm.questionItems)
+        await updateExam(editId, {
+          ...editForm,
+          questionItems: editForm.questionItems,
+          questions: sanitized.length,
+          contentMode: 'mcq',
+        })
+      }
       setEditId(null)
     } catch (err) {
       toastActionError(err, 'Không lưu được đề.')
@@ -117,8 +154,8 @@ export default function AdminExams() {
             <Link className="font-medium text-cyan-400 hover:text-cyan-300" to="/bai-kiem-tra">
               trang Bài kiểm tra
             </Link>
-            . Dùng nút <span className="text-slate-200">Sửa đề</span> trong bảng để chỉnh tiêu đề, thời gian và
-            bộ câu hỏi trắc nghiệm.
+            . Có thể chọn đề trắc nghiệm hoặc nhúng nội dung tương tác (Genially). Dùng{' '}
+            <span className="text-slate-200">Sửa đề</span> để chỉnh nội dung.
           </>
         }
         badge="Đề thi"
@@ -128,6 +165,29 @@ export default function AdminExams() {
 
       <Panel title="Tạo đề mới" subtitle="Thêm đề vào kho đề dùng chung cho website.">
         <form onSubmit={addExamSubmit} className="space-y-4">
+          <div className="flex flex-wrap gap-4 text-sm text-slate-300">
+            <span className="text-slate-400">Hình thức:</span>
+            <label className="flex cursor-pointer items-center gap-2">
+              <input
+                type="radio"
+                name="createMode"
+                checked={form.contentMode === 'mcq'}
+                onChange={() => setForm((f) => ({ ...f, contentMode: 'mcq' }))}
+                className="border-white/30 bg-black/40 text-cyan-500"
+              />
+              Trắc nghiệm (mã đề, chọn đáp án)
+            </label>
+            <label className="flex cursor-pointer items-center gap-2">
+              <input
+                type="radio"
+                name="createMode"
+                checked={form.contentMode === 'embed'}
+                onChange={() => setForm((f) => ({ ...f, contentMode: 'embed' }))}
+                className="border-white/30 bg-black/40 text-cyan-500"
+              />
+              Nhúng nội dung web (Genially, …)
+            </label>
+          </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <label className="text-sm text-slate-400">
               Tên đề
@@ -165,18 +225,41 @@ export default function AdminExams() {
                 className={field}
               />
             </label>
-            <p className="flex items-end text-sm text-slate-500 sm:col-span-1">
-              Số câu hợp lệ sẽ lưu:{' '}
-              <span className="ml-1 font-medium text-slate-300">
-                {sanitizeMcqBankForDatabase(form.questionItems).length}
-              </span>
-            </p>
+            {form.contentMode === 'mcq' ? (
+              <p className="flex items-end text-sm text-slate-500 sm:col-span-1">
+                Số câu hợp lệ sẽ lưu:{' '}
+                <span className="ml-1 font-medium text-slate-300">
+                  {sanitizeMcqBankForDatabase(form.questionItems).length}
+                </span>
+              </p>
+            ) : (
+              <p className="flex items-end text-sm text-slate-500 sm:col-span-1">
+                Học viên mở bài trong khung xem tương tác
+              </p>
+            )}
           </div>
-          <QuestionBankEditor
-            value={form.questionItems}
-            onChange={(questionItems) => setForm((f) => ({ ...f, questionItems }))}
-            disabled={loading}
-          />
+          {form.contentMode === 'embed' ? (
+            <label className="block text-sm text-slate-400">
+              URL hoặc mã nhúng iframe
+              <textarea
+                value={form.embedInput}
+                onChange={(e) => setForm((f) => ({ ...f, embedInput: e.target.value }))}
+                rows={5}
+                placeholder="Dán link Genially (https://view.genially.com/...) hoặc cả đoạn HTML có &lt;iframe src=...&gt;"
+                className={`${field} mt-1 font-mono text-xs`}
+              />
+              <span className="mt-1 block text-xs text-slate-500">
+                Chỉ chấp nhận HTTPS từ Genially / LearningApps. Ví dụ URL xem:{' '}
+                <span className="text-slate-400">https://view.genially.com/6941ab04d927ef0eeed7a8ed/interactive-content-chu-de-10-virus</span>
+              </span>
+            </label>
+          ) : (
+            <QuestionBankEditor
+              value={form.questionItems}
+              onChange={(questionItems) => setForm((f) => ({ ...f, questionItems }))}
+              disabled={loading}
+            />
+          )}
           <div className="mt-4 flex flex-wrap gap-6 text-sm text-slate-300">
             <label className="flex cursor-pointer items-center gap-2">
               <input
@@ -211,7 +294,7 @@ export default function AdminExams() {
                 <th className="px-4 py-3">Tên đề</th>
                 <th className="px-4 py-3">Môn</th>
                 <th className="px-4 py-3">Thời gian</th>
-                <th className="px-4 py-3">Số câu</th>
+                <th className="px-4 py-3">Loại / số câu</th>
                 <th className="px-4 py-3">Cấp</th>
                 <th className="px-4 py-3">Đã giao</th>
                 <th className="px-4 py-3">Công khai</th>
@@ -224,7 +307,13 @@ export default function AdminExams() {
                   <td className="px-4 py-3 font-medium">{e.title}</td>
                   <td className="px-4 py-3 text-slate-400">{e.subject}</td>
                   <td className="px-4 py-3">{e.duration} phút</td>
-                  <td className="px-4 py-3">{e.questions}</td>
+                  <td className="px-4 py-3">
+                    {e.contentMode === 'embed' ? (
+                      <span className="rounded-full bg-violet-500/20 px-2 py-0.5 text-xs text-violet-200">Nhúng web</span>
+                    ) : (
+                      <span>{e.questions} câu</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3">{e.level}</td>
                   <td className="px-4 py-3">
                     <button
@@ -274,7 +363,30 @@ export default function AdminExams() {
           className={`${modalPanelAdmin} max-h-[90vh] max-w-3xl overflow-y-auto`}
         >
             <h3 className="text-lg font-semibold text-white">Sửa đề thi &amp; bộ câu hỏi</h3>
-            <p className="mt-1 text-sm text-slate-400">Thay đổi nội dung câu hỏi, đáp án hoặc metadata — nhấn Lưu để cập nhật.</p>
+            <p className="mt-1 text-sm text-slate-400">Thay đổi nội dung câu hỏi, đáp án hoặc link nhúng — nhấn Lưu để cập nhật.</p>
+            <div className="mt-4 flex flex-wrap gap-4 text-sm text-slate-300">
+              <span className="text-slate-400">Hình thức:</span>
+              <label className="flex cursor-pointer items-center gap-2">
+                <input
+                  type="radio"
+                  name="editMode"
+                  checked={editForm.contentMode === 'mcq'}
+                  onChange={() => setEditForm((f) => ({ ...f, contentMode: 'mcq' }))}
+                  className="border-white/30 bg-black/40 text-cyan-500"
+                />
+                Trắc nghiệm
+              </label>
+              <label className="flex cursor-pointer items-center gap-2">
+                <input
+                  type="radio"
+                  name="editMode"
+                  checked={editForm.contentMode === 'embed'}
+                  onChange={() => setEditForm((f) => ({ ...f, contentMode: 'embed' }))}
+                  className="border-white/30 bg-black/40 text-cyan-500"
+                />
+                Nhúng web
+              </label>
+            </div>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <label className="text-sm text-slate-400 sm:col-span-2">
                 Tên đề
@@ -310,19 +422,36 @@ export default function AdminExams() {
                   className={field}
                 />
               </label>
-              <p className="flex items-end text-sm text-slate-500 sm:col-span-2">
-                Số câu hợp lệ sẽ lưu:{' '}
-                <span className="ml-1 font-medium text-slate-300">
-                  {sanitizeMcqBankForDatabase(editForm.questionItems).length}
-                </span>
-              </p>
+              {editForm.contentMode === 'mcq' ? (
+                <p className="flex items-end text-sm text-slate-500 sm:col-span-2">
+                  Số câu hợp lệ sẽ lưu:{' '}
+                  <span className="ml-1 font-medium text-slate-300">
+                    {sanitizeMcqBankForDatabase(editForm.questionItems).length}
+                  </span>
+                </p>
+              ) : (
+                <p className="flex items-end text-sm text-slate-500 sm:col-span-2">Nội dung nhúng từ URL đã lưu</p>
+              )}
             </div>
             <div className="mt-4 border-t border-white/10 pt-4">
-              <QuestionBankEditor
-                value={editForm.questionItems}
-                onChange={(questionItems) => setEditForm((f) => ({ ...f, questionItems }))}
-                disabled={loading}
-              />
+              {editForm.contentMode === 'embed' ? (
+                <label className="block text-sm text-slate-400">
+                  URL hoặc mã nhúng iframe
+                  <textarea
+                    value={editForm.embedInput}
+                    onChange={(e) => setEditForm((f) => ({ ...f, embedInput: e.target.value }))}
+                    rows={5}
+                    placeholder="Dán link Genially hoặc HTML iframe…"
+                    className={`${field} mt-1 font-mono text-xs`}
+                  />
+                </label>
+              ) : (
+                <QuestionBankEditor
+                  value={editForm.questionItems}
+                  onChange={(questionItems) => setEditForm((f) => ({ ...f, questionItems }))}
+                  disabled={loading}
+                />
+              )}
             </div>
             <div className="mt-4 flex flex-wrap gap-6 text-sm text-slate-300">
               <label className="flex cursor-pointer items-center gap-2">

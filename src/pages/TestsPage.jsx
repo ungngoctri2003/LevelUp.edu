@@ -19,17 +19,52 @@ export default function TestsPage() {
     setLoadingQuestions(true)
     try {
       const detail = await fetchPublicExamById(exam.id)
+      if (detail?.content_mode === 'embed' && detail?.embed_src) {
+        setSelectedExam({
+          ...exam,
+          title: detail.title || exam.title,
+          mode: 'embed',
+          embedSrc: detail.embed_src,
+          questions: [],
+        })
+        setAnswers({})
+        setSubmitted(false)
+        setResult(null)
+        return
+      }
       const qs = normalizeExamQuestions(detail?.questions)
       if (!qs.length) {
         toast.warning('Đề này chưa có câu hỏi. Vui lòng chọn đề khác hoặc liên hệ quản trị.')
         return
       }
-      setSelectedExam({ ...exam, questions: qs })
+      setSelectedExam({ ...exam, title: detail.title || exam.title, mode: 'mcq', questions: qs })
       setAnswers({})
       setSubmitted(false)
       setResult(null)
     } finally {
       setLoadingQuestions(false)
+    }
+  }
+
+  const handleCompleteEmbed = async () => {
+    const maxScore = 10
+    const score = maxScore
+    setResult({ correct: null, total: null, score, maxScore, embed: true })
+    setSubmitted(true)
+
+    const token = session?.access_token
+    if (token && user?.id && selectedExam?.id != null) {
+      try {
+        await postMyExamAttempt(token, {
+          exam_id: selectedExam.id,
+          score,
+          max_score: maxScore,
+          correct_count: null,
+          total_count: null,
+        })
+      } catch (e) {
+        console.warn('[exam_attempts]', e.message)
+      }
     }
   }
 
@@ -60,6 +95,54 @@ export default function TestsPage() {
         console.warn('[exam_attempts]', e.message)
       }
     }
+  }
+
+  if (selectedExam && !submitted && selectedExam.mode === 'embed' && selectedExam.embedSrc) {
+    return (
+      <div className="fixed inset-0 z-50 flex flex-col bg-white dark:bg-slate-900">
+        <div className="flex w-full shrink-0 items-center justify-between gap-4 border-b border-gray-200 px-4 py-3 sm:px-6 dark:border-slate-700">
+          <h2 className="min-w-0 flex-1 truncate text-lg font-semibold text-gray-900 dark:text-white">
+            {selectedExam.title}
+          </h2>
+          <button
+            type="button"
+            onClick={() => setSelectedExam(null)}
+            className="shrink-0 text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-slate-400 dark:hover:text-white"
+          >
+            ← Quay lại
+          </button>
+        </div>
+        <p className="shrink-0 border-b border-gray-100 px-4 py-2 text-xs text-gray-600 dark:border-slate-800 dark:text-slate-400 sm:px-6 sm:text-sm">
+          Làm bài trong khung toàn màn hình. Khi xong, nhấn nút phía dưới để ghi nhận (học viên đăng nhập được lưu lịch sử).
+        </p>
+        <div className="relative min-h-0 w-full flex-1 bg-black/5 dark:bg-black/20">
+          <iframe
+            title={selectedExam.title}
+            src={selectedExam.embedSrc}
+            className="absolute inset-0 h-full w-full border-0"
+            allowFullScreen
+            allow="fullscreen; autoplay; clipboard-write"
+            loading="lazy"
+          />
+        </div>
+        <div className="flex w-full shrink-0 flex-wrap gap-3 border-t border-gray-200 bg-white px-4 py-4 dark:border-slate-700 dark:bg-slate-900 sm:px-6">
+          <button
+            type="button"
+            onClick={handleCompleteEmbed}
+            className="min-h-[48px] flex-1 rounded-xl bg-gradient-to-r from-cyan-500 to-fuchsia-600 px-6 py-3 font-semibold text-white shadow-md transition-opacity hover:opacity-95 sm:max-w-md sm:flex-none"
+          >
+            Đã hoàn thành — ghi nhận
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedExam(null)}
+            className="min-h-[48px] rounded-xl border border-gray-300 px-6 py-3 font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+          >
+            Hủy
+          </button>
+        </div>
+      </div>
+    )
   }
 
   if (selectedExam && !submitted) {
@@ -130,26 +213,48 @@ export default function TestsPage() {
   }
 
   if (selectedExam && submitted && result) {
+    const isEmbed = !!result.embed
     return (
       <div className="py-16 sm:py-24">
         <div className="mx-auto max-w-2xl px-6">
           <div className="rounded-2xl border border-transparent bg-white p-10 text-center shadow-lg dark:border-slate-700 dark:bg-slate-800/90">
-            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/40">
-              <svg className="h-10 w-10 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">Đã nộp bài</h3>
-            <p className="mt-2 text-3xl font-bold text-cyan-600 dark:text-cyan-400">
-              {result.score} / {result.maxScore} điểm
-            </p>
-            <p className="mt-2 text-gray-600 dark:text-slate-400">
-              Trả lời đúng {result.correct}/{result.total} câu
-            </p>
-            {user?.role === 'user' && session?.access_token && (
-              <p className="mt-3 text-sm text-fuchsia-600 dark:text-fuchsia-400">
-                Đã lưu vào &quot;Khu học viên → Kiểm tra&quot;.
-              </p>
+            {isEmbed ? (
+              <>
+                <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-cyan-100 dark:bg-cyan-900/35">
+                  <svg className="h-10 w-10 text-cyan-600 dark:text-cyan-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">Đã tiếp nhận thông tin</h3>
+                <p className="mt-4 text-base leading-relaxed text-gray-700 dark:text-slate-300">
+                  Hệ thống đã nhận được thông tin hoàn thành bài tương tác của bạn. Kết quả chi tiết sẽ được xử lý và trả về sau — vui lòng theo dõi thông báo hoặc khu học viên (nếu đã đăng nhập).
+                </p>
+                {user?.role === 'user' && session?.access_token && (
+                  <p className="mt-4 text-sm text-fuchsia-600 dark:text-fuchsia-400">
+                    Thông tin tham gia đã được lưu; bạn có thể xem lại tại &quot;Khu học viên → Kiểm tra&quot; khi có cập nhật.
+                  </p>
+                )}
+              </>
+            ) : (
+              <>
+                <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/40">
+                  <svg className="h-10 w-10 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">Đã nộp bài</h3>
+                <p className="mt-2 text-3xl font-bold text-cyan-600 dark:text-cyan-400">
+                  {result.score} / {result.maxScore} điểm
+                </p>
+                <p className="mt-2 text-gray-600 dark:text-slate-400">
+                  Trả lời đúng {result.correct}/{result.total} câu
+                </p>
+                {user?.role === 'user' && session?.access_token && (
+                  <p className="mt-3 text-sm text-fuchsia-600 dark:text-fuchsia-400">
+                    Đã lưu vào &quot;Khu học viên → Kiểm tra&quot;.
+                  </p>
+                )}
+              </>
             )}
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
               <button
@@ -186,7 +291,7 @@ export default function TestsPage() {
             Bài kiểm tra
           </h1>
           <p className="mt-6 mx-auto max-w-2xl text-lg text-gray-600 dark:text-slate-400">
-            Câu hỏi lấy từ CSDL theo từng đề. Học viên đăng nhập được lưu điểm qua API máy chủ.
+            Đề trắc nghiệm hoặc nội dung tương tác nhúng từ web (Genially). Học viên đăng nhập được lưu kết quả qua máy chủ.
           </p>
         </div>
 
@@ -219,7 +324,11 @@ export default function TestsPage() {
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{exam.title}</h3>
               <div className="mt-4 flex flex-wrap gap-3 text-sm text-gray-500 dark:text-slate-400">
                 <span>⏱ {exam.duration} phút</span>
-                <span>📝 {exam.questions} câu</span>
+                {exam.contentMode === 'embed' ? (
+                  <span>🎮 Nội dung tương tác (nhúng)</span>
+                ) : (
+                  <span>📝 {exam.questions} câu</span>
+                )}
                 <span>📚 {exam.level}</span>
               </div>
               <button

@@ -1,4 +1,5 @@
 import { sanitizeMcqBankForDatabase } from '../lib/mcqQuestions.js'
+import { assertValidEmbedSrc } from '../lib/examEmbed.js'
 
 /** @param {import('@supabase/supabase-js').SupabaseClient} sb */
 
@@ -59,6 +60,8 @@ export async function fetchExamsAdmin(sb) {
     level: e.level_label || '',
     assigned: !!e.assigned,
     published: e.published !== false,
+    contentMode: e.content_mode === 'embed' ? 'embed' : 'mcq',
+    embedSrc: typeof e.embed_src === 'string' ? e.embed_src : '',
   }))
 }
 
@@ -411,15 +414,22 @@ export async function adminDeleteCourse(sb, id, title, user) {
 }
 
 export async function adminInsertExam(sb, row, user) {
-  let question_count
-  let questions
-  if (Array.isArray(row.questionItems)) {
+  const mode = row.contentMode === 'embed' || row.content_mode === 'embed' ? 'embed' : 'mcq'
+  let question_count = 0
+  let questions = []
+  let embed_src = null
+
+  if (mode === 'embed') {
+    const raw = row.embedSrc ?? row.embed_src
+    embed_src = assertValidEmbedSrc(raw)
+  } else if (Array.isArray(row.questionItems)) {
     questions = sanitizeMcqBankForDatabase(row.questionItems)
     question_count = questions.length
   } else {
-    question_count = Number(row.questions) || 10
+    question_count = Number(row.questions) || 0
     questions = []
   }
+
   const { error } = await sb.from('exams').insert({
     title: row.title.trim(),
     subject_label: row.subject?.trim() || 'Môn học',
@@ -429,12 +439,15 @@ export async function adminInsertExam(sb, row, user) {
     level_label: row.level || null,
     assigned: !!row.assigned,
     published: row.published !== false,
+    content_mode: mode,
+    embed_src: mode === 'embed' ? embed_src : null,
   })
   if (error) throw new Error(error.message)
   await logAdminActivity(sb, `Tạo đề: ${row.title}`, 'course', user?.email, user?.id)
 }
 
 export async function adminUpdateExam(sb, id, row, user) {
+  const mode = row.contentMode === 'embed' || row.content_mode === 'embed' ? 'embed' : 'mcq'
   const body = {
     title: row.title.trim(),
     subject_label: row.subject?.trim() || 'Môn học',
@@ -442,13 +455,22 @@ export async function adminUpdateExam(sb, id, row, user) {
     level_label: row.level || null,
     assigned: !!row.assigned,
     published: row.published !== false,
+    content_mode: mode,
   }
-  if (Array.isArray(row.questionItems)) {
-    const sanitized = sanitizeMcqBankForDatabase(row.questionItems)
-    body.questions = sanitized
-    body.question_count = sanitized.length
+  if (mode === 'embed') {
+    const raw = row.embedSrc ?? row.embed_src
+    body.embed_src = assertValidEmbedSrc(raw)
+    body.questions = []
+    body.question_count = 0
   } else {
-    body.question_count = Number(row.questions) || 10
+    body.embed_src = null
+    if (Array.isArray(row.questionItems)) {
+      const sanitized = sanitizeMcqBankForDatabase(row.questionItems)
+      body.questions = sanitized
+      body.question_count = sanitized.length
+    } else {
+      body.question_count = Number(row.questions) || 0
+    }
   }
   const { error } = await sb.from('exams').update(body).eq('id', id)
   if (error) throw new Error(error.message)

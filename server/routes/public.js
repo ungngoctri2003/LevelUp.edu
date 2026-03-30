@@ -151,11 +151,10 @@ router.get('/lessons/:id/details', async (req, res) => {
 router.get('/exams', async (_req, res) => {
   const sb = sbOr503(res, createAnonClient())
   if (!sb) return
+  // select('*') để DB chưa chạy migration embed vẫn hoạt động (không lỗi thiếu cột content_mode/embed_src)
   const { data, error } = await sb
     .from('exams')
-    .select(
-      'id, title, subject_label, duration_minutes, question_count, level_label, published, assigned, created_at, updated_at',
-    )
+    .select('*')
     .eq('published', true)
     .order('id', { ascending: true })
   if (error) return res.status(500).json({ error: error.message })
@@ -170,9 +169,7 @@ router.get('/exams/:id', async (req, res) => {
   if (!Number.isFinite(id)) return res.status(400).json({ error: 'id không hợp lệ' })
   const { data, error } = await sb
     .from('exams')
-    .select(
-      'id, title, subject_label, duration_minutes, question_count, questions, level_label, published, assigned, created_at, updated_at',
-    )
+    .select('*')
     .eq('id', id)
     .maybeSingle()
   if (error) return res.status(500).json({ error: error.message })

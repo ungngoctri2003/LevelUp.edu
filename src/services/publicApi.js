@@ -57,6 +57,8 @@ export async function fetchPublicCatalog() {
       level: e.level_label || '',
       assigned: !!e.assigned,
       published: e.published !== false,
+      contentMode: e.content_mode === 'embed' ? 'embed' : 'mcq',
+      embedSrc: typeof e.embed_src === 'string' ? e.embed_src : '',
     }))
 
   const news = (newsRes.data || []).map((n) => mapNewsRow(n)).filter(Boolean)

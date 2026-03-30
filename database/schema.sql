@@ -185,8 +185,11 @@ create table public.exams (
   level_label      text,
   published        boolean not null default true,
   assigned         boolean not null default false,
+  content_mode     text not null default 'mcq',
+  embed_src        text,
   created_at       timestamptz not null default now(),
-  updated_at       timestamptz not null default now()
+  updated_at       timestamptz not null default now(),
+  constraint exams_content_mode_chk check (content_mode in ('mcq', 'embed'))
 );
 
 create index exams_published_list_idx on     public.exams (subject_label, id) where published = true;
