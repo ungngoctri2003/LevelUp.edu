@@ -224,6 +224,15 @@ create table public.exam_attempts (
 create index exam_attempts_student_completed_idx on public.exam_attempts (student_id, completed_at desc);
 create index exam_attempts_exam_id_idx on public.exam_attempts (exam_id);
 
+create table public.exam_class_assignments (
+  exam_id bigint not null references public.exams (id) on delete cascade,
+  class_id bigint not null references public.classes (id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (exam_id, class_id)
+);
+
+create index exam_class_assignments_class_id_idx on public.exam_class_assignments (class_id);
+
 create table public.news_posts (
   id            bigint generated always as identity primary key,
   title         text not null,
@@ -505,6 +514,7 @@ alter table public.lessons enable row level security;
 alter table public.lesson_details enable row level security;
 alter table public.exams enable row level security;
 alter table public.exam_attempts enable row level security;
+alter table public.exam_class_assignments enable row level security;
 alter table public.news_posts enable row level security;
 alter table public.admission_applications enable row level security;
 alter table public.marketing_leads enable row level security;
@@ -594,6 +604,39 @@ create policy exam_attempts_update_own on public.exam_attempts
   )
   with check (
     student_id = (select auth.uid()) or (select public.is_admin())
+  );
+
+create policy exam_class_assignments_select on public.exam_class_assignments
+  for select using (
+    (select public.is_admin())
+    or exists (
+      select 1 from public.classes c
+      where c.id = exam_class_assignments.class_id
+        and c.teacher_id = (select auth.uid())
+    )
+    or exists (
+      select 1 from public.class_enrollments ce
+      where ce.class_id = exam_class_assignments.class_id
+        and ce.student_id = (select auth.uid())
+    )
+  );
+create policy exam_class_assignments_insert on public.exam_class_assignments
+  for insert with check (
+    (select public.is_admin())
+    or exists (
+      select 1 from public.classes c
+      where c.id = exam_class_assignments.class_id
+        and c.teacher_id = (select auth.uid())
+    )
+  );
+create policy exam_class_assignments_delete on public.exam_class_assignments
+  for delete using (
+    (select public.is_admin())
+    or exists (
+      select 1 from public.classes c
+      where c.id = exam_class_assignments.class_id
+        and c.teacher_id = (select auth.uid())
+    )
   );
 
 -- news: public read; admin write

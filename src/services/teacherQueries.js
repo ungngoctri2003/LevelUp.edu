@@ -1,6 +1,13 @@
 /** @param {import('@supabase/supabase-js').SupabaseClient} sb */
 
 export async function loadTeacherBundle(sb) {
+  const { data: examCatalog, error: examCatErr } = await sb
+    .from('exams')
+    .select('id, title, subject_label, level_label, duration_minutes, question_count, content_mode')
+    .eq('published', true)
+    .order('id', { ascending: true })
+  if (examCatErr) throw new Error(examCatErr.message)
+
   const { data: classes, error: cErr } = await sb.from('classes').select('*').order('id')
   if (cErr) throw new Error(cErr.message)
   const cls = classes || []
@@ -13,18 +20,25 @@ export async function loadTeacherBundle(sb) {
       lessonPosts: [],
       assignments: [],
       submissions: [],
+      examClassAssignments: [],
+      examCatalog: examCatalog || [],
     }
   }
-  const [enRes, slotRes, postRes, asgRes] = await Promise.all([
+  const [enRes, slotRes, postRes, asgRes, ecxRes] = await Promise.all([
     sb.from('class_enrollments').select('*, profiles(full_name,email)').in('class_id', classIds),
     sb.from('schedule_slots').select('*').in('class_id', classIds),
     sb.from('teacher_lesson_posts').select('*').in('class_id', classIds).order('updated_at', { ascending: false }),
     sb.from('assignments').select('*').in('class_id', classIds).order('due_at', { ascending: true }),
+    sb
+      .from('exam_class_assignments')
+      .select('exam_id, class_id, exams(id,title,subject_label,level_label,duration_minutes,question_count,content_mode)')
+      .in('class_id', classIds),
   ])
   if (enRes.error) throw new Error(enRes.error.message)
   if (slotRes.error) throw new Error(slotRes.error.message)
   if (postRes.error) throw new Error(postRes.error.message)
   if (asgRes.error) throw new Error(asgRes.error.message)
+  if (ecxRes.error) throw new Error(ecxRes.error.message)
 
   const assignments = asgRes.data || []
   const asgIds = assignments.map((a) => a.id)
@@ -46,6 +60,8 @@ export async function loadTeacherBundle(sb) {
     lessonPosts: postRes.data || [],
     assignments,
     submissions,
+    examClassAssignments: ecxRes.data || [],
+    examCatalog: examCatalog || [],
   }
 }
 

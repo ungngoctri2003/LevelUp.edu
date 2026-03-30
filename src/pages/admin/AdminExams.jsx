@@ -150,12 +150,11 @@ export default function AdminExams() {
         title="Bài kiểm tra & đề"
         description={
           <>
-            Đề thi tạo tại đây sẽ hiển thị cho học viên trên{' '}
-            <Link className="font-medium text-cyan-400 hover:text-cyan-300" to="/bai-kiem-tra">
-              trang Bài kiểm tra
-            </Link>
-            . Có thể chọn đề trắc nghiệm hoặc nhúng nội dung tương tác (Genially). Dùng{' '}
-            <span className="text-slate-200">Sửa đề</span> để chỉnh nội dung.
+            Học viên chỉ thấy đề khi đăng nhập và thuộc lớp được giao đề:{' '}
+            <span className="text-slate-200">giáo viên</span> gán đề–lớp tại{' '}
+            <span className="text-slate-200">Khu giáo viên → Bài tập &amp; kiểm tra</span>, hoặc đề không gắn lớp cụ thể nhưng bật{' '}
+            <span className="text-slate-200">Đã giao cho lớp</span> (kho cũ). Đề cần{' '}
+            <span className="text-slate-200">Hiển thị công khai</span>. Soạn trắc nghiệm hoặc nhúng Genially.
           </>
         }
         badge="Đề thi"

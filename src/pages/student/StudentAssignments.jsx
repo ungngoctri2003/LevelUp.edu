@@ -124,16 +124,25 @@ export default function StudentAssignments() {
     <div className="space-y-8">
       <PageHeader
         title="Bài tập"
-        description="Bài tập trong các lớp bạn đã được ghi danh."
+        description="Bài do giáo viên tạo trong khu Giáo viên (bài tập theo lớp), khác với đề kiểm tra kho trung tâm."
       />
 
       {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
+
+      {!loading && loadFailed && (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+          <p>Không tải được danh sách. Kiểm tra mạng hoặc đăng nhập lại.</p>
+          <button type="button" onClick={() => load()} className="mt-2 text-sky-300 underline hover:text-sky-200">
+            Thử lại
+          </button>
+        </div>
+      )}
 
       {!loading && !loadFailed && assignments.length === 0 && (
         <EmptyState
           icon="📝"
           title="Chưa có bài tập"
-          description="Khi giáo viên giao bài trong lớp của bạn, mục sẽ hiển thị tại đây."
+          description="Cần được ghi danh đúng lớp và giáo viên giao bài tại Khu giáo viên → Bài tập & kiểm tra (mục bài tập soạn riêng). Đề kiểm tra kho chung nằm ở Học viên → Kiểm tra hoặc trang Bài kiểm tra."
         />
       )}
 

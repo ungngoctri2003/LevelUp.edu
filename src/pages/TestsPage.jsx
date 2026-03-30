@@ -1,24 +1,89 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuthSession } from '../context/AuthSessionContext'
-import { usePublicContent } from '../hooks/usePublicContent'
-import { fetchPublicExamById, normalizeExamQuestions } from '../services/publicApi.js'
-import { postMyExamAttempt } from '../services/meApi.js'
+import { normalizeExamQuestions } from '../services/publicApi.js'
+import { getMyAssignedExamById, getMyAssignedExams, postMyExamAttempt } from '../services/meApi.js'
 import { toast } from 'sonner'
 
+function mapExamForCard(row) {
+  if (!row) return null
+  return {
+    id: row.id,
+    title: row.title,
+    subject: row.subject_label,
+    duration: row.duration_minutes,
+    questions: row.question_count,
+    level: row.level_label || '',
+    assigned: !!row.assigned,
+    published: row.published !== false,
+    contentMode: row.content_mode === 'embed' ? 'embed' : 'mcq',
+    embedSrc: typeof row.embed_src === 'string' ? row.embed_src : '',
+  }
+}
+
 export default function TestsPage() {
-  const { exams, loading: examsLoading } = usePublicContent()
-  const { user, session } = useAuthSession()
+  const { user, session, loading: authLoading } = useAuthSession()
+  const [exams, setExams] = useState([])
+  const [examsLoading, setExamsLoading] = useState(true)
+  const [needsEnrollment, setNeedsEnrollment] = useState(false)
+  const [listForbidden, setListForbidden] = useState(false)
   const [selectedExam, setSelectedExam] = useState(null)
   const [answers, setAnswers] = useState({})
   const [submitted, setSubmitted] = useState(false)
   const [result, setResult] = useState(null)
   const [loadingQuestions, setLoadingQuestions] = useState(false)
 
+  useEffect(() => {
+    let cancelled = false
+    const token = session?.access_token
+    if (authLoading) {
+      setExamsLoading(true)
+      return () => {
+        cancelled = true
+      }
+    }
+    if (!token || user?.dbRole !== 'student') {
+      setExams([])
+      setNeedsEnrollment(false)
+      setListForbidden(false)
+      setExamsLoading(false)
+      return () => {
+        cancelled = true
+      }
+    }
+    ;(async () => {
+      setExamsLoading(true)
+      setListForbidden(false)
+      try {
+        const res = await getMyAssignedExams(token)
+        if (cancelled) return
+        const rows = res?.data || []
+        setExams(rows.map(mapExamForCard).filter(Boolean))
+        setNeedsEnrollment(!!res?.meta?.needsEnrollment)
+      } catch (e) {
+        if (cancelled) return
+        setExams([])
+        setNeedsEnrollment(false)
+        if (e?.status === 403) setListForbidden(true)
+      } finally {
+        if (!cancelled) setExamsLoading(false)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [authLoading, session?.access_token, user?.dbRole])
+
   const handleStartExam = async (exam) => {
+    const token = session?.access_token
+    if (!token) {
+      toast.error('Vui lòng đăng nhập tài khoản học viên.')
+      return
+    }
     setLoadingQuestions(true)
     try {
-      const detail = await fetchPublicExamById(exam.id)
+      const res = await getMyAssignedExamById(token, exam.id)
+      const detail = res?.data
       if (detail?.content_mode === 'embed' && detail?.embed_src) {
         setSelectedExam({
           ...exam,
@@ -41,6 +106,9 @@ export default function TestsPage() {
       setAnswers({})
       setSubmitted(false)
       setResult(null)
+    } catch (e) {
+      const msg = e?.body?.error || e?.message || 'Không tải được đề.'
+      toast.error(msg)
     } finally {
       setLoadingQuestions(false)
     }
@@ -283,6 +351,46 @@ export default function TestsPage() {
     )
   }
 
+  if (authLoading) {
+    return (
+      <div className="py-24 text-center text-slate-500">
+        <p>Đang tải…</p>
+      </div>
+    )
+  }
+
+  if (!session?.access_token) {
+    return (
+      <div className="py-16 sm:py-24">
+        <div className="mx-auto max-w-lg px-6 text-center">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Bài kiểm tra</h1>
+          <p className="mt-4 text-gray-600 dark:text-slate-400">
+            Chỉ học viên đã đăng nhập và được ghi danh lớp mới xem và làm các đề được trung tâm giao. Vui lòng đăng nhập bằng tài khoản học viên.
+          </p>
+          <Link
+            to="/?auth=login"
+            className="mt-8 inline-flex rounded-xl bg-gradient-to-r from-cyan-500 to-fuchsia-600 px-8 py-3 font-medium text-white shadow-md"
+          >
+            Đăng nhập
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  if (user?.dbRole !== 'student') {
+    return (
+      <div className="py-16 sm:py-24">
+        <div className="mx-auto max-w-lg px-6 text-center">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Bài kiểm tra</h1>
+          <p className="mt-4 text-gray-600 dark:text-slate-400">
+            Trang này dành cho học viên. Tài khoản giáo viên hoặc quản trị không làm bài kiểm tra tại đây.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="py-16 sm:py-24">
       <div className="mx-auto max-w-7xl px-6">
@@ -291,7 +399,7 @@ export default function TestsPage() {
             Bài kiểm tra
           </h1>
           <p className="mt-6 mx-auto max-w-2xl text-lg text-gray-600 dark:text-slate-400">
-            Đề trắc nghiệm hoặc nội dung tương tác nhúng từ web (Genially). Học viên đăng nhập được lưu kết quả qua máy chủ.
+            Đề do trung tâm đăng và giáo viên giao cho lớp của bạn (hoặc đề chung đã bật giao). Cần đăng nhập học viên và đã ghi danh lớp.
           </p>
         </div>
 
@@ -301,11 +409,27 @@ export default function TestsPage() {
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {examsLoading && <p className="col-span-full text-center text-slate-500">Đang tải đề…</p>}
-          {!examsLoading && exams.length === 0 && (
+          {!examsLoading && listForbidden && (
             <p className="col-span-full text-center text-slate-500">
-              Chưa có đề công khai. Admin có thể thêm đề tại khu vực quản trị.
+              Không thể tải danh sách đề. Vui lòng thử lại sau.
             </p>
           )}
+          {!examsLoading &&
+            !listForbidden &&
+            needsEnrollment &&
+            exams.length === 0 && (
+              <p className="col-span-full text-center text-slate-500">
+                Bạn chưa được ghi danh lớp nào. Liên hệ trung tâm để được giao bài kiểm tra.
+              </p>
+            )}
+          {!examsLoading &&
+            !listForbidden &&
+            !needsEnrollment &&
+            exams.length === 0 && (
+              <p className="col-span-full text-center text-slate-500">
+                Hiện chưa có đề nào được giao cho bạn. Khi trung tâm giao đề và bật đủ điều kiện, đề sẽ hiển thị tại đây.
+              </p>
+            )}
           {exams.map((exam) => (
             <div
               key={exam.id}

@@ -54,6 +54,8 @@ export function TeacherDataProvider({ children }) {
           lessons: [],
           schedule: [],
           assignments: [],
+          examClassLinks: [],
+          examCatalog: [],
           gradingQueue: [],
           teacherStudents: [],
           rosters: {},
@@ -84,6 +86,8 @@ export function TeacherDataProvider({ children }) {
         async gradeSubmission() {},
         async reopenSubmission() {},
         async deleteSubmission() {},
+        async assignExamToClass() {},
+        async removeExamClassAssignment() {},
       }
     }
 
@@ -107,6 +111,17 @@ export function TeacherDataProvider({ children }) {
       duration: p.duration_display || '—',
       views: p.view_count ?? 0,
       updated: new Date(p.updated_at).toLocaleDateString('vi-VN'),
+    }))
+
+    const examClassLinks = (bundle.examClassAssignments || []).map((row) => ({
+      examId: String(row.exam_id),
+      classId: String(row.class_id),
+      examTitle: row.exams?.title || `Đề #${row.exam_id}`,
+      examSubject: row.exams?.subject_label || '',
+      className: classesById[row.class_id]?.name || `Lớp ${row.class_id}`,
+      contentMode: row.exams?.content_mode === 'embed' ? 'embed' : 'mcq',
+      duration: row.exams?.duration_minutes,
+      questionCount: row.exams?.question_count,
     }))
 
     const assignments = (bundle.assignments || []).map((a) => {
@@ -160,6 +175,8 @@ export function TeacherDataProvider({ children }) {
         upcoming: true,
       })),
       assignments,
+      examClassLinks,
+      examCatalog: bundle.examCatalog || [],
       gradingQueue,
       teacherStudents,
       rosters,
@@ -340,6 +357,25 @@ export function TeacherDataProvider({ children }) {
 
       async deleteSubmission(submissionId) {
         const { error: err } = await supabase.from('assignment_submissions').delete().eq('id', Number(submissionId))
+        if (err) throw new Error(err.message)
+        await refresh()
+      },
+
+      async assignExamToClass(examIdStr, classIdStr) {
+        const exam_id = Number(examIdStr)
+        const class_id = Number(classIdStr)
+        if (!Number.isFinite(exam_id) || !Number.isFinite(class_id)) throw new Error('Thiếu đề hoặc lớp')
+        const { error: err } = await supabase.from('exam_class_assignments').insert({ exam_id, class_id })
+        if (err) throw new Error(err.message)
+        await refresh()
+      },
+
+      async removeExamClassAssignment(examIdStr, classIdStr) {
+        const { error: err } = await supabase
+          .from('exam_class_assignments')
+          .delete()
+          .eq('exam_id', Number(examIdStr))
+          .eq('class_id', Number(classIdStr))
         if (err) throw new Error(err.message)
         await refresh()
       },

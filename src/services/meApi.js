@@ -19,6 +19,16 @@ export async function postMyExamAttempt(accessToken, body) {
   })
 }
 
+/** Đề được giao — chỉ học viên đã ghi danh lớp (kèm meta.needsEnrollment nếu chưa có lớp) */
+export async function getMyAssignedExams(accessToken) {
+  return meFetch(accessToken, '/api/me/exams')
+}
+
+/** Chi tiết đề để làm bài (cùng điều kiện truy cập) */
+export async function getMyAssignedExamById(accessToken, examId) {
+  return meFetch(accessToken, `/api/me/exams/${Number(examId)}`)
+}
+
 export async function getMyCourseProgress(accessToken) {
   return meFetch(accessToken, '/api/me/course-progress')
 }

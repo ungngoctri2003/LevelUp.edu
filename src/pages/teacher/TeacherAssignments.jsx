@@ -5,10 +5,21 @@ import { useTeacherState } from '../../hooks/useTeacherState'
 import QuestionBankEditor from '../../components/dashboard/QuestionBankEditor.jsx'
 
 const empty = { classId: '', title: '', due: '', questionItems: [] }
+const emptyExamAssign = { examId: '', classId: '' }
 
 export default function TeacherAssignments() {
-  const { state, loading, error, addAssignment, updateAssignment, deleteAssignment } = useTeacherState()
+  const {
+    state,
+    loading,
+    error,
+    addAssignment,
+    updateAssignment,
+    deleteAssignment,
+    assignExamToClass,
+    removeExamClassAssignment,
+  } = useTeacherState()
   const [form, setForm] = useState(empty)
+  const [examAssign, setExamAssign] = useState(emptyExamAssign)
   const [modalOpen, setModalOpen] = useState(false)
   const [editingId, setEditingId] = useState(null)
 
@@ -66,7 +77,8 @@ export default function TeacherAssignments() {
         <div>
           <h2 className="text-xl font-bold text-white">Bài tập & kiểm tra</h2>
           <p className="text-sm text-slate-400">
-            Giao bài mới hoặc <span className="text-slate-300">Sửa</span> để đổi tiêu đề, hạn nộp và bộ câu hỏi.
+            <span className="text-slate-300">Bài tập</span>: giao bài do bạn soạn cho lớp.{' '}
+            <span className="text-slate-300">Đề kiểm tra</span>: chọn từ kho đề trung tâm (admin đã đăng) và gán cho lớp của bạn — học viên làm tại trang Bài kiểm tra công khai.
           </p>
         </div>
         <button
@@ -129,6 +141,119 @@ export default function TeacherAssignments() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      <div className="mt-10 space-y-4">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-white">Giao đề kiểm tra (kho đề)</h3>
+            <p className="text-sm text-slate-500">
+              Chỉ các đề <span className="text-slate-400">đã xuất bản</span> trên hệ thống mới hiện trong danh sách. Mỗi cặp đề–lớp chỉ giao một lần.
+            </p>
+          </div>
+        </div>
+
+        <form
+          className="flex flex-wrap items-end gap-3 rounded-2xl border border-white/10 bg-white/5 p-4"
+          onSubmit={async (e) => {
+            e.preventDefault()
+            if (!examAssign.examId || !examAssign.classId) return
+            try {
+              await assignExamToClass(examAssign.examId, examAssign.classId)
+              setExamAssign(emptyExamAssign)
+            } catch (err) {
+              toastActionError(err, 'Không giao được đề (có thể đã giao trùng lớp).')
+            }
+          }}
+        >
+          <label className="min-w-[200px] flex-1 text-sm text-slate-400">
+            Đề từ kho
+            <select
+              value={examAssign.examId}
+              onChange={(e) => setExamAssign((f) => ({ ...f, examId: e.target.value }))}
+              className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white"
+            >
+              <option value="">— Chọn đề —</option>
+              {(state.examCatalog || []).map((ex) => (
+                <option key={ex.id} value={String(ex.id)}>
+                  {ex.title} ({ex.subject_label})
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="min-w-[180px] flex-1 text-sm text-slate-400">
+            Lớp nhận đề
+            <select
+              value={examAssign.classId}
+              onChange={(e) => setExamAssign((f) => ({ ...f, classId: e.target.value }))}
+              className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white"
+            >
+              <option value="">— Chọn lớp —</option>
+              {state.classes.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button
+            type="submit"
+            disabled={loading || !examAssign.examId || !examAssign.classId}
+            className="rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-40"
+          >
+            Giao đề
+          </button>
+        </form>
+
+        <div className="overflow-x-auto rounded-2xl border border-white/10 bg-white/5">
+          <table className="w-full min-w-[720px] text-left text-sm">
+            <thead className="border-b border-white/10 text-xs uppercase text-slate-400">
+              <tr>
+                <th className="px-4 py-3">Đề</th>
+                <th className="px-4 py-3">Lớp</th>
+                <th className="px-4 py-3">Loại</th>
+                <th className="px-4 py-3" />
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5 text-slate-200">
+              {state.examClassLinks.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="px-4 py-8 text-center text-slate-500">
+                    Chưa giao đề nào từ kho. Chọn đề và lớp ở trên.
+                  </td>
+                </tr>
+              )}
+              {state.examClassLinks.map((row) => (
+                <tr key={`${row.examId}-${row.classId}`} className="hover:bg-white/5">
+                  <td className="px-4 py-3">
+                    <div className="font-medium">{row.examTitle}</div>
+                    <div className="text-xs text-slate-500">{row.examSubject}</div>
+                  </td>
+                  <td className="px-4 py-3 text-slate-400">{row.className}</td>
+                  <td className="px-4 py-3 text-slate-400">
+                    {row.contentMode === 'embed' ? 'Nhúng / tương tác' : `${row.questionCount ?? 0} câu TN`}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (!confirm('Bỏ giao đề này cho lớp? Học viên sẽ không còn thấy đề qua lớp này.')) return
+                        try {
+                          await removeExamClassAssignment(row.examId, row.classId)
+                        } catch (err) {
+                          toastActionError(err, 'Không bỏ giao được.')
+                        }
+                      }}
+                      className="text-xs text-red-400 hover:text-red-300"
+                    >
+                      Bỏ giao
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {modalOpen && (

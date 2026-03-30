@@ -11,6 +11,12 @@ const router = Router()
 
 router.use(requireAuth)
 
+/** Postgres bigint / JSON có thể là number hoặc string — cần thống nhất khi dùng Set.has */
+function nid(v) {
+  const n = Number(v)
+  return Number.isFinite(n) ? n : NaN
+}
+
 /** GET /api/me/profile */
 router.get('/profile', async (req, res) => {
   const sb = req.supabaseUser
@@ -63,6 +69,44 @@ router.get('/exam-attempts', async (req, res) => {
 })
 
 /**
+ * Đề kiểm tra: học viên đã ghi danh lớp; đề published;
+ * nếu có exam_class_assignments thì phải trùng lớp; nếu không có bản ghi lớp nào thì dùng cờ assigned (kho cũ).
+ */
+async function assertStudentMayAccessExam(sb, uid, examId) {
+  const { data: profile } = await sb.from('profiles').select('role').eq('id', uid).maybeSingle()
+  if (profile?.role !== 'student') return { ok: false, code: 'not_student' }
+  const { data: enr } = await sb.from('class_enrollments').select('class_id').eq('student_id', uid)
+  const classIds = new Set(
+    (enr || []).map((r) => nid(r.class_id)).filter((n) => Number.isFinite(n)),
+  )
+  if (classIds.size === 0) return { ok: false, code: 'no_enrollment' }
+
+  const eidNum = nid(examId)
+  if (!Number.isFinite(eidNum)) return { ok: false, code: 'no_exam' }
+
+  const { data: exam, error: exErr } = await sb
+    .from('exams')
+    .select('id, published, assigned')
+    .eq('id', eidNum)
+    .maybeSingle()
+  if (exErr) return { ok: false, code: 'error', message: exErr.message }
+  if (!exam?.published) return { ok: false, code: 'no_exam' }
+
+  const { data: links, error: linkErr } = await sb
+    .from('exam_class_assignments')
+    .select('class_id')
+    .eq('exam_id', eidNum)
+  if (linkErr) return { ok: false, code: 'error', message: linkErr.message }
+
+  if (links?.length) {
+    const ok = links.some((l) => classIds.has(nid(l.class_id)))
+    return ok ? { ok: true } : { ok: false, code: 'no_exam' }
+  }
+  if (!exam.assigned) return { ok: false, code: 'no_exam' }
+  return { ok: true }
+}
+
+/**
  * POST /api/me/exam-attempts
  * body: { exam_id, score, max_score, correct_count?, total_count? }
  */
@@ -80,6 +124,19 @@ router.post('/exam-attempts', async (req, res) => {
   if (!Number.isFinite(eid) || !Number.isFinite(sc) || !Number.isFinite(mx)) {
     return res.status(400).json({ error: 'exam_id, score, max_score phải là số hợp lệ' })
   }
+  const examGate = await assertStudentMayAccessExam(sb, uid, eid)
+  if (!examGate.ok) {
+    if (examGate.code === 'not_student') {
+      return res.status(403).json({ error: 'Chỉ học viên được lưu kết quả bài kiểm tra' })
+    }
+    if (examGate.code === 'no_enrollment') {
+      return res.status(403).json({ error: 'Bạn chưa được ghi danh lớp nào.' })
+    }
+    if (examGate.code === 'no_exam') {
+      return res.status(403).json({ error: 'Đề không tồn tại hoặc chưa được giao cho lớp.' })
+    }
+    return res.status(500).json({ error: examGate.message || 'Lỗi' })
+  }
   const row = {
     student_id: uid,
     exam_id: eid,
@@ -92,6 +149,67 @@ router.post('/exam-attempts', async (req, res) => {
   const { data, error } = await sb.from('exam_attempts').insert(row).select('*').single()
   if (error) return res.status(500).json({ error: error.message })
   res.status(201).json({ data })
+})
+
+/** GET /api/me/exams — đề published; theo lớp (exam_class_assignments) hoặc kho assigned không gắn lớp */
+router.get('/exams', async (req, res) => {
+  const sb = req.supabaseUser
+  const uid = req.authUser.id
+  const { data: profile } = await sb.from('profiles').select('role').eq('id', uid).maybeSingle()
+  if (profile?.role !== 'student') {
+    return res.status(403).json({ error: 'Chỉ học viên được xem đề kiểm tra được giao.' })
+  }
+  const { data: enr, error: eErr } = await sb.from('class_enrollments').select('class_id').eq('student_id', uid)
+  if (eErr) return res.status(500).json({ error: eErr.message })
+  if (!enr?.length) {
+    return res.json({ data: [], meta: { needsEnrollment: true } })
+  }
+  const classIds = new Set(enr.map((r) => nid(r.class_id)).filter((n) => Number.isFinite(n)))
+  const { data: allLinks, error: linkErr } = await sb.from('exam_class_assignments').select('exam_id, class_id')
+  if (linkErr) return res.status(500).json({ error: linkErr.message })
+  const examsWithLinks = new Set((allLinks || []).map((r) => nid(r.exam_id)).filter((n) => Number.isFinite(n)))
+  const reachableExamIds = new Set(
+    (allLinks || [])
+      .filter((r) => classIds.has(nid(r.class_id)))
+      .map((r) => nid(r.exam_id))
+      .filter((n) => Number.isFinite(n)),
+  )
+  const { data: examsRaw, error } = await sb
+    .from('exams')
+    .select('*')
+    .eq('published', true)
+    .order('id', { ascending: true })
+  if (error) return res.status(500).json({ error: error.message })
+  const data = (examsRaw || []).filter((e) => {
+    const eid = nid(e.id)
+    if (!Number.isFinite(eid)) return false
+    if (examsWithLinks.has(eid)) return reachableExamIds.has(eid)
+    return e.assigned === true
+  })
+  res.json({ data })
+})
+
+/** GET /api/me/exams/:id — chi tiết đề (câu hỏi / nhúng) khi đủ điều kiện */
+router.get('/exams/:id', async (req, res) => {
+  const sb = req.supabaseUser
+  const uid = req.authUser.id
+  const id = Number(req.params.id)
+  if (!Number.isFinite(id)) return res.status(400).json({ error: 'id không hợp lệ' })
+  const gate = await assertStudentMayAccessExam(sb, uid, id)
+  if (!gate.ok) {
+    if (gate.code === 'not_student') {
+      return res.status(403).json({ error: 'Chỉ học viên được làm bài kiểm tra được giao.' })
+    }
+    if (gate.code === 'no_enrollment') {
+      return res.status(403).json({ error: 'Bạn chưa được ghi danh lớp nào. Liên hệ trung tâm để được giao bài.' })
+    }
+    if (gate.code === 'no_exam') return res.status(404).json({ error: 'Không tìm thấy đề hoặc đề chưa được giao.' })
+    return res.status(500).json({ error: gate.message || 'Lỗi' })
+  }
+  const { data, error } = await sb.from('exams').select('*').eq('id', id).maybeSingle()
+  if (error) return res.status(500).json({ error: error.message })
+  if (!data) return res.status(404).json({ error: 'Không tìm thấy đề' })
+  res.json({ data })
 })
 
 /** GET /api/me/classes */
