@@ -169,6 +169,7 @@ create table public.lesson_details (
   lesson_id      bigint primary key references public.lessons (id) on delete cascade,
   summary        text,
   teacher_name   text,
+  youtube_url    text,
   outline        jsonb not null default '[]'::jsonb,
   sections       jsonb not null default '[]'::jsonb,
   resources      jsonb not null default '[]'::jsonb,

@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { Reveal } from '../components/motion/Reveal'
 import { usePublicContent } from '../hooks/usePublicContent'
 import { buildLessonsBySubject, fetchLessonDetail, findLessonContextFromGroups } from '../services/publicApi.js'
+import { toYouTubeEmbedUrl } from '../lib/youtubeEmbed.js'
 
 export default function LessonDetailPage() {
   const { lessonId } = useParams()
@@ -56,6 +57,7 @@ export default function LessonDetailPage() {
   const { subject, lesson } = ctx
   const summary = row.summary || ''
   const teacherName = row.teacher_name || '—'
+  const embedSrc = toYouTubeEmbedUrl(row.youtube_url)
   const outline = Array.isArray(row.outline) ? row.outline : []
   const sections = Array.isArray(row.sections) ? row.sections : []
   const resources = Array.isArray(row.resources) ? row.resources : []
@@ -98,19 +100,28 @@ export default function LessonDetailPage() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="mt-10 overflow-hidden rounded-2xl border border-gray-200 bg-gradient-to-br from-slate-900 via-slate-800 to-cyan-900 shadow-xl dark:border-slate-600"
+          className="mt-10 overflow-hidden rounded-2xl border border-gray-200 bg-slate-900 shadow-xl dark:border-slate-600"
         >
-          <div className="relative flex aspect-video items-center justify-center">
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-cyan-500/20 via-transparent to-fuchsia-500/10" />
-            <button
-              type="button"
-              className="relative z-10 flex h-16 w-16 items-center justify-center rounded-full bg-white/95 text-cyan-600 shadow-lg ring-4 ring-white/30 transition hover:scale-105"
-              aria-label="Phát video bài giảng"
-            >
-              <svg className="ml-1 h-8 w-8" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z" />
-              </svg>
-            </button>
+          <div className="relative aspect-video w-full">
+            {embedSrc ? (
+              <iframe
+                src={embedSrc}
+                title={`Video — ${lesson.title}`}
+                className="absolute inset-0 h-full w-full border-0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                referrerPolicy="strict-origin-when-cross-origin"
+              />
+            ) : (
+              <div className="flex h-full min-h-[200px] flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-cyan-950 px-6 text-center">
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-cyan-500/15 via-transparent to-fuchsia-500/10" />
+                <p className="relative z-10 text-sm text-slate-400">
+                  {row.youtube_url && String(row.youtube_url).trim()
+                    ? 'Link YouTube không hợp lệ — vui lòng kiểm tra lại URL trong phần quản trị.'
+                    : 'Chưa gắn video YouTube cho bài giảng này.'}
+                </p>
+              </div>
+            )}
           </div>
         </motion.div>
 

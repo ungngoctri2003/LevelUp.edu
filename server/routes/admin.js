@@ -346,7 +346,18 @@ router.get(
     const id = Number(req.params.id)
     if (!Number.isFinite(id)) throw new Error('ID bài giảng không hợp lệ')
     const row = await adminApi.fetchLessonDetailsRow(req.sbAdmin, id)
-    return row || { lesson_id: id, summary: '', teacher_name: '', outline: [], sections: [], resources: [], practice_hints: [] }
+    return (
+      row || {
+        lesson_id: id,
+        summary: '',
+        teacher_name: '',
+        youtube_url: null,
+        outline: [],
+        sections: [],
+        resources: [],
+        practice_hints: [],
+      }
+    )
   }),
 )
 
@@ -376,14 +387,16 @@ router.delete(
   }),
 )
 
-router.put(
-  '/lessons/:id/details',
-  handle(async (req) => {
+router.put('/lessons/:id/details', async (req, res) => {
+  try {
     const id = Number(req.params.id)
     if (!Number.isFinite(id)) throw new Error('ID bài giảng không hợp lệ')
-    await adminApi.adminUpsertLessonDetails(req.sbAdmin, id, req.body || {}, actor(req))
-  }),
-)
+    const data = await adminApi.adminUpsertLessonDetails(req.sbAdmin, id, req.body || {}, actor(req))
+    res.json({ ok: true, data })
+  } catch (e) {
+    res.status(400).json({ error: e?.message || 'Lỗi thao tác' })
+  }
+})
 
 // --- Public teacher cards (landing) ---
 router.get(

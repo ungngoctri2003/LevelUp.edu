@@ -19,6 +19,7 @@ import AdminExams from './pages/admin/AdminExams'
 import AdminAdmissions from './pages/admin/AdminAdmissions'
 import AdminSubjects from './pages/admin/AdminSubjects'
 import AdminLessons from './pages/admin/AdminLessons'
+import AdminLessonDetail from './pages/admin/AdminLessonDetail'
 import AdminLandingTeachers from './pages/admin/AdminLandingTeachers'
 import AdminLeads from './pages/admin/AdminLeads'
 import AdminCmsLanding from './pages/admin/AdminCmsLanding'
@@ -69,6 +70,7 @@ function App() {
           <Route path="tuyen-sinh" element={<AdminAdmissions />} />
           <Route path="mon-hoc" element={<AdminSubjects />} />
           <Route path="bai-giang-noi-dung" element={<AdminLessons />} />
+          <Route path="bai-giang-noi-dung/:lessonId" element={<AdminLessonDetail />} />
           <Route path="doi-ngu-trang-chu" element={<AdminLandingTeachers />} />
           <Route path="lead-dang-ky" element={<AdminLeads />} />
           <Route path="cms-trang-chu" element={<AdminCmsLanding />} />

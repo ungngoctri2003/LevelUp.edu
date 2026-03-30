@@ -139,7 +139,7 @@ router.get('/lessons/:id/details', async (req, res) => {
   if (!Number.isFinite(id)) return res.status(400).json({ error: 'id không hợp lệ' })
   const { data, error } = await sb
     .from('lesson_details')
-    .select('lesson_id, summary, teacher_name, outline, sections, resources, practice_hints')
+    .select('lesson_id, summary, teacher_name, youtube_url, outline, sections, resources, practice_hints')
     .eq('lesson_id', id)
     .maybeSingle()
   if (error) return res.status(500).json({ error: error.message })

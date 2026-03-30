@@ -6,15 +6,6 @@ import { inputAdmin, btnPrimaryAdmin, tableHeadAdmin } from '../../components/da
 import { useAuthSession } from '../../context/AuthSessionContext'
 import { toast } from 'sonner'
 import { toastActionError } from '../../lib/appToast.js'
-import {
-  LessonResourceRowsEditor,
-  LessonSectionBlocksEditor,
-  LinesTextarea,
-  linesToStringArray,
-  normalizeLessonResources,
-  normalizeLessonSections,
-  stringArrayToLines,
-} from '../../components/admin/StructuredContentEditors.jsx'
 import * as srv from '../../services/adminServerApi.js'
 
 export default function AdminLessons() {
@@ -30,16 +21,6 @@ export default function AdminLessons() {
     level_label: '',
     sort_order: 0,
   })
-  const [detailLesson, setDetailLesson] = useState(null)
-  const [detailForm, setDetailForm] = useState({
-    summary: '',
-    teacher_name: '',
-    outlineText: '',
-    sectionBlocks: [{ heading: '', body: '' }],
-    resourceRows: [{ name: '', type: '' }],
-    practiceHintsText: '',
-  })
-
   const loadAll = useCallback(async () => {
     if (!token) {
       setSubjects([])
@@ -99,51 +80,6 @@ export default function AdminLessons() {
       await loadAll()
     } catch (e2) {
       toastActionError(e2, 'Không xóa được bài giảng.')
-    }
-  }
-
-  const openDetail = async (row) => {
-    if (!token) return
-    setDetailLesson(row)
-    try {
-      const res = await srv.adminGetLessonDetails(token, row.id)
-      const d = res.data || {}
-      setDetailForm({
-        summary: d.summary || '',
-        teacher_name: d.teacher_name || '',
-        outlineText: stringArrayToLines(Array.isArray(d.outline) ? d.outline : []),
-        sectionBlocks: normalizeLessonSections(d.sections),
-        resourceRows: normalizeLessonResources(d.resources),
-        practiceHintsText: stringArrayToLines(Array.isArray(d.practice_hints) ? d.practice_hints : []),
-      })
-    } catch (e2) {
-      toastActionError(e2, 'Không đọc được chi tiết bài giảng.')
-      setDetailLesson(null)
-    }
-  }
-
-  const saveDetail = async (e) => {
-    e.preventDefault()
-    if (!token || !detailLesson) return
-    const outline = linesToStringArray(detailForm.outlineText)
-    const sections = detailForm.sectionBlocks.filter((s) => s.heading.trim() || s.body.trim())
-    const resources = detailForm.resourceRows
-      .filter((r) => r.name.trim())
-      .map((r) => ({ name: r.name.trim(), type: (r.type || '').trim() || 'PDF' }))
-    const practice_hints = linesToStringArray(detailForm.practiceHintsText)
-    try {
-      await srv.adminPutLessonDetails(token, detailLesson.id, {
-        summary: detailForm.summary,
-        teacher_name: detailForm.teacher_name,
-        outline,
-        sections,
-        resources,
-        practice_hints,
-      })
-      setDetailLesson(null)
-      await loadAll()
-    } catch (e2) {
-      toastActionError(e2, 'Không lưu được chi tiết bài giảng.')
     }
   }
 
@@ -247,9 +183,12 @@ export default function AdminLessons() {
                   <td className="px-4 py-3 font-medium">{r.title}</td>
                   <td className="px-4 py-3">{r.duration_minutes ?? '—'}</td>
                   <td className="px-4 py-3 text-right">
-                    <button type="button" onClick={() => openDetail(r)} className="mr-2 text-cyan-400 hover:text-cyan-300">
+                    <Link
+                      to={`/admin/bai-giang-noi-dung/${r.id}`}
+                      className="mr-2 inline-block text-cyan-400 hover:text-cyan-300"
+                    >
                       Chi tiết
-                    </button>
+                    </Link>
                     <button type="button" onClick={() => remove(r)} className="text-red-400 hover:text-red-300">
                       Xóa
                     </button>
@@ -260,80 +199,6 @@ export default function AdminLessons() {
           </table>
         </div>
       </Panel>
-
-      {detailLesson && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/70 p-4" role="dialog">
-          <form
-            onSubmit={saveDetail}
-            className="my-8 w-full max-w-4xl space-y-5 rounded-2xl border border-white/10 bg-slate-900 p-6 shadow-xl"
-          >
-            <h3 className="text-lg font-semibold text-white">
-              Chi tiết bài #{detailLesson.id} — {detailLesson.title}
-            </h3>
-            <label className="block text-sm text-slate-400">
-              Tóm tắt
-              <textarea
-                rows={3}
-                value={detailForm.summary}
-                onChange={(e) => setDetailForm((f) => ({ ...f, summary: e.target.value }))}
-                className={field}
-              />
-            </label>
-            <label className="block text-sm text-slate-400">
-              Tên giảng viên (hiển thị)
-              <input
-                value={detailForm.teacher_name}
-                onChange={(e) => setDetailForm((f) => ({ ...f, teacher_name: e.target.value }))}
-                className={field}
-              />
-            </label>
-            <LinesTextarea
-              label="Dàn ý (outline)"
-              hint="Mỗi dòng là một ý trong danh sách dàn ý trên trang chi tiết bài giảng."
-              value={detailForm.outlineText}
-              onChange={(outlineText) => setDetailForm((f) => ({ ...f, outlineText }))}
-              rows={6}
-              inputClassName={field}
-            />
-            <div className="border-t border-white/10 pt-4">
-              <LessonSectionBlocksEditor
-                blocks={detailForm.sectionBlocks}
-                onChange={(sectionBlocks) => setDetailForm((f) => ({ ...f, sectionBlocks }))}
-                fieldClass={field}
-              />
-            </div>
-            <div className="border-t border-white/10 pt-4">
-              <LessonResourceRowsEditor
-                rows={detailForm.resourceRows}
-                onChange={(resourceRows) => setDetailForm((f) => ({ ...f, resourceRows }))}
-                fieldClass={field}
-              />
-            </div>
-            <div className="border-t border-white/10 pt-4">
-              <LinesTextarea
-                label="Gợi ý luyện tập"
-                hint="Mỗi dòng là một câu hỏi / bài tập gợi ý."
-                value={detailForm.practiceHintsText}
-                onChange={(practiceHintsText) => setDetailForm((f) => ({ ...f, practiceHintsText }))}
-                rows={5}
-                inputClassName={field}
-              />
-            </div>
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setDetailLesson(null)}
-                className="rounded-xl border border-white/15 px-4 py-2 text-sm text-slate-300"
-              >
-                Đóng
-              </button>
-              <button type="submit" className={btnPrimaryAdmin}>
-                Lưu chi tiết
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
     </div>
   )
 }

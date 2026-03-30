@@ -735,6 +735,7 @@ export async function adminInsertLesson(
         lesson_id: lid,
         summary: '',
         teacher_name: '',
+        youtube_url: null,
         outline: [],
         sections: [],
         resources: [],
@@ -772,21 +773,39 @@ export async function adminDeleteLesson(sb, id, title, user) {
   await logAdminActivity(sb, `Xóa bài giảng: ${title || `#${lid}`}`, 'course', user?.email, user?.id)
 }
 
+/** Lấy URL video từ body (snake_case / camelCase) — tránh mất dữ liệu khi client gửi tên trường khác. */
+function pickYoutubeUrlFromPayload(raw) {
+  if (!raw || typeof raw !== 'object') return null
+  const v = raw.youtube_url ?? raw.youtubeUrl ?? raw.video_url ?? raw.videoUrl
+  if (v == null) return null
+  const s = String(v).trim()
+  return s || null
+}
+
 export async function adminUpsertLessonDetails(sb, lessonId, raw, user) {
   const lid = Number(lessonId)
   if (!Number.isFinite(lid)) throw new Error('ID bài giảng không hợp lệ')
+  const yt = pickYoutubeUrlFromPayload(raw)
   const row = {
     lesson_id: lid,
     summary: raw.summary != null ? String(raw.summary) : '',
     teacher_name: raw.teacher_name != null ? String(raw.teacher_name) : '',
+    youtube_url: yt,
     outline: parseJsonField(raw.outline, []),
     sections: parseJsonField(raw.sections, []),
     resources: parseJsonField(raw.resources, []),
     practice_hints: parseJsonField(raw.practice_hints, []),
   }
-  const { error } = await sb.from('lesson_details').upsert(row, { onConflict: 'lesson_id' })
+  const { data: saved, error } = await sb
+    .from('lesson_details')
+    .upsert(row, { onConflict: 'lesson_id' })
+    .select('*')
+    .maybeSingle()
   if (error) throw new Error(error.message)
+  const out = saved ?? (await fetchLessonDetailsRow(sb, lid))
+  if (!out) throw new Error('Không đọc lại được bản ghi lesson_details sau khi lưu.')
   await logAdminActivity(sb, `Cập nhật chi tiết bài giảng #${lid}`, 'course', user?.email, user?.id)
+  return out
 }
 
 export async function adminInsertSubject(sb, { name, slug, icon_label, sort_order }, user) {
