@@ -1,5 +1,6 @@
 import { createContext, useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
+import { APP_DATA_LOAD_ERROR } from '../lib/publicUserMessages.js'
 import { useAuthSession } from './AuthSessionContext.jsx'
 import * as api from '../services/adminApi.js'
 import * as srv from '../services/adminServerApi.js'
@@ -63,7 +64,7 @@ export function AdminDataProvider({ children }) {
               classes: clRes.data,
             }
           } catch {
-            /* API tắt / thiếu service role — fallback RLS trên trình duyệt */
+            /* Máy chủ quản trị không phản hồi — dùng dữ liệu trực tiếp từ phiên đăng nhập */
             const [students, teachers, counts, classes] = await Promise.all([
               api.fetchStudentsAdmin(supabase),
               api.fetchTeachersAdmin(supabase),
@@ -117,7 +118,8 @@ export function AdminDataProvider({ children }) {
         settings,
       })
     } catch (e) {
-      setError(e.message || 'Lỗi tải dữ liệu admin')
+      if (import.meta.env.DEV) console.error('[AdminData]', e)
+      setError(APP_DATA_LOAD_ERROR)
     } finally {
       setLoading(false)
     }

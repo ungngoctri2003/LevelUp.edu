@@ -88,7 +88,7 @@ export default function StudentAssignments() {
       await load()
     } catch (e) {
       if (import.meta.env.DEV) console.error('[StudentAssignments submit]', e)
-      toast.error(e?.message || PUBLIC_SUBMIT_ERROR)
+      toast.error(PUBLIC_SUBMIT_ERROR)
     } finally {
       setSubmittingId(null)
     }
@@ -114,7 +114,7 @@ export default function StudentAssignments() {
       toast.success('Đã nộp bài. Điểm được chấm tự động.')
     } catch (e) {
       if (import.meta.env.DEV) console.error('[StudentAssignments submitMcq]', e)
-      toast.error(e?.message || PUBLIC_SUBMIT_ERROR)
+      toast.error(PUBLIC_SUBMIT_ERROR)
     } finally {
       setSubmittingId(null)
     }
@@ -210,14 +210,14 @@ export default function StudentAssignments() {
               {hasMcq && !sub && (
                 <div className="mt-6 space-y-6 border-t border-white/10 pt-6">
                   {taking.map((q, idx) => (
-                    <div key={q.sourceIndex} className="space-y-2">
+                    <div key={`${a.id}-q-${idx}-${q.sourceIndex}`} className="space-y-2">
                       <p className="text-sm font-medium text-white">
                         Câu {idx + 1}: {q.text}
                       </p>
                       <div className="space-y-2">
-                        {q.options.map((opt) => (
+                        {q.options.map((opt, optIdx) => (
                           <label
-                            key={`${q.sourceIndex}-${opt}`}
+                            key={`${a.id}-${q.sourceIndex}-opt-${optIdx}`}
                             className="flex cursor-pointer items-center gap-3 rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-slate-200 hover:border-sky-500/40"
                           >
                             <input

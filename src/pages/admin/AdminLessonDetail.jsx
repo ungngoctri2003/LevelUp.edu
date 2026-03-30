@@ -109,9 +109,7 @@ export default function AdminLessonDetail() {
       })
       const saved = res?.data
       if (youtubePayload && (!saved || !(saved.youtube_url != null && String(saved.youtube_url).trim()))) {
-        toast.warning(
-          'Link YouTube không được ghi vào CSDL. Chạy migration database/migrations/007_lesson_details_youtube_url.sql trên Supabase rồi thử lưu lại.',
-        )
+        toast.warning('Không lưu được link video. Vui lòng thử lại hoặc liên hệ quản trị hệ thống.')
       } else {
         toast.success('Đã lưu chi tiết bài giảng.')
       }
@@ -152,8 +150,8 @@ export default function AdminLessonDetail() {
         description={
           <>
             Nội dung hiển thị tại{' '}
-            <Link className="font-medium text-cyan-400 hover:text-cyan-300" to="/bai-giang">
-              /bai-giang
+            <Link className="font-medium text-cyan-400 hover:text-cyan-300" to="/bai-giang" placeholder='Bài giảng'>
+              Bài giảng
             </Link>{' '}
             và trang chi tiết công khai.
           </>
@@ -164,7 +162,7 @@ export default function AdminLessonDetail() {
       {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
 
       {!loading && lessonRow && (
-        <Panel title={`Bài #${lessonRow.id} — ${lessonRow.title}`} subtitle="lesson_details">
+        <Panel title={`Bài #${lessonRow.id} — ${lessonRow.title}`} subtitle="Tóm tắt, video, dàn ý và tài liệu trên trang bài giảng">
           <form onSubmit={saveDetail} className="mt-4 space-y-5">
             <label className="block text-sm text-slate-400">
               Tóm tắt

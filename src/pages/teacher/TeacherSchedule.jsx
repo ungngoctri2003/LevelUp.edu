@@ -31,7 +31,6 @@ export default function TeacherSchedule() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-xl font-bold text-white">Lịch dạy</h2>
-          <p className="text-sm text-slate-400">Bảng schedule_slots theo từng lớp.</p>
         </div>
         <button
           type="button"

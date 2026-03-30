@@ -9,3 +9,7 @@ export const PUBLIC_SUBMIT_ERROR =
 
 /** Thông báo chung khi thao tác (lưu tiến độ, gửi bài…) thất bại — không lộ chi tiết kỹ thuật. */
 export const PUBLIC_ACTION_ERROR = 'Thao tác chưa thành công. Vui lòng thử lại sau.'
+
+/** Tải dữ liệu khu vực quản trị / giáo viên — không hiển thị message lỗi thô từ máy chủ. */
+export const APP_DATA_LOAD_ERROR =
+  'Không tải được dữ liệu. Vui lòng thử lại sau hoặc đăng nhập lại nếu vẫn lỗi.'

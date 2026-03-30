@@ -13,7 +13,7 @@ export default function TeacherStudents() {
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-bold text-white">Học sinh</h2>
-        <p className="text-sm text-slate-400">Gom từ class_enrollments các lớp bạn phụ trách.</p>
+        <p className="text-sm text-slate-400">Các lớp bạn phụ trách.</p>
       </div>
 
       {loading && <p className="text-sm text-slate-400">Đang tải…</p>}

@@ -14,7 +14,9 @@ export default function TeacherGrading() {
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-bold text-white">Chấm điểm</h2>
-        <p className="text-sm text-slate-400">assignment_submissions — học viên nộp bài từ khu học viên.</p>
+        <p className="text-sm text-slate-400">
+          Danh sách bài học viên đã nộp từ trang học tập — bạn chấm điểm và phản hồi tại đây.
+        </p>
       </div>
 
       {loading && <p className="text-sm text-slate-400">Đang tải…</p>}

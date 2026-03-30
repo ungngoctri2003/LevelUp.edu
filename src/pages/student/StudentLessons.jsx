@@ -15,7 +15,7 @@ export default function StudentLessons() {
     <div className="space-y-8">
       <PageHeader
         title="Bài giảng đang học"
-        description="Gợi ý từ API công khai — liên kết tới chi tiết bài giảng."
+        description="Gợi ý theo môn học — mở từng bài để xem chi tiết."
       />
 
       {loading && <p className="text-sm text-slate-400">Đang tải…</p>}

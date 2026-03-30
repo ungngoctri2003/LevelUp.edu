@@ -4,6 +4,7 @@ import { useAuthSession } from '../context/AuthSessionContext'
 import { normalizeExamQuestions } from '../services/publicApi.js'
 import { getMyAssignedExamById, getMyAssignedExams, postMyExamAttempt } from '../services/meApi.js'
 import { toast } from 'sonner'
+import { PUBLIC_LOAD_ERROR } from '../lib/publicUserMessages.js'
 
 function mapExamForCard(row) {
   if (!row) return null
@@ -107,8 +108,8 @@ export default function TestsPage() {
       setSubmitted(false)
       setResult(null)
     } catch (e) {
-      const msg = e?.body?.error || e?.message || 'Không tải được đề.'
-      toast.error(msg)
+      if (import.meta.env.DEV) console.error('[TestsPage load exam]', e)
+      toast.error(PUBLIC_LOAD_ERROR)
     } finally {
       setLoadingQuestions(false)
     }
@@ -237,9 +238,9 @@ export default function TestsPage() {
                     Câu {idx + 1}: {q.text}
                   </p>
                   <div className="space-y-2">
-                    {q.options.map((opt) => (
+                    {q.options.map((opt, optIdx) => (
                       <label
-                        key={opt}
+                        key={`${q.id}-opt-${optIdx}`}
                         className="flex cursor-pointer items-center gap-3 rounded-lg border border-gray-200 p-4 transition-colors hover:border-cyan-300 dark:border-slate-600 dark:hover:border-cyan-500/50"
                       >
                         <input

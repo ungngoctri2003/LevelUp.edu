@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
+import { APP_DATA_LOAD_ERROR } from '../lib/publicUserMessages.js'
 import { useAuthSession } from './AuthSessionContext.jsx'
 import * as tq from '../services/teacherQueries.js'
 import { questionBankDraftsFromStored, sanitizeMcqBankForDatabase } from '../lib/mcqQuestions.js'
@@ -36,7 +37,8 @@ export function TeacherDataProvider({ children }) {
       const b = await tq.loadTeacherBundle(supabase)
       setBundle(b)
     } catch (e) {
-      setError(e.message || 'Lỗi tải dữ liệu giáo viên')
+      if (import.meta.env.DEV) console.error('[TeacherData]', e)
+      setError(APP_DATA_LOAD_ERROR)
     } finally {
       setLoading(false)
     }

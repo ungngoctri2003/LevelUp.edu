@@ -6,6 +6,16 @@ import { usePublicContent } from '../hooks/usePublicContent'
 import { buildLessonsBySubject, fetchLessonDetail, findLessonContextFromGroups } from '../services/publicApi.js'
 import { toYouTubeEmbedUrl } from '../lib/youtubeEmbed.js'
 
+/** Hiển thị dòng nội dung công khai — tránh lộ chuỗi JSON kỹ thuật. */
+function lineItemText(item) {
+  if (typeof item === 'string') return item
+  if (item != null && typeof item === 'object') {
+    if (typeof item.text === 'string') return item.text
+    if (typeof item.label === 'string') return item.label
+  }
+  return '—'
+}
+
 export default function LessonDetailPage() {
   const { lessonId } = useParams()
   const { subjects, lessons, loading: catLoading } = usePublicContent()
@@ -135,7 +145,7 @@ export default function LessonDetailPage() {
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Dàn ý bài giảng</h2>
             <ol className="mt-4 list-decimal space-y-2 pl-5 text-gray-600 dark:text-slate-300">
               {outline.map((item, i) => (
-                <li key={i}>{typeof item === 'string' ? item : JSON.stringify(item)}</li>
+                <li key={i}>{lineItemText(item)}</li>
               ))}
             </ol>
           </section>
@@ -154,7 +164,7 @@ export default function LessonDetailPage() {
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Bài tập gợi ý</h2>
             <ul className="mt-3 list-disc space-y-2 pl-5 text-gray-700 dark:text-slate-300">
               {practiceHints.map((h, i) => (
-                <li key={i}>{typeof h === 'string' ? h : JSON.stringify(h)}</li>
+                <li key={i}>{lineItemText(h)}</li>
               ))}
             </ul>
           </section>

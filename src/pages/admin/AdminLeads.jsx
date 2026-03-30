@@ -70,7 +70,7 @@ export default function AdminLeads() {
     <div className="space-y-8">
       <PageHeader
         title="Lead đăng ký"
-        description="Dữ liệu từ form trang chủ (marketing_leads). Chỉ admin đọc qua API máy chủ."
+        description="Các đăng ký nhận tư vấn gửi từ form trang chủ (chỉ quản trị viên xem được)."
         badge="CRM"
       >
         <button type="button" onClick={downloadCsv} className={btnPrimaryAdmin} disabled={!rows.length}>
@@ -81,7 +81,7 @@ export default function AdminLeads() {
       {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
 
       <p className="text-sm text-slate-500">
-        Tổng ước: {total} — hiển thị {rows.length} (offset {offset})
+        Tổng khoảng {total} mục — đang xem {rows.length} mục (trang {Math.floor(offset / limit) + 1})
       </p>
 
       <div className="flex gap-2">

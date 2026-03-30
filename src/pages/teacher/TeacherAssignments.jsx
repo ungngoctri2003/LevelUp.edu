@@ -3,8 +3,9 @@ import { toast } from 'sonner'
 import { toastActionError } from '../../lib/appToast.js'
 import { useTeacherState } from '../../hooks/useTeacherState'
 import QuestionBankEditor from '../../components/dashboard/QuestionBankEditor.jsx'
+import { mergeDateTimeForDeadline, splitDatetimeLocalParts } from '../../lib/datetimeParts.js'
 
-const empty = { classId: '', title: '', due: '', questionItems: [] }
+const empty = { classId: '', title: '', dueDate: '', dueTime: '', questionItems: [] }
 const emptyExamAssign = { examId: '', classId: '' }
 
 export default function TeacherAssignments() {
@@ -30,10 +31,12 @@ export default function TeacherAssignments() {
   }
 
   const openEdit = (a) => {
+    const { date, time } = splitDatetimeLocalParts(a.dueInput || '')
     setForm({
       classId: a.classId,
       title: a.title,
-      due: a.dueInput || '',
+      dueDate: date,
+      dueTime: time,
       questionItems: JSON.parse(JSON.stringify(a.questionItems?.length ? a.questionItems : [])),
     })
     setEditingId(a.id)
@@ -51,7 +54,8 @@ export default function TeacherAssignments() {
     if (!form.title.trim()) return
     if (!editingId && !form.classId) return
     try {
-      const dueAt = form.due.trim() ? new Date(form.due).toISOString() : null
+      const dueLocal = mergeDateTimeForDeadline(form.dueDate, form.dueTime)
+      const dueAt = dueLocal ? new Date(dueLocal).toISOString() : null
       if (editingId) {
         await updateAssignment(editingId, {
           title: form.title.trim(),
@@ -290,15 +294,30 @@ export default function TeacherAssignments() {
                 className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white"
               />
             </label>
-            <label className="mt-3 block text-sm text-slate-400">
-              Hạn nộp (datetime-local, tùy chọn)
-              <input
-                type="datetime-local"
-                value={form.due}
-                onChange={(e) => setForm((f) => ({ ...f, due: e.target.value }))}
-                className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white"
-              />
-            </label>
+            <div className="mt-3">
+              <span className="block text-sm text-slate-400">Hạn nộp (tuỳ chọn)</span>
+              <p className="mt-0.5 text-xs text-slate-500">Chọn ngày trên lịch; nếu không chọn giờ, hạn được hiểu là cuối ngày đó (23:59).</p>
+              <div className="mt-2 grid gap-3 sm:grid-cols-2">
+                <label className="block text-sm text-slate-400">
+                  Ngày
+                  <input
+                    type="date"
+                    value={form.dueDate}
+                    onChange={(e) => setForm((f) => ({ ...f, dueDate: e.target.value }))}
+                    className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white scheme-dark"
+                  />
+                </label>
+                <label className="block text-sm text-slate-400">
+                  Giờ
+                  <input
+                    type="time"
+                    value={form.dueTime}
+                    onChange={(e) => setForm((f) => ({ ...f, dueTime: e.target.value }))}
+                    className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white scheme-dark"
+                  />
+                </label>
+              </div>
+            </div>
             <div className="mt-6 border-t border-white/10 pt-4">
               <p className="mb-3 text-sm text-slate-400">
                 Bộ câu hỏi (tùy chọn): nếu có, học viên làm trắc nghiệm và hệ thống chấm tự động (thang 10). Không thêm câu

@@ -33,7 +33,7 @@ export default function TeacherLessons() {
 
   return (
     <div className="space-y-8">
-      <PageHeader title="Bài giảng đã đăng" description="Bảng teacher_lesson_posts.">
+      <PageHeader title="Bài giảng đã đăng" >
         <button
           type="button"
           onClick={() => setShowForm(true)}

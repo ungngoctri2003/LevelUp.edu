@@ -7,6 +7,16 @@ import { useAuthSession } from '../../context/AuthSessionContext'
 import { toast } from 'sonner'
 import * as srv from '../../services/adminServerApi.js'
 
+const LANDING_TEACHER_LABELS = {
+  name: 'Tên',
+  bio: 'Giới thiệu',
+  initial: 'Chữ cái đại diện',
+  color_token: 'Màu (indigo | purple)',
+  avatar_url: 'Ảnh URL',
+  user_id: 'ID tài khoản đăng nhập (tuỳ chọn)',
+  sort_order: 'Thứ tự hiển thị',
+}
+
 const emptyDraft = {
   name: '',
   bio: '',
@@ -126,8 +136,8 @@ export default function AdminLandingTeachers() {
             Thẻ hiển thị tại{' '}
             <Link className="font-medium text-cyan-400 hover:text-cyan-300" to="/">
               trang chủ
-            </Link>{' '}
-            (bảng public_teacher_profiles).
+            </Link>
+            .
           </>
         }
         badge="CMS"
@@ -135,7 +145,7 @@ export default function AdminLandingTeachers() {
 
       {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
 
-      <Panel title="Thêm thẻ giáo viên" subtitle="Không bắt buộc liên kết user_id — có thể chỉ hiển thị tĩnh.">
+      <Panel title="Thêm thẻ giáo viên" subtitle="Có thể chỉ nhập thông tin hiển thị, không cần gắn tài khoản đăng nhập.">
         <form onSubmit={add} className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <label className="block text-sm text-slate-400 sm:col-span-2 lg:col-span-1">
             Tên *
@@ -146,7 +156,7 @@ export default function AdminLandingTeachers() {
             <input value={draft.bio} onChange={(e) => setDraft((d) => ({ ...d, bio: e.target.value }))} className={field} />
           </label>
           <label className="block text-sm text-slate-400">
-            Initial
+            Chữ cái đại diện
             <input value={draft.initial} onChange={(e) => setDraft((d) => ({ ...d, initial: e.target.value }))} className={field} />
           </label>
           <label className="block text-sm text-slate-400">
@@ -158,11 +168,11 @@ export default function AdminLandingTeachers() {
             <input value={draft.avatar_url} onChange={(e) => setDraft((d) => ({ ...d, avatar_url: e.target.value }))} className={field} />
           </label>
           <label className="block text-sm text-slate-400 sm:col-span-2">
-            user_id (UUID, tuỳ chọn)
+            Liên kết tài khoản (tuỳ chọn)
             <input value={draft.user_id} onChange={(e) => setDraft((d) => ({ ...d, user_id: e.target.value }))} className={field} />
           </label>
           <label className="block text-sm text-slate-400">
-            Sort
+            Thứ tự hiển thị
             <input
               type="number"
               value={draft.sort_order}
@@ -185,7 +195,7 @@ export default function AdminLandingTeachers() {
               <tr>
                 <th className="px-4 py-3">ID</th>
                 <th className="px-4 py-3">Tên</th>
-                <th className="px-4 py-3">Sort</th>
+                <th className="px-4 py-3">Thứ tự</th>
                 <th className="px-4 py-3"> </th>
               </tr>
             </thead>
@@ -213,10 +223,10 @@ export default function AdminLandingTeachers() {
       {editId != null && (
         <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/70 p-4" role="dialog">
           <form onSubmit={saveEdit} className="my-8 w-full max-w-lg space-y-3 rounded-2xl border border-white/10 bg-slate-900 p-6 shadow-xl">
-            <h3 className="text-lg font-semibold text-white">Sửa #{editId}</h3>
+            <h3 className="text-lg font-semibold text-white">Sửa thẻ giáo viên</h3>
             {['name', 'bio', 'initial', 'color_token', 'avatar_url', 'user_id'].map((k) => (
               <label key={k} className="block text-sm text-slate-400">
-                {k}
+                {LANDING_TEACHER_LABELS[k]}
                 <input
                   value={editForm[k]}
                   onChange={(e) => setEditForm((f) => ({ ...f, [k]: e.target.value }))}
@@ -225,7 +235,7 @@ export default function AdminLandingTeachers() {
               </label>
             ))}
             <label className="block text-sm text-slate-400">
-              sort_order
+              {LANDING_TEACHER_LABELS.sort_order}
               <input
                 type="number"
                 value={editForm.sort_order}

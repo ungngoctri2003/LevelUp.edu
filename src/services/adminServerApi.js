@@ -57,7 +57,7 @@ export function adminDeleteClassEnrollment(accessToken, classId, studentId) {
 
 function adminFetch(accessToken, path, init = {}) {
   if (!accessToken) {
-    throw new Error('Chưa đăng nhập — không có access token. Hãy đăng xuất và đăng nhập lại.')
+    throw new Error('Phiên đăng nhập không hợp lệ. Vui lòng đăng xuất và đăng nhập lại.')
   }
   return apiFetch(path, {
     ...init,

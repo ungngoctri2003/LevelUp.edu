@@ -143,7 +143,7 @@ export default function AdminCmsLanding() {
     <div className="space-y-8">
       <PageHeader
         title="CMS trang chủ"
-        description="Chỉnh nội dung hiển thị công khai bằng form — không cần chỉnh JSON."
+        description="Chỉnh nội dung hiển thị công khai trực tiếp bằng các ô bên dưới."
         badge="CMS"
       >
         <button type="button" onClick={() => load()} className="rounded-xl border border-white/20 px-4 py-2 text-sm text-slate-200">
