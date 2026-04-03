@@ -7,11 +7,9 @@ import { useAuthSession } from '../../context/AuthSessionContext'
 import { toast } from 'sonner'
 import { toastActionError } from '../../lib/appToast.js'
 import {
-  LessonResourceRowsEditor,
   LessonSectionBlocksEditor,
   LinesTextarea,
   linesToStringArray,
-  normalizeLessonResources,
   normalizeLessonSections,
   stringArrayToLines,
 } from '../../components/admin/StructuredContentEditors.jsx'
@@ -31,7 +29,6 @@ export default function AdminLessonDetail() {
     youtube_url: '',
     outlineText: '',
     sectionBlocks: [{ heading: '', body: '' }],
-    resourceRows: [{ name: '', type: '' }],
     practiceHintsText: '',
   })
 
@@ -69,7 +66,6 @@ export default function AdminLessonDetail() {
           youtube_url: d.youtube_url != null ? String(d.youtube_url) : '',
           outlineText: stringArrayToLines(Array.isArray(d.outline) ? d.outline : []),
           sectionBlocks: normalizeLessonSections(d.sections),
-          resourceRows: normalizeLessonResources(d.resources),
           practiceHintsText: stringArrayToLines(Array.isArray(d.practice_hints) ? d.practice_hints : []),
         })
       } catch (e) {
@@ -91,9 +87,6 @@ export default function AdminLessonDetail() {
     if (!token || !idValid) return
     const outline = linesToStringArray(detailForm.outlineText)
     const sections = detailForm.sectionBlocks.filter((s) => s.heading.trim() || s.body.trim())
-    const resources = detailForm.resourceRows
-      .filter((r) => r.name.trim())
-      .map((r) => ({ name: r.name.trim(), type: (r.type || '').trim() || 'PDF' }))
     const practice_hints = linesToStringArray(detailForm.practiceHintsText)
     const youtubePayload =
       typeof detailForm.youtube_url === 'string' ? detailForm.youtube_url.trim() : detailForm.youtube_url
@@ -104,7 +97,7 @@ export default function AdminLessonDetail() {
         youtube_url: youtubePayload,
         outline,
         sections,
-        resources,
+        resources: [],
         practice_hints,
       })
       const saved = res?.data
@@ -162,7 +155,7 @@ export default function AdminLessonDetail() {
       {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
 
       {!loading && lessonRow && (
-        <Panel title={`Bài #${lessonRow.id} — ${lessonRow.title}`} subtitle="Tóm tắt, video, dàn ý và tài liệu trên trang bài giảng">
+        <Panel title={`Bài #${lessonRow.id} — ${lessonRow.title}`} subtitle="Tóm tắt, video và dàn ý trên trang bài giảng">
           <form onSubmit={saveDetail} className="mt-4 space-y-5">
             <label className="block text-sm text-slate-400">
               Tóm tắt
@@ -208,13 +201,6 @@ export default function AdminLessonDetail() {
               <LessonSectionBlocksEditor
                 blocks={detailForm.sectionBlocks}
                 onChange={(sectionBlocks) => setDetailForm((f) => ({ ...f, sectionBlocks }))}
-                fieldClass={field}
-              />
-            </div>
-            <div className="border-t border-white/10 pt-4">
-              <LessonResourceRowsEditor
-                rows={detailForm.resourceRows}
-                onChange={(resourceRows) => setDetailForm((f) => ({ ...f, resourceRows }))}
                 fieldClass={field}
               />
             </div>

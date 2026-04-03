@@ -291,40 +291,6 @@ export function LessonSectionBlocksEditor({ blocks, onChange, fieldClass }) {
   )
 }
 
-export function LessonResourceRowsEditor({ rows, onChange, fieldClass }) {
-  const fc = fieldClass || 'mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-sm text-white'
-  const updateAt = (i, patch) => onChange(rows.map((r, j) => (j === i ? { ...r, ...patch } : r)))
-  const removeAt = (i) => onChange(rows.filter((_, j) => j !== i))
-  return (
-    <div className="space-y-3">
-      <p className="text-sm text-slate-400">Tài liệu đính kèm (tên + loại)</p>
-      {rows.map((r, i) => (
-        <div key={i} className="flex flex-wrap items-end gap-2 rounded-xl border border-white/10 bg-white/[0.03] p-3">
-          <label className="min-w-[160px] flex-1 text-sm text-slate-400">
-            Tên tài liệu
-            <input value={r.name || ''} onChange={(e) => updateAt(i, { name: e.target.value })} className={fc} />
-          </label>
-          <label className="w-28 text-sm text-slate-400">
-            Loại
-            <input
-              value={r.type || ''}
-              onChange={(e) => updateAt(i, { type: e.target.value })}
-              className={fc}
-              placeholder="PDF"
-            />
-          </label>
-          <button type="button" className={`${btnDanger} mb-0.5`} onClick={() => removeAt(i)}>
-            Xóa
-          </button>
-        </div>
-      ))}
-      <button type="button" className={btnGhost} onClick={() => onChange([...rows, { name: '', type: '' }])}>
-        + Thêm tài liệu
-      </button>
-    </div>
-  )
-}
-
 /** Chuỗi nhiều dòng → mảng chuỗi (bỏ dòng trống). */
 export function linesToStringArray(text) {
   return String(text || '')
@@ -345,15 +311,6 @@ export function normalizeLessonSections(raw) {
     body: s?.body != null ? String(s.body) : '',
   }))
   return out.length ? out : [{ heading: '', body: '' }]
-}
-
-export function normalizeLessonResources(raw) {
-  if (!Array.isArray(raw)) return [{ name: '', type: '' }]
-  const out = raw.map((r) => ({
-    name: r?.name != null ? String(r.name) : '',
-    type: r?.type != null ? String(r.type) : '',
-  }))
-  return out.length ? out : [{ name: '', type: '' }]
 }
 
 export function normalizeBenefitRows(raw) {

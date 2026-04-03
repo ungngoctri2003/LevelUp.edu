@@ -70,7 +70,6 @@ export default function LessonDetailPage() {
   const embedSrc = toYouTubeEmbedUrl(row.youtube_url)
   const outline = Array.isArray(row.outline) ? row.outline : []
   const sections = Array.isArray(row.sections) ? row.sections : []
-  const resources = Array.isArray(row.resources) ? row.resources : []
   const practiceHints = Array.isArray(row.practice_hints) ? row.practice_hints : []
 
   return (
@@ -165,20 +164,6 @@ export default function LessonDetailPage() {
             <ul className="mt-3 list-disc space-y-2 pl-5 text-gray-700 dark:text-slate-300">
               {practiceHints.map((h, i) => (
                 <li key={i}>{lineItemText(h)}</li>
-              ))}
-            </ul>
-          </section>
-
-          <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800/80">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Tài liệu đính kèm</h2>
-            <ul className="mt-4 divide-y divide-gray-100 dark:divide-slate-700">
-              {resources.map((r, i) => (
-                <li key={i} className="flex items-center justify-between py-3 first:pt-0">
-                  <span className="text-gray-700 dark:text-slate-200">{r.name}</span>
-                  <span className="rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 dark:bg-slate-700 dark:text-slate-300">
-                    {r.type}
-                  </span>
-                </li>
               ))}
             </ul>
           </section>
