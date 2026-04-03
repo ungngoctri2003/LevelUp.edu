@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import PageHeader from '../../components/dashboard/PageHeader'
 import Panel from '../../components/dashboard/Panel'
 import EmptyState from '../../components/dashboard/EmptyState'
@@ -24,12 +25,15 @@ function formatDue(iso) {
 
 export default function StudentAssignments() {
   const { user, session } = useAuthSession()
+  const [searchParams] = useSearchParams()
+  const assignmentFocusParam = searchParams.get('assignment') || ''
   const [assignments, setAssignments] = useState([])
   const [submissions, setSubmissions] = useState([])
   const [loading, setLoading] = useState(true)
   const [loadFailed, setLoadFailed] = useState(false)
   const [submittingId, setSubmittingId] = useState(null)
   const [mcqDraft, setMcqDraft] = useState({})
+  const [highlightAssignmentId, setHighlightAssignmentId] = useState(null)
 
   const token = session?.access_token
 
@@ -79,6 +83,23 @@ export default function StudentAssignments() {
   useEffect(() => {
     load()
   }, [load])
+
+  useEffect(() => {
+    if (!assignmentFocusParam || loading) return
+    const idNum = Number(assignmentFocusParam)
+    if (!Number.isFinite(idNum)) return
+    const found = assignments.some((a) => Number(a.id) === idNum)
+    if (!found) return
+    const t = window.setTimeout(() => {
+      const el = document.getElementById(`student-asg-${idNum}`)
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        setHighlightAssignmentId(idNum)
+        window.setTimeout(() => setHighlightAssignmentId(null), 2600)
+      }
+    }, 80)
+    return () => window.clearTimeout(t)
+  }, [assignmentFocusParam, loading, assignments])
 
   const submit = async (assignmentId) => {
     if (!token) return
@@ -156,7 +177,13 @@ export default function StudentAssignments() {
           const hasMcq = taking.length > 0
           const picked = mcqDraft[a.id] || {}
           return (
-            <Panel key={a.id} noDivider className="border-white/10" padding>
+            <Panel
+              key={a.id}
+              id={`student-asg-${a.id}`}
+              noDivider
+              className={`border-white/10 ${highlightAssignmentId === Number(a.id) ? 'ring-2 ring-inset ring-sky-400/45' : ''}`}
+              padding
+            >
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="min-w-0">
                   <p className="text-xs font-medium uppercase tracking-wide text-sky-400/90">{className}</p>

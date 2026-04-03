@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import PageHeader from '../../components/dashboard/PageHeader'
 import Panel from '../../components/dashboard/Panel'
 import { btnPrimaryStudent } from '../../components/dashboard/dashboardStyles'
@@ -11,16 +11,28 @@ import { getMyCourseProgress, patchMyCourseProgress } from '../../services/meApi
 
 export default function StudentCourses() {
   const { user, session } = useAuthSession()
-  const { courses: pubCourses, loading: pubLoading } = usePublicContent()
+  const [searchParams] = useSearchParams()
+  const courseFocusParam = searchParams.get('course') || ''
+  const { courses: pubCourses, subjects, loading: pubLoading } = usePublicContent()
   const [rows, setRows] = useState([])
   const [version, setVersion] = useState(0)
   const [draftPct, setDraftPct] = useState({})
+  const [highlightCourseId, setHighlightCourseId] = useState(null)
+
+  const subjectIdToSlug = useMemo(() => {
+    const m = new Map()
+    for (const s of subjects || []) {
+      if (s?.id != null && s?.slug) m.set(Number(s.id), String(s.slug))
+    }
+    return m
+  }, [subjects])
 
   const load = useCallback(async () => {
     const token = session?.access_token
     if (!token || !user?.id) {
       const guestRows = (pubCourses || []).map((c) => ({
         id: c.id,
+        subject_id: c.subject_id,
         title: c.title,
         teacher: '—',
         progress: 0,
@@ -42,6 +54,7 @@ export default function StudentCourses() {
       const p = pmap[c.id]
       return {
         id: c.id,
+        subject_id: c.subject_id,
         title: c.title,
         teacher: '—',
         progress: p ? Number(p.progress_pct) : 0,
@@ -55,6 +68,23 @@ export default function StudentCourses() {
   useEffect(() => {
     load()
   }, [load, version])
+
+  useEffect(() => {
+    if (!courseFocusParam || pubLoading) return
+    const idNum = Number(courseFocusParam)
+    if (!Number.isFinite(idNum)) return
+    const found = rows.some((r) => Number(r.id) === idNum)
+    if (!found) return
+    const t = window.setTimeout(() => {
+      const el = document.getElementById(`student-course-${idNum}`)
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        setHighlightCourseId(idNum)
+        window.setTimeout(() => setHighlightCourseId(null), 2600)
+      }
+    }, 80)
+    return () => window.clearTimeout(t)
+  }, [courseFocusParam, pubLoading, rows])
 
   const saveProgress = async (courseId) => {
     const token = session?.access_token
@@ -87,7 +117,13 @@ export default function StudentCourses() {
 
       <div className="grid gap-4">
         {rows.map((c) => (
-          <Panel key={c.id} noDivider className="transition hover:border-sky-500/20" padding>
+          <Panel
+            key={c.id}
+            id={`student-course-${c.id}`}
+            noDivider
+            className={`transition hover:border-sky-500/20 ${highlightCourseId === Number(c.id) ? 'ring-2 ring-inset ring-sky-400/45' : ''}`}
+            padding
+          >
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0">
                 <h3 className="text-lg font-semibold text-white">{c.title}</h3>
@@ -125,7 +161,14 @@ export default function StudentCourses() {
               >
                 Lưu tiến độ
               </button>
-              <Link to="/bai-giang" className={`${btnPrimaryStudent} inline-block text-xs`}>
+              <Link
+                to={
+                  c.subject_id != null && subjectIdToSlug.has(Number(c.subject_id))
+                    ? `/bai-giang?subject=${encodeURIComponent(subjectIdToSlug.get(Number(c.subject_id)))}`
+                    : '/bai-giang'
+                }
+                className={`${btnPrimaryStudent} inline-block text-xs`}
+              >
                 Xem bài giảng
               </Link>
             </div>

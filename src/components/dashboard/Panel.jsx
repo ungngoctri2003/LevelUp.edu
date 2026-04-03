@@ -9,6 +9,7 @@ export default function Panel({
   padding = true,
   noDivider = false,
   variant = 'default',
+  id,
 }) {
   const variants = {
     default:
@@ -19,7 +20,7 @@ export default function Panel({
   }
 
   return (
-    <section className={`${variants[variant] || variants.default} ${padding ? 'p-6 md:p-7' : ''} ${className}`}>
+    <section id={id} className={`${variants[variant] || variants.default} ${padding ? 'p-6 md:p-7' : ''} ${className}`}>
       {(title || subtitle) && (
         <div className={noDivider ? '' : 'mb-5 border-b border-white/5 pb-5'}>
           {title && <h3 className="text-lg font-semibold tracking-tight text-white">{title}</h3>}

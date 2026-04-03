@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useCallback, useEffect, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useAuthSession } from '../context/AuthSessionContext'
 import { normalizeExamQuestions } from '../services/publicApi.js'
 import { getMyAssignedExamById, getMyAssignedExams, postMyExamAttempt } from '../services/meApi.js'
@@ -24,6 +24,7 @@ function mapExamForCard(row) {
 
 export default function TestsPage() {
   const { user, session, loading: authLoading } = useAuthSession()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [exams, setExams] = useState([])
   const [examsLoading, setExamsLoading] = useState(true)
   const [needsEnrollment, setNeedsEnrollment] = useState(false)
@@ -33,6 +34,64 @@ export default function TestsPage() {
   const [submitted, setSubmitted] = useState(false)
   const [result, setResult] = useState(null)
   const [loadingQuestions, setLoadingQuestions] = useState(false)
+
+  const clearExamFromUrl = useCallback(() => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        if (!next.has('exam')) return prev
+        next.delete('exam')
+        return next
+      },
+      { replace: true },
+    )
+  }, [setSearchParams])
+
+  const syncExamToUrl = useCallback(
+    (examId) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev)
+          next.set('exam', String(examId))
+          return next
+        },
+        { replace: true },
+      )
+    },
+    [setSearchParams],
+  )
+
+  /** Gán state làm bài từ payload API; false = không mở được (đề trống / không hợp lệ). */
+  const applyLoadedExam = useCallback((examStub, detail) => {
+    if (detail?.content_mode === 'embed' && detail?.embed_src) {
+      setSelectedExam({
+        ...examStub,
+        title: detail.title || examStub.title,
+        mode: 'embed',
+        embedSrc: detail.embed_src,
+        questions: [],
+      })
+      setAnswers({})
+      setSubmitted(false)
+      setResult(null)
+      return true
+    }
+    const qs = normalizeExamQuestions(detail?.questions)
+    if (!qs.length) {
+      toast.warning('Đề này chưa có câu hỏi. Vui lòng chọn đề khác hoặc liên hệ quản trị.')
+      return false
+    }
+    setSelectedExam({
+      ...examStub,
+      title: detail.title || examStub.title,
+      mode: 'mcq',
+      questions: qs,
+    })
+    setAnswers({})
+    setSubmitted(false)
+    setResult(null)
+    return true
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -75,6 +134,53 @@ export default function TestsPage() {
     }
   }, [authLoading, session?.access_token, user?.dbRole])
 
+  const examQueryId = searchParams.get('exam')
+
+  /** Mở đề theo `?exam=<id>` (ví dụ từ khu học viên). */
+  useEffect(() => {
+    if (authLoading) return
+    const token = session?.access_token
+    if (!token || user?.dbRole !== 'student') return
+    const raw = examQueryId
+    if (raw == null || raw === '') return
+    const id = Number(raw)
+    if (!Number.isFinite(id)) {
+      clearExamFromUrl()
+      return
+    }
+    if (selectedExam?.id === id) return
+
+    let cancelled = false
+    ;(async () => {
+      setLoadingQuestions(true)
+      try {
+        const res = await getMyAssignedExamById(token, id)
+        if (cancelled) return
+        const detail = res?.data
+        const ok = applyLoadedExam({ id }, detail)
+        if (!ok) clearExamFromUrl()
+      } catch (e) {
+        if (cancelled) return
+        if (import.meta.env.DEV) console.error('[TestsPage load exam from URL]', e)
+        toast.error(PUBLIC_LOAD_ERROR)
+        clearExamFromUrl()
+      } finally {
+        if (!cancelled) setLoadingQuestions(false)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [
+    authLoading,
+    session?.access_token,
+    user?.dbRole,
+    examQueryId,
+    selectedExam?.id,
+    applyLoadedExam,
+    clearExamFromUrl,
+  ])
+
   const handleStartExam = async (exam) => {
     const token = session?.access_token
     if (!token) {
@@ -85,34 +191,26 @@ export default function TestsPage() {
     try {
       const res = await getMyAssignedExamById(token, exam.id)
       const detail = res?.data
-      if (detail?.content_mode === 'embed' && detail?.embed_src) {
-        setSelectedExam({
-          ...exam,
-          title: detail.title || exam.title,
-          mode: 'embed',
-          embedSrc: detail.embed_src,
-          questions: [],
-        })
-        setAnswers({})
-        setSubmitted(false)
-        setResult(null)
-        return
-      }
-      const qs = normalizeExamQuestions(detail?.questions)
-      if (!qs.length) {
-        toast.warning('Đề này chưa có câu hỏi. Vui lòng chọn đề khác hoặc liên hệ quản trị.')
-        return
-      }
-      setSelectedExam({ ...exam, title: detail.title || exam.title, mode: 'mcq', questions: qs })
-      setAnswers({})
-      setSubmitted(false)
-      setResult(null)
+      const ok = applyLoadedExam(exam, detail)
+      if (ok) syncExamToUrl(exam.id)
     } catch (e) {
       if (import.meta.env.DEV) console.error('[TestsPage load exam]', e)
       toast.error(PUBLIC_LOAD_ERROR)
     } finally {
       setLoadingQuestions(false)
     }
+  }
+
+  const leaveExamView = () => {
+    setSelectedExam(null)
+    clearExamFromUrl()
+  }
+
+  const leaveExamViewFull = () => {
+    setSelectedExam(null)
+    setSubmitted(false)
+    setResult(null)
+    clearExamFromUrl()
   }
 
   const handleCompleteEmbed = async () => {
@@ -175,7 +273,7 @@ export default function TestsPage() {
           </h2>
           <button
             type="button"
-            onClick={() => setSelectedExam(null)}
+            onClick={leaveExamView}
             className="shrink-0 text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-slate-400 dark:hover:text-white"
           >
             ← Quay lại
@@ -204,7 +302,7 @@ export default function TestsPage() {
           </button>
           <button
             type="button"
-            onClick={() => setSelectedExam(null)}
+            onClick={leaveExamView}
             className="min-h-[48px] rounded-xl border border-gray-300 px-6 py-3 font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
           >
             Hủy
@@ -224,7 +322,7 @@ export default function TestsPage() {
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{selectedExam.title}</h2>
               <button
                 type="button"
-                onClick={() => setSelectedExam(null)}
+                onClick={leaveExamView}
                 className="text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200"
               >
                 ← Quay lại
@@ -269,7 +367,7 @@ export default function TestsPage() {
               </button>
               <button
                 type="button"
-                onClick={() => setSelectedExam(null)}
+                onClick={leaveExamView}
                 className="rounded-xl border border-gray-300 px-6 py-4 font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700"
               >
                 Hủy
@@ -328,11 +426,7 @@ export default function TestsPage() {
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
               <button
                 type="button"
-                onClick={() => {
-                  setSelectedExam(null)
-                  setSubmitted(false)
-                  setResult(null)
-                }}
+                onClick={leaveExamViewFull}
                 className="rounded-xl bg-gradient-to-r from-cyan-500 to-fuchsia-600 px-8 py-3 font-medium text-white shadow-md transition-opacity hover:opacity-95"
               >
                 Về danh sách đề

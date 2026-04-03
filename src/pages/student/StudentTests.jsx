@@ -119,7 +119,10 @@ export default function StudentTests() {
                       ⏱ {ex.duration} phút ·{' '}
                       {ex.contentMode === 'embed' ? 'Tương tác / nhúng' : `${ex.questions} câu`} · {ex.level}
                     </p>
-                    <Link to="/bai-kiem-tra" className={`${btnPrimaryStudent} mt-4 inline-block text-center`}>
+                    <Link
+                      to={`/bai-kiem-tra?exam=${ex.id}`}
+                      className={`${btnPrimaryStudent} mt-4 inline-block text-center`}
+                    >
                       Làm bài
                     </Link>
                   </Panel>

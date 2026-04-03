@@ -81,8 +81,14 @@ export default function StudentDashboard() {
             </Link>
           </li>
           <li className="flex items-center justify-between gap-2 border-b border-white/5 py-3">
+            <span className="text-slate-300">Khóa học và tiến độ</span>
+            <Link to="/hoc-vien/khoa-hoc" className="rounded-lg bg-sky-500/15 px-3 py-1 text-xs font-semibold text-sky-300 hover:bg-sky-500/25">
+              Mở →
+            </Link>
+          </li>
+          <li className="flex items-center justify-between gap-2 border-b border-white/5 py-3">
             <span className="text-slate-300">Làm thêm bài kiểm tra</span>
-            <Link to="/bai-kiem-tra" className="rounded-lg bg-sky-500/15 px-3 py-1 text-xs font-semibold text-sky-300 hover:bg-sky-500/25">
+            <Link to="/hoc-vien/bai-kiem-tra" className="rounded-lg bg-sky-500/15 px-3 py-1 text-xs font-semibold text-sky-300 hover:bg-sky-500/25">
               Mở →
             </Link>
           </li>

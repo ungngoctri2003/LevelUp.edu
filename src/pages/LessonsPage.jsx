@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Reveal } from '../components/motion/Reveal'
 import { usePublicContent } from '../hooks/usePublicContent'
@@ -8,6 +8,8 @@ import { buildLessonsBySubject } from '../services/publicApi.js'
 
 export default function LessonsPage() {
   const { subjects, lessons, loading, error } = usePublicContent()
+  const [searchParams] = useSearchParams()
+  const subjectSlugFromUrl = searchParams.get('subject') || ''
   const lessonsBySubject = useMemo(() => buildLessonsBySubject(subjects, lessons), [subjects, lessons])
   const [selectedSubject, setSelectedSubject] = useState('')
 
@@ -18,6 +20,13 @@ export default function LessonsPage() {
   useEffect(() => {
     if (error && !lessonsBySubject.length) toast.error(error)
   }, [error, lessonsBySubject.length])
+
+  /** Mở đúng môn khi vào từ liên kết dạng /bai-giang?subject=<slug> */
+  useEffect(() => {
+    if (!subjectSlugFromUrl || !lessonsBySubject.length) return
+    const exists = lessonsBySubject.some((s) => s.id === subjectSlugFromUrl)
+    if (exists) setSelectedSubject(subjectSlugFromUrl)
+  }, [subjectSlugFromUrl, lessonsBySubject])
 
   if (loading && !lessonsBySubject.length) {
     return (

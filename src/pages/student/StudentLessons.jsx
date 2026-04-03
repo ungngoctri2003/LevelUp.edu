@@ -41,7 +41,7 @@ export default function StudentLessons() {
           ))}
         </ul>
         <Link
-          to="/bai-giang"
+          to={first?.id ? `/bai-giang?subject=${encodeURIComponent(first.id)}` : '/bai-giang'}
           className="mt-6 inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-sky-500 to-cyan-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-sky-500/20 transition hover:opacity-95"
         >
           Mở thư viện bài giảng đầy đủ
