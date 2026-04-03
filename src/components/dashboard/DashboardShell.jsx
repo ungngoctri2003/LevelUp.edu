@@ -45,78 +45,82 @@ export default function DashboardShell({ navItems, accent = 'admin', title }) {
           className={`mt-3 h-px w-12 rounded-full ${accent === 'admin' ? 'bg-gradient-to-r from-cyan-400 to-fuchsia-500' : 'bg-gradient-to-r from-emerald-400 to-teal-400'}`}
         />
       </div>
-      <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-3">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.end}
-            onClick={closeMobile}
-            className={({ isActive }) =>
-              `group flex items-center gap-3 rounded-xl border px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
-                isActive
-                  ? activeLink[accent]
-                  : 'border-transparent text-slate-400 hover:border-white/10 hover:bg-white/[0.06] hover:text-white'
-              }`
-            }
-          >
-            {({ isActive }) => (
-              <>
-                <NavIcon
-                  name={item.icon || 'dashboard'}
-                  className={
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <nav className="flex flex-col gap-1 p-3">
+            {navItems.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.end}
+                onClick={closeMobile}
+                className={({ isActive }) =>
+                  `group flex items-center gap-3 rounded-xl border px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
                     isActive
-                      ? accent === 'admin'
-                        ? 'text-cyan-200'
-                        : 'text-emerald-200'
-                      : 'text-slate-500 group-hover:text-slate-300'
-                  }
-                />
-                <span className="min-w-0 flex-1 truncate">{item.label}</span>
-              </>
-            )}
-          </NavLink>
-        ))}
-      </nav>
-      <div className="border-t border-white/10 p-4">
-        <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/30 p-3">
-          <div
-            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ring-2 ring-white/10 ${
-              accent === 'admin'
-                ? 'bg-gradient-to-br from-cyan-500 to-fuchsia-600'
-                : 'bg-gradient-to-br from-emerald-500 to-teal-600'
-            }`}
-          >
-            {(user?.name || '?')
-              .split(' ')
-              .map((w) => w[0])
-              .join('')
-              .slice(0, 2)
-              .toUpperCase()}
-          </div>
-          <div className="min-w-0 flex-1 text-xs">
-            <p className="truncate font-semibold text-slate-100">{user?.name}</p>
-            <p className="truncate text-slate-500">{user?.email}</p>
+                      ? activeLink[accent]
+                      : 'border-transparent text-slate-400 hover:border-white/10 hover:bg-white/[0.06] hover:text-white'
+                  }`
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    <NavIcon
+                      name={item.icon || 'dashboard'}
+                      className={
+                        isActive
+                          ? accent === 'admin'
+                            ? 'text-cyan-200'
+                            : 'text-emerald-200'
+                          : 'text-slate-500 group-hover:text-slate-300'
+                      }
+                    />
+                    <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                  </>
+                )}
+              </NavLink>
+            ))}
+          </nav>
+          <div className="border-t border-white/10 p-4">
+            <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/30 p-3">
+              <div
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ring-2 ring-white/10 ${
+                  accent === 'admin'
+                    ? 'bg-gradient-to-br from-cyan-500 to-fuchsia-600'
+                    : 'bg-gradient-to-br from-emerald-500 to-teal-600'
+                }`}
+              >
+                {(user?.name || '?')
+                  .split(' ')
+                  .map((w) => w[0])
+                  .join('')
+                  .slice(0, 2)
+                  .toUpperCase()}
+              </div>
+              <div className="min-w-0 flex-1 text-xs">
+                <p className="truncate font-semibold text-slate-100">{user?.name}</p>
+                <p className="truncate text-slate-500">{user?.email}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                logout()
+                navigate('/')
+                closeMobile()
+              }}
+              className="mt-3 w-full rounded-xl border border-white/15 bg-white/5 py-2.5 text-sm font-medium text-slate-200 transition-colors hover:bg-white/10"
+            >
+              Đăng xuất
+            </button>
+            <NavLink
+              to="/"
+              onClick={closeMobile}
+              className={`mt-2 block text-center text-sm ${accent === 'admin' ? 'text-cyan-400/90 hover:text-cyan-300' : 'text-emerald-400/90 hover:text-emerald-300'}`}
+            >
+              ← Về trang chủ
+            </NavLink>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={() => {
-            logout()
-            navigate('/')
-            closeMobile()
-          }}
-          className="mt-3 w-full rounded-xl border border-white/15 bg-white/5 py-2.5 text-sm font-medium text-slate-200 transition-colors hover:bg-white/10"
-        >
-          Đăng xuất
-        </button>
-        <NavLink
-          to="/"
-          onClick={closeMobile}
-          className={`mt-2 block text-center text-sm ${accent === 'admin' ? 'text-cyan-400/90 hover:text-cyan-300' : 'text-emerald-400/90 hover:text-emerald-300'}`}
-        >
-          ← Về trang chủ
-        </NavLink>
       </div>
     </>
   )
@@ -125,7 +129,9 @@ export default function DashboardShell({ navItems, accent = 'admin', title }) {
     <div className={`dashboard-app-bg min-h-screen bg-gradient-to-br ${shellGrad[accent]} text-slate-100`}>
       <div className="relative z-[1] flex min-h-screen">
         {/* Desktop sidebar */}
-        <aside className={`hidden w-[272px] shrink-0 flex-col backdrop-blur-xl lg:flex ${sidebarAccent[accent]}`}>
+        <aside
+          className={`hidden min-h-0 w-[272px] shrink-0 flex-col backdrop-blur-xl lg:flex ${sidebarAccent[accent]}`}
+        >
           <SidebarContent />
         </aside>
 
@@ -147,7 +153,7 @@ export default function DashboardShell({ navItems, accent = 'admin', title }) {
                 animate={{ x: 0 }}
                 exit={{ x: '-100%' }}
                 transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-                className={`fixed inset-y-0 left-0 z-[60] flex w-[min(288px,92vw)] flex-col border-r border-white/10 bg-slate-950/98 shadow-2xl backdrop-blur-xl lg:hidden ${sidebarAccent[accent]}`}
+                className={`fixed inset-y-0 left-0 z-[60] flex min-h-0 w-[min(288px,92vw)] flex-col border-r border-white/10 bg-slate-950/98 shadow-2xl backdrop-blur-xl lg:hidden ${sidebarAccent[accent]}`}
               >
                 <SidebarContent />
               </motion.aside>

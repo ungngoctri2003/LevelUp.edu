@@ -31,62 +31,70 @@ export default function StudentShell() {
         <p className="mt-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-sky-400/70">Khu học viên</p>
         <div className="mt-3 h-px w-12 rounded-full bg-gradient-to-r from-sky-400 to-cyan-400" />
       </div>
-      <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-3">
-        {studentNavItems.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.end}
-            onClick={closeMobile}
-            className={({ isActive }) =>
-              `group flex items-center gap-3 rounded-xl border px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
-                isActive
-                  ? activeStudent
-                  : 'border-transparent text-slate-400 hover:border-white/10 hover:bg-white/[0.06] hover:text-white'
-              }`
-            }
-          >
-            {({ isActive }) => (
-              <>
-                <NavIcon
-                  name={item.icon}
-                  className={isActive ? 'text-sky-200' : 'text-slate-500 group-hover:text-slate-300'}
-                />
-                <span className="min-w-0 flex-1 truncate">{item.label}</span>
-              </>
-            )}
-          </NavLink>
-        ))}
-      </nav>
-      <div className="border-t border-white/10 p-4">
-        <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/30 p-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-cyan-600 text-sm font-bold text-white ring-2 ring-white/10">
-            {(user?.name || '?')
-              .split(' ')
-              .map((w) => w[0])
-              .join('')
-              .slice(0, 2)
-              .toUpperCase()}
-          </div>
-          <div className="min-w-0 flex-1 text-xs">
-            <p className="truncate font-semibold text-slate-100">{user?.name}</p>
-            <p className="truncate text-slate-500">{user?.email}</p>
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <nav className="flex flex-col gap-1 p-3">
+            {studentNavItems.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.end}
+                onClick={closeMobile}
+                className={({ isActive }) =>
+                  `group flex items-center gap-3 rounded-xl border px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
+                    isActive
+                      ? activeStudent
+                      : 'border-transparent text-slate-400 hover:border-white/10 hover:bg-white/[0.06] hover:text-white'
+                  }`
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    <NavIcon
+                      name={item.icon}
+                      className={isActive ? 'text-sky-200' : 'text-slate-500 group-hover:text-slate-300'}
+                    />
+                    <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                  </>
+                )}
+              </NavLink>
+            ))}
+          </nav>
+          <div className="border-t border-white/10 p-4">
+            <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/30 p-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-cyan-600 text-sm font-bold text-white ring-2 ring-white/10">
+                {(user?.name || '?')
+                  .split(' ')
+                  .map((w) => w[0])
+                  .join('')
+                  .slice(0, 2)
+                  .toUpperCase()}
+              </div>
+              <div className="min-w-0 flex-1 text-xs">
+                <p className="truncate font-semibold text-slate-100">{user?.name}</p>
+                <p className="truncate text-slate-500">{user?.email}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                logout()
+                navigate('/')
+                closeMobile()
+              }}
+              className="mt-3 w-full rounded-xl border border-white/15 bg-white/5 py-2.5 text-sm font-medium text-slate-200 transition-colors hover:bg-white/10"
+            >
+              Đăng xuất
+            </button>
+            <NavLink
+              to="/"
+              onClick={closeMobile}
+              className="mt-2 block text-center text-sm text-sky-400/90 hover:text-sky-300"
+            >
+              ← Về trang chủ
+            </NavLink>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={() => {
-            logout()
-            navigate('/')
-            closeMobile()
-          }}
-          className="mt-3 w-full rounded-xl border border-white/15 bg-white/5 py-2.5 text-sm font-medium text-slate-200 transition-colors hover:bg-white/10"
-        >
-          Đăng xuất
-        </button>
-        <NavLink to="/" onClick={closeMobile} className="mt-2 block text-center text-sm text-sky-400/90 hover:text-sky-300">
-          ← Về trang chủ
-        </NavLink>
       </div>
     </>
   )
@@ -94,7 +102,7 @@ export default function StudentShell() {
   return (
     <div className="dashboard-app-bg min-h-screen bg-gradient-to-br from-sky-950/95 via-slate-950 to-slate-950 text-slate-100">
       <div className="relative z-[1] flex min-h-screen">
-        <aside className="hidden w-[272px] shrink-0 flex-col border-r border-white/10 bg-gradient-to-b from-sky-950/35 via-black/25 to-slate-950/80 shadow-[inset_-1px_0_0_rgba(255,255,255,0.06)] backdrop-blur-xl lg:flex">
+        <aside className="hidden min-h-0 w-[272px] shrink-0 flex-col border-r border-white/10 bg-gradient-to-b from-sky-950/35 via-black/25 to-slate-950/80 shadow-[inset_-1px_0_0_rgba(255,255,255,0.06)] backdrop-blur-xl lg:flex">
           <SidebarContent />
         </aside>
 
@@ -115,7 +123,7 @@ export default function StudentShell() {
                 animate={{ x: 0 }}
                 exit={{ x: '-100%' }}
                 transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-                className="fixed inset-y-0 left-0 z-[60] flex w-[min(288px,92vw)] flex-col border-r border-white/10 bg-slate-950/98 shadow-2xl backdrop-blur-xl lg:hidden"
+                className="fixed inset-y-0 left-0 z-[60] flex min-h-0 w-[min(288px,92vw)] flex-col border-r border-white/10 bg-slate-950/98 shadow-2xl backdrop-blur-xl lg:hidden"
               >
                 <SidebarContent />
               </motion.aside>
