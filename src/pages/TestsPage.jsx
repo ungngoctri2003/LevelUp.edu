@@ -433,7 +433,7 @@ export default function TestsPage() {
               </button>
               {user?.role === 'user' && (
                 <Link
-                  to="/hoc-vien/bai-kiem-tra"
+                  to="/hoc-vien/bai-tap#student-section-kiem-tra"
                   className="rounded-xl border border-gray-300 px-8 py-3 font-medium text-gray-800 dark:border-slate-600 dark:text-slate-200"
                 >
                   Xem lịch sử điểm

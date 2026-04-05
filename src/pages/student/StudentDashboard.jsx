@@ -75,25 +75,13 @@ export default function StudentDashboard() {
       <Panel title="Việc cần làm" subtitle="Gợi ý bước tiếp theo.">
         <ul className="space-y-0 text-sm">
           <li className="flex items-center justify-between gap-2 border-b border-white/5 py-3 first:pt-0">
-            <span className="text-slate-300">Xem bài giảng tiếp theo</span>
-            <Link to="/hoc-vien/bai-giang" className="rounded-lg bg-sky-500/15 px-3 py-1 text-xs font-semibold text-sky-300 hover:bg-sky-500/25">
-              Mở →
-            </Link>
-          </li>
-          <li className="flex items-center justify-between gap-2 border-b border-white/5 py-3">
-            <span className="text-slate-300">Khóa học và tiến độ</span>
+            <span className="text-slate-300">Học tập — khóa học &amp; bài giảng</span>
             <Link to="/hoc-vien/khoa-hoc" className="rounded-lg bg-sky-500/15 px-3 py-1 text-xs font-semibold text-sky-300 hover:bg-sky-500/25">
               Mở →
             </Link>
           </li>
           <li className="flex items-center justify-between gap-2 border-b border-white/5 py-3">
-            <span className="text-slate-300">Làm thêm bài kiểm tra</span>
-            <Link to="/hoc-vien/bai-kiem-tra" className="rounded-lg bg-sky-500/15 px-3 py-1 text-xs font-semibold text-sky-300 hover:bg-sky-500/25">
-              Mở →
-            </Link>
-          </li>
-          <li className="flex items-center justify-between gap-2 border-b border-white/5 py-3">
-            <span className="text-slate-300">Bài tập lớp</span>
+            <span className="text-slate-300">Bài tập &amp; kiểm tra</span>
             <Link to="/hoc-vien/bai-tap" className="rounded-lg bg-sky-500/15 px-3 py-1 text-xs font-semibold text-sky-300 hover:bg-sky-500/25">
               Mở →
             </Link>

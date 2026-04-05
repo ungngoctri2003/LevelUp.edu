@@ -34,10 +34,8 @@ import TeacherStudents from './pages/teacher/TeacherStudents'
 import TeacherClassDetail from './pages/teacher/TeacherClassDetail'
 import StudentLayout from './pages/student/StudentLayout'
 import StudentDashboard from './pages/student/StudentDashboard'
-import StudentCourses from './pages/student/StudentCourses'
-import StudentLessons from './pages/student/StudentLessons'
-import StudentTests from './pages/student/StudentTests'
-import StudentAssignments from './pages/student/StudentAssignments'
+import StudentLearningHub from './pages/student/StudentLearningHub'
+import StudentWorkHub from './pages/student/StudentWorkHub'
 import StudentProfile from './pages/student/StudentProfile'
 import { DialogflowMessenger } from './components/DialogflowMessenger'
 
@@ -89,10 +87,10 @@ function App() {
 
         <Route path="/hoc-vien" element={<StudentLayout />}>
           <Route index element={<StudentDashboard />} />
-          <Route path="khoa-hoc" element={<StudentCourses />} />
-          <Route path="bai-giang" element={<StudentLessons />} />
-          <Route path="bai-tap" element={<StudentAssignments />} />
-          <Route path="bai-kiem-tra" element={<StudentTests />} />
+          <Route path="khoa-hoc" element={<StudentLearningHub />} />
+          <Route path="bai-giang" element={<Navigate to="/hoc-vien/khoa-hoc#student-section-bai-giang" replace />} />
+          <Route path="bai-tap" element={<StudentWorkHub />} />
+          <Route path="bai-kiem-tra" element={<Navigate to="/hoc-vien/bai-tap#student-section-kiem-tra" replace />} />
           <Route path="ho-so" element={<StudentProfile />} />
         </Route>
       </Routes>

@@ -7,10 +7,8 @@ import { NavIcon } from '../dashboard/DashboardNavIcons'
 
 export const studentNavItems = [
   { to: '/hoc-vien', label: 'Tổng quan', end: true, icon: 'dashboard' },
-  { to: '/hoc-vien/khoa-hoc', label: 'Khóa học', icon: 'course' },
-  { to: '/hoc-vien/bai-giang', label: 'Bài giảng', icon: 'lesson' },
-  { to: '/hoc-vien/bai-tap', label: 'Bài tập', icon: 'assignment' },
-  { to: '/hoc-vien/bai-kiem-tra', label: 'Kiểm tra', icon: 'test' },
+  { to: '/hoc-vien/khoa-hoc', label: 'Học tập', icon: 'course' },
+  { to: '/hoc-vien/bai-tap', label: 'Bài tập & kiểm tra', icon: 'assignment' },
   { to: '/hoc-vien/ho-so', label: 'Hồ sơ', icon: 'profile' },
 ]
 
@@ -173,7 +171,7 @@ export default function StudentShell() {
       </div>
 
       <nav className="fixed bottom-0 left-0 right-0 z-40 flex border-t border-white/10 bg-slate-950/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden">
-        {studentNavItems.slice(0, 4).map((item) => (
+        {studentNavItems.slice(0, -1).map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
