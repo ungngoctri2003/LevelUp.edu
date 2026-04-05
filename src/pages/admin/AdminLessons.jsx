@@ -92,7 +92,7 @@ export default function AdminLessons() {
         description={
           <>
             Nội dung hiển thị tại{' '}
-            <Link className="font-medium text-cyan-400 hover:text-cyan-300" to="/bai-giang" placeholder='Bài giảng'>
+            <Link className="font-medium text-cyan-400 hover:text-cyan-300" to="/bai-giang">
               Bài giảng
             </Link>{' '}
             và trang chi tiết.

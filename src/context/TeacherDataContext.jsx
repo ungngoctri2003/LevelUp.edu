@@ -296,6 +296,20 @@ export function TeacherDataProvider({ children }) {
         await refresh()
       },
 
+      async updateLessonPost(postId, title, duration_display) {
+        const dur =
+          duration_display != null && String(duration_display).trim() ? String(duration_display).trim() : null
+        const { error: err } = await supabase
+          .from('teacher_lesson_posts')
+          .update({
+            title: title.trim(),
+            duration_display: dur,
+          })
+          .eq('id', Number(postId))
+        if (err) throw new Error(err.message)
+        await refresh()
+      },
+
       async deleteLessonPost(postId) {
         const { error: err } = await supabase.from('teacher_lesson_posts').delete().eq('id', Number(postId))
         if (err) throw new Error(err.message)

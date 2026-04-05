@@ -1,5 +1,6 @@
 import DashboardShell from '../../components/dashboard/DashboardShell'
 import ProtectedRoute from '../../components/ProtectedRoute'
+import TeacherApprovalGate from '../../components/TeacherApprovalGate.jsx'
 import { TeacherDataProvider } from '../../context/TeacherDataContext.jsx'
 
 export const teacherNavItems = [
@@ -15,9 +16,11 @@ export const teacherNavItems = [
 export default function TeacherLayout() {
   return (
     <ProtectedRoute allowedRoles={['teacher']}>
-      <TeacherDataProvider>
-        <DashboardShell navItems={teacherNavItems} title="Khu vực giáo viên" accent="teacher" />
-      </TeacherDataProvider>
+      <TeacherApprovalGate>
+        <TeacherDataProvider>
+          <DashboardShell navItems={teacherNavItems} title="Khu vực giáo viên" accent="teacher" />
+        </TeacherDataProvider>
+      </TeacherApprovalGate>
     </ProtectedRoute>
   )
 }

@@ -1,11 +1,12 @@
 import { useEffect, useId, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuthModal } from '../context/AuthModalContext'
 import { toast } from 'sonner'
 import { useAuthSession } from '../context/AuthSessionContext'
 import { authErrorMessageForUser } from '../lib/authErrorMessages.js'
+import { safePostAuthPath } from '../lib/authRedirect.js'
 
 function ForgotPasswordForm({ onBackToLogin, onSubmitEmail, titleId }) {
   const fieldIds = useId()
@@ -294,6 +295,7 @@ export default function AuthModal() {
   const { authView, openLogin, openRegister, openForgotPassword, closeAuth } = useAuthModal()
   const { login, register, requestPasswordReset } = useAuthSession()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const titleId = useId()
 
   const redirectForRole = (role) => {
@@ -302,14 +304,21 @@ export default function AuthModal() {
     else navigate('/hoc-vien', { replace: true })
   }
 
+  const goAfterAuth = (role) => {
+    const rr = role || 'user'
+    const next = safePostAuthPath(searchParams.get('next'), rr)
+    closeAuth()
+    if (next) navigate(next, { replace: true })
+    else redirectForRole(rr)
+  }
+
   const handleLogin = async ({ email, password }) => {
     const { error, role } = await login(email, password)
     if (error) {
       toast.error(authErrorMessageForUser(error, 'login'))
       return
     }
-    closeAuth()
-    redirectForRole(role || 'user')
+    goAfterAuth(role || 'user')
   }
 
   const handleForgotPassword = async (email) => {
@@ -334,8 +343,7 @@ export default function AuthModal() {
       toast.success('Đã gửi email xác nhận. Mở link trong hộp thư rồi đăng nhập.', { duration: 8000 })
       return
     }
-    closeAuth()
-    redirectForRole('user')
+    goAfterAuth('user')
   }
 
   useEffect(() => {

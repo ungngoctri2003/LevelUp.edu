@@ -17,24 +17,39 @@ function routeRole(dbRole) {
   return dbRole
 }
 
+/** @returns {Promise<{ profile: object | null, teacherApprovalStatus: string | null }>} */
+async function fetchProfileBundle(userId) {
+  if (!supabase || !userId) return { profile: null, teacherApprovalStatus: null }
+  const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
+  if (error) {
+    console.warn('[auth] profile', error.message)
+    return { profile: null, teacherApprovalStatus: null }
+  }
+  if (!data) return { profile: null, teacherApprovalStatus: null }
+  let teacherApprovalStatus = null
+  if (data.role === 'teacher') {
+    const { data: tp, error: tpErr } = await supabase
+      .from('teacher_profiles')
+      .select('approval_status')
+      .eq('user_id', userId)
+      .maybeSingle()
+    if (tpErr) console.warn('[auth] teacher_profiles', tpErr.message)
+    teacherApprovalStatus = tp?.approval_status ?? 'pending'
+  }
+  return { profile: data, teacherApprovalStatus }
+}
+
 export function AuthSessionProvider({ children }) {
   const [session, setSession] = useState(null)
   const [profile, setProfile] = useState(null)
+  const [teacherApprovalStatus, setTeacherApprovalStatus] = useState(null)
   const [loading, setLoading] = useState(true)
   const [authError, setAuthError] = useState(null)
 
   const loadProfile = useCallback(async (userId) => {
-    if (!supabase || !userId) {
-      setProfile(null)
-      return
-    }
-    const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
-    if (error) {
-      console.warn('[auth] profile', error.message)
-      setProfile(null)
-      return
-    }
-    setProfile(data)
+    const { profile: p, teacherApprovalStatus: ta } = await fetchProfileBundle(userId)
+    setProfile(p)
+    setTeacherApprovalStatus(ta)
   }, [])
 
   useEffect(() => {
@@ -47,7 +62,10 @@ export function AuthSessionProvider({ children }) {
       if (cancelled) return
       setSession(s)
       if (s?.user?.id) await loadProfile(s.user.id)
-      else setProfile(null)
+      else {
+        setProfile(null)
+        setTeacherApprovalStatus(null)
+      }
       if (!cancelled) setLoading(false)
     })
     const {
@@ -55,7 +73,10 @@ export function AuthSessionProvider({ children }) {
     } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s)
       if (s?.user?.id) loadProfile(s.user.id)
-      else setProfile(null)
+      else {
+        setProfile(null)
+        setTeacherApprovalStatus(null)
+      }
     })
     return () => {
       cancelled = true
@@ -74,8 +95,9 @@ export function AuthSessionProvider({ children }) {
       role: rr,
       dbRole: profile.role,
       accountStatus: profile.account_status,
+      teacherApprovalStatus: profile.role === 'teacher' ? teacherApprovalStatus : null,
     }
-  }, [session, profile])
+  }, [session, profile, teacherApprovalStatus])
 
   const login = useCallback(async (email, password) => {
     setAuthError(null)
@@ -90,9 +112,10 @@ export function AuthSessionProvider({ children }) {
     }
     setSession(data.session)
     if (data.user?.id) {
-      const { data: prof } = await supabase.from('profiles').select('*').eq('id', data.user.id).maybeSingle()
-      setProfile(prof || null)
-      const rr = routeRole(prof?.role)
+      const bundle = await fetchProfileBundle(data.user.id)
+      setProfile(bundle.profile)
+      setTeacherApprovalStatus(bundle.teacherApprovalStatus)
+      const rr = routeRole(bundle.profile?.role)
       return { error: null, role: rr }
     }
     return { error: null, role: null }
@@ -120,8 +143,9 @@ export function AuthSessionProvider({ children }) {
     }
     if (data.session && data.user?.id) {
       setSession(data.session)
-      const { data: prof } = await supabase.from('profiles').select('*').eq('id', data.user.id).maybeSingle()
-      setProfile(prof || null)
+      const bundle = await fetchProfileBundle(data.user.id)
+      setProfile(bundle.profile)
+      setTeacherApprovalStatus(bundle.teacherApprovalStatus)
     }
     return { error: null, needsEmailConfirm: !data.session }
   }, [])
@@ -131,6 +155,7 @@ export function AuthSessionProvider({ children }) {
     if (supabase) await supabase.auth.signOut()
     setSession(null)
     setProfile(null)
+    setTeacherApprovalStatus(null)
   }, [])
 
   const updateProfile = useCallback(

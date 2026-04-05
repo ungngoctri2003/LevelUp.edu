@@ -8,9 +8,10 @@ import { useTeacherState } from '../../hooks/useTeacherState'
 const empty = { classId: '', title: '', duration: '45 phút' }
 
 export default function TeacherLessons() {
-  const { state, loading, error, addLessonPost, deleteLessonPost } = useTeacherState()
+  const { state, loading, error, addLessonPost, updateLessonPost, deleteLessonPost } = useTeacherState()
   const [form, setForm] = useState(empty)
   const [showForm, setShowForm] = useState(false)
+  const [editingLesson, setEditingLesson] = useState(null)
 
   const save = async (e) => {
     e.preventDefault()
@@ -21,6 +22,21 @@ export default function TeacherLessons() {
       setShowForm(false)
     } catch (err) {
       toastActionError(err, 'Không thêm được bài giảng.')
+    }
+  }
+
+  const saveEdit = async (e) => {
+    e.preventDefault()
+    if (!editingLesson?.title?.trim()) return
+    try {
+      await updateLessonPost(
+        editingLesson.id,
+        editingLesson.title.trim(),
+        editingLesson.duration?.trim() || '',
+      )
+      setEditingLesson(null)
+    } catch (err) {
+      toastActionError(err, 'Không cập nhật được bài giảng.')
     }
   }
 
@@ -69,6 +85,21 @@ export default function TeacherLessons() {
                   <td className="px-4 py-3 text-right">
                     <button
                       type="button"
+                      onClick={() =>
+                        setEditingLesson({
+                          id: l.id,
+                          classId: l.classId,
+                          className: l.className,
+                          title: l.title,
+                          duration: l.duration === '—' ? '45 phút' : l.duration,
+                        })
+                      }
+                      className="mr-3 text-xs text-emerald-400 hover:text-emerald-300"
+                    >
+                      Sửa
+                    </button>
+                    <button
+                      type="button"
                       onClick={async () => {
                         if (!confirm('Xóa bài giảng?')) return
                         try {
@@ -88,6 +119,43 @@ export default function TeacherLessons() {
           </table>
         </div>
       </Panel>
+
+      {editingLesson && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+          <form onSubmit={saveEdit} className="w-full max-w-md rounded-2xl border border-white/15 bg-slate-900 p-6 shadow-xl">
+            <h3 className="text-lg font-semibold text-white">Sửa bài giảng</h3>
+            <p className="mt-2 text-sm text-slate-500">Lớp: {editingLesson.className}</p>
+            <label className="mt-4 block text-sm text-slate-400">
+              Tiêu đề
+              <input
+                value={editingLesson.title}
+                onChange={(e) => setEditingLesson((x) => (x ? { ...x, title: e.target.value } : x))}
+                className={field}
+              />
+            </label>
+            <label className="mt-3 block text-sm text-slate-400">
+              Thời lượng hiển thị
+              <input
+                value={editingLesson.duration}
+                onChange={(e) => setEditingLesson((x) => (x ? { ...x, duration: e.target.value } : x))}
+                className={field}
+              />
+            </label>
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setEditingLesson(null)}
+                className="rounded-xl border border-white/20 px-4 py-2 text-sm text-slate-300"
+              >
+                Hủy
+              </button>
+              <button type="submit" className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white">
+                Cập nhật
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
