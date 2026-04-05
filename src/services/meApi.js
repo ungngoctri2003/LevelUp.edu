@@ -59,3 +59,15 @@ export async function postMyAssignmentSubmission(accessToken, body) {
 export async function getMyClassLessonPosts(accessToken) {
   return meFetch(accessToken, '/api/me/class-lesson-posts')
 }
+
+/** Chi tiết một bài giảng lớp (có nội dung body) */
+export async function getMyClassLessonPost(accessToken, postId) {
+  const id = Number(postId)
+  if (!Number.isFinite(id)) throw new Error('ID bài giảng không hợp lệ')
+  return meFetch(accessToken, `/api/me/class-lesson-posts/${id}`)
+}
+
+/** Lịch buổi học các lớp đã ghi danh */
+export async function getMyClassSchedule(accessToken) {
+  return meFetch(accessToken, '/api/me/class-schedule')
+}

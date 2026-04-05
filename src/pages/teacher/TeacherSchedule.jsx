@@ -1,24 +1,250 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { toastActionError } from '../../lib/appToast.js'
+import PageHeader from '../../components/dashboard/PageHeader'
+import Panel from '../../components/dashboard/Panel'
 import { useTeacherState } from '../../hooks/useTeacherState'
+import {
+  WEEK_DAYS,
+  defaultNewSlotFormValues,
+  localDateFromParts,
+  normalizeDeliveryMode,
+  parseTimeStartMinutes,
+  toDateInputValue,
+  toTimeInputValue,
+} from '../../lib/teacherScheduleFormat.js'
 
-const empty = { classId: '', day: 'Thứ 2', time: '', room: 'Online - Zoom' }
+function daySortKeyFromRow(row) {
+  const i = WEEK_DAYS.indexOf(row.day)
+  return i >= 0 ? i : 98
+}
+
+function formatAnchorDateVi(iso) {
+  if (!iso) return null
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return null
+  return d.toLocaleDateString('vi-VN')
+}
+
+/** Phút từ 0h trong ngày (bắt đầu buổi) — dùng sắp xếp tăng dần trong cùng một cột thứ */
+function startMinutesOfDay(row) {
+  if (row.startsAt) {
+    const d = new Date(row.startsAt)
+    if (!Number.isNaN(d.getTime())) return d.getHours() * 60 + d.getMinutes()
+  }
+  return parseTimeStartMinutes(row.time)
+}
+
+/** YYYY-MM-DD theo giờ local của mốc bắt đầu buổi (để lọc theo ngày) */
+function rowAnchorDateKey(row) {
+  if (!row.startsAt) return null
+  const d = new Date(row.startsAt)
+  if (Number.isNaN(d.getTime())) return null
+  return toDateInputValue(d)
+}
+
+function formatYmdKeyVi(ymd) {
+  if (!ymd) return ''
+  const [y, mo, d] = ymd.split('-').map(Number)
+  if (!y || !mo || !d) return ymd
+  const dt = new Date(y, mo - 1, d)
+  return dt.toLocaleDateString('vi-VN')
+}
 
 export default function TeacherSchedule() {
-  const { state, loading, error, addScheduleSlot, deleteScheduleSlot } = useTeacherState()
-  const [form, setForm] = useState(empty)
+  const { state, loading, error, addScheduleSlot, updateScheduleSlot, deleteScheduleSlot } = useTeacherState()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [form, setForm] = useState(() => defaultNewSlotFormValues())
   const [showForm, setShowForm] = useState(false)
+  const [editingId, setEditingId] = useState(null)
+  const [view, setView] = useState('week')
+
+  const filterClassId = searchParams.get('lop') || ''
+  const filterTuNgay = searchParams.get('tuNgay') || ''
+  const filterDenNgay = searchParams.get('denNgay') || ''
+
+  const setFilterClassId = (id) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        if (!id) next.delete('lop')
+        else next.set('lop', id)
+        return next
+      },
+      { replace: true },
+    )
+  }
+
+  const patchNgayParams = (tuNgay, denNgay) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        if (tuNgay) next.set('tuNgay', tuNgay)
+        else next.delete('tuNgay')
+        if (denNgay) next.set('denNgay', denNgay)
+        else next.delete('denNgay')
+        return next
+      },
+      { replace: true },
+    )
+  }
+
+  const dateRangeFilter = useMemo(() => {
+    let fromKey = filterTuNgay.trim() || null
+    let toKey = filterDenNgay.trim() || null
+    if (fromKey && toKey && fromKey > toKey) {
+      ;[fromKey, toKey] = [toKey, fromKey]
+    }
+    const active = Boolean(fromKey || toKey)
+    return { fromKey, toKey, active }
+  }, [filterTuNgay, filterDenNgay])
+
+  const sortedBase = useMemo(() => {
+    let rows = [...state.schedule]
+    if (filterClassId) rows = rows.filter((s) => s.classId === filterClassId)
+    rows.sort((a, b) => {
+      const da = daySortKeyFromRow(a)
+      const db = daySortKeyFromRow(b)
+      if (da !== db) return da - db
+      const ma = startMinutesOfDay(a)
+      const mb = startMinutesOfDay(b)
+      if (ma !== mb) return ma - mb
+      return a.sortTimestamp - b.sortTimestamp
+    })
+    return rows
+  }, [state.schedule, filterClassId])
+
+  const sortedAndFiltered = useMemo(() => {
+    const { fromKey, toKey } = dateRangeFilter
+    if (!fromKey && !toKey) return sortedBase
+    return sortedBase.filter((row) => {
+      const key = rowAnchorDateKey(row)
+      if (key == null) return false
+      if (fromKey && key < fromKey) return false
+      if (toKey && key > toKey) return false
+      return true
+    })
+  }, [sortedBase, dateRangeFilter])
+
+  const nonStandardSlots = useMemo(
+    () =>
+      sortedAndFiltered.filter(
+        (s) => !WEEK_DAYS.includes(s.day) || s.day === '—',
+      ),
+    [sortedAndFiltered],
+  )
+
+  const byDay = useMemo(() => {
+    const map = Object.fromEntries(WEEK_DAYS.map((d) => [d, []]))
+    for (const s of sortedAndFiltered) {
+      if (map[s.day] != null) map[s.day].push(s)
+    }
+    for (const d of WEEK_DAYS) {
+      map[d].sort((a, b) => {
+        const ma = startMinutesOfDay(a)
+        const mb = startMinutesOfDay(b)
+        if (ma !== mb) return ma - mb
+        return a.sortTimestamp - b.sortTimestamp
+      })
+    }
+    return map
+  }, [sortedAndFiltered])
+
+  const stats = useMemo(() => {
+    const classIds = new Set(state.schedule.map((s) => s.classId))
+    return {
+      totalSlots: state.schedule.length,
+      classCount: classIds.size,
+      visible: sortedAndFiltered.length,
+    }
+  }, [state.schedule, sortedAndFiltered])
+
+  const dateFilterSummary = useMemo(() => {
+    if (!dateRangeFilter.active) return null
+    const { fromKey, toKey } = dateRangeFilter
+    if (fromKey && toKey) return `${formatYmdKeyVi(fromKey)} – ${formatYmdKeyVi(toKey)}`
+    if (fromKey) return `từ ${formatYmdKeyVi(fromKey)}`
+    return `đến ${formatYmdKeyVi(toKey)}`
+  }, [dateRangeFilter])
+
+  const closeForm = () => {
+    setShowForm(false)
+    setEditingId(null)
+  }
+
+  const openForm = () => {
+    setEditingId(null)
+    setForm(defaultNewSlotFormValues())
+    setShowForm(true)
+  }
+
+  const openForEdit = (s) => {
+    setEditingId(s.id)
+    const dm = normalizeDeliveryMode(s.deliveryMode)
+    if (s.startsAt) {
+      const start = new Date(s.startsAt)
+      let end = s.endsAt ? new Date(s.endsAt) : null
+      if (!end || Number.isNaN(end.getTime())) {
+        end = new Date(start.getTime() + 90 * 60000)
+      }
+      setForm({
+        classId: s.classId,
+        startDate: toDateInputValue(start),
+        startTime: toTimeInputValue(start),
+        endDate: toDateInputValue(end),
+        endTime: toTimeInputValue(end),
+        deliveryMode: dm,
+      })
+    } else {
+      toast.info('Buổi cũ chưa có mốc ngày giờ — chọn đầy đủ ngày giờ bắt đầu và kết thúc.')
+      setForm({
+        ...defaultNewSlotFormValues(),
+        classId: s.classId,
+        deliveryMode: dm,
+      })
+    }
+    setShowForm(true)
+  }
 
   const save = async (e) => {
     e.preventDefault()
-    if (!form.classId || !form.time.trim()) return
+    if (!form.classId || !form.startDate || !form.startTime || !form.endDate || !form.endTime) {
+      toast.error('Chọn đủ lớp, ngày giờ bắt đầu và ngày giờ kết thúc.')
+      return
+    }
+    const start = localDateFromParts(form.startDate, form.startTime)
+    const end = localDateFromParts(form.endDate, form.endTime)
+    if (!start || !end) {
+      toast.error('Ngày giờ không hợp lệ.')
+      return
+    }
+    if (end.getTime() <= start.getTime()) {
+      toast.error('Giờ kết thúc phải sau giờ bắt đầu.')
+      return
+    }
     try {
-      await addScheduleSlot(form.classId, form.day, form.time.trim(), form.room.trim())
-      setForm(empty)
+      if (editingId) {
+        await updateScheduleSlot(editingId, {
+          classIdStr: form.classId,
+          startsAtIso: start.toISOString(),
+          endsAtIso: end.toISOString(),
+          deliveryMode: form.deliveryMode,
+        })
+        toast.success('Đã cập nhật buổi học.')
+      } else {
+        await addScheduleSlot(form.classId, {
+          startsAtIso: start.toISOString(),
+          endsAtIso: end.toISOString(),
+          deliveryMode: form.deliveryMode,
+        })
+        toast.success('Đã thêm buổi học.')
+      }
+      setForm(defaultNewSlotFormValues())
+      setEditingId(null)
       setShowForm(false)
     } catch (err) {
-      toastActionError(err, 'Không thêm được buổi học.')
+      toastActionError(err, editingId ? 'Không cập nhật được buổi học.' : 'Không thêm được buổi học.')
     }
   }
 
@@ -26,73 +252,353 @@ export default function TeacherSchedule() {
     if (error) toast.error(error)
   }, [error])
 
+  const inputCls =
+    'mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white placeholder:text-slate-500 [color-scheme:dark]'
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-xl font-bold text-white">Lịch dạy</h2>
-        </div>
+    <div className="space-y-8">
+      <PageHeader
+        eyebrow="Giáo viên"
+        title="Lịch dạy"
+        description="Thêm hoặc sửa buổi từ lưới / bảng. Chọn ngày và giờ bắt đầu & kết thúc; thứ trên lưới theo ngày bắt đầu. Hình thức: Học Online hoặc Học Offline."
+      >
         <button
           type="button"
-          onClick={() => setShowForm(true)}
-          className="rounded-xl border border-dashed border-emerald-500/40 px-4 py-2 text-sm text-emerald-300 hover:bg-emerald-500/10"
+          onClick={openForm}
+          className="rounded-xl border border-dashed border-emerald-500/50 bg-emerald-500/10 px-4 py-2.5 text-sm font-medium text-emerald-200 transition-colors hover:bg-emerald-500/20"
         >
           + Thêm buổi
         </button>
-      </div>
+      </PageHeader>
 
       {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
 
-      <div className="overflow-x-auto rounded-2xl border border-white/10 bg-white/5">
-        <table className="w-full min-w-[720px] text-left text-sm">
-          <thead className="border-b border-white/10 text-xs uppercase text-slate-400">
-            <tr>
-              <th className="px-4 py-3">Thứ / giờ</th>
-              <th className="px-4 py-3">Lớp</th>
-              <th className="px-4 py-3">Phòng</th>
-              <th className="px-4 py-3" />
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-white/5 text-slate-200">
-            {state.schedule.map((s) => (
-              <tr key={s.id} className="hover:bg-white/5">
-                <td className="px-4 py-3">
-                  {s.day} · {s.time}
-                </td>
-                <td className="px-4 py-3 text-slate-400">{s.className}</td>
-                <td className="px-4 py-3">{s.room}</td>
-                <td className="px-4 py-3 text-right">
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      if (!confirm('Xóa buổi này?')) return
-                      try {
-                        await deleteScheduleSlot(s.id)
-                      } catch (err) {
-                        toastActionError(err, 'Không xóa được buổi học.')
-                      }
-                    }}
-                    className="text-xs text-red-400"
-                  >
-                    Xóa
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+        <div className="flex flex-wrap gap-3">
+          <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+            <p className="text-xs uppercase tracking-wide text-slate-500">Tổng buổi</p>
+            <p className="text-lg font-semibold text-white">{stats.totalSlots}</p>
+          </div>
+          <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+            <p className="text-xs uppercase tracking-wide text-slate-500">Lớp có lịch</p>
+            <p className="text-lg font-semibold text-white">{stats.classCount}</p>
+          </div>
+          {(filterClassId || dateRangeFilter.active) && (
+            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3">
+              <p className="text-xs uppercase tracking-wide text-emerald-200/80">Sau lọc</p>
+              <p className="text-lg font-semibold text-emerald-100">{stats.visible} buổi</p>
+              {dateRangeFilter.active && dateFilterSummary && (
+                <p className="text-xs text-emerald-200/70">Ngày mốc buổi: {dateFilterSummary}</p>
+              )}
+            </div>
+          )}
+        </div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+          <label className="block text-sm text-slate-400">
+            Lọc theo lớp
+            <select
+              value={filterClassId}
+              onChange={(e) => setFilterClassId(e.target.value)}
+              className={`${inputCls} sm:mt-1 sm:min-w-[200px]`}
+            >
+              <option value="">Tất cả lớp</option>
+              {state.classes.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className="flex flex-wrap items-end gap-3">
+            <label className="block text-sm text-slate-400">
+              Từ ngày (mốc bắt đầu buổi)
+              <input
+                type="date"
+                value={filterTuNgay}
+                onChange={(e) => patchNgayParams(e.target.value, filterDenNgay)}
+                className={`${inputCls} sm:mt-1 sm:w-[11rem]`}
+              />
+            </label>
+            <label className="block text-sm text-slate-400">
+              Đến ngày
+              <input
+                type="date"
+                value={filterDenNgay}
+                onChange={(e) => patchNgayParams(filterTuNgay, e.target.value)}
+                className={`${inputCls} sm:mt-1 sm:w-[11rem]`}
+              />
+            </label>
+            {dateRangeFilter.active && (
+              <button
+                type="button"
+                onClick={() => patchNgayParams('', '')}
+                className="rounded-xl border border-white/20 px-3 py-2 text-sm text-slate-300 hover:bg-white/10"
+              >
+                Bỏ lọc ngày
+              </button>
+            )}
+          </div>
+          <div className="flex rounded-xl border border-white/15 p-1">
+            <button
+              type="button"
+              onClick={() => setView('week')}
+              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                view === 'week' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              Lưới tuần
+            </button>
+            <button
+              type="button"
+              onClick={() => setView('list')}
+              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                view === 'list' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              Bảng chi tiết
+            </button>
+          </div>
+        </div>
       </div>
+
+      {nonStandardSlots.length > 0 && (
+        <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+          Có {nonStandardSlots.length} buổi dữ liệu cũ hoặc thứ không chuẩn — xem kỹ ở bảng chi tiết (dòng tô nhạt).
+        </p>
+      )}
+
+      {view === 'week' && (
+        <Panel
+          title="Lưới theo tuần"
+          subtitle={
+            dateRangeFilter.active && dateFilterSummary
+              ? `Lọc theo ngày mốc buổi: ${dateFilterSummary}. Cột = thứ; trong ô sắp xếp theo giờ tăng dần.`
+              : 'Cột = thứ trong tuần; giờ lấy từ ngày bạn đã chọn khi tạo buổi.'
+          }
+        >
+          {sortedAndFiltered.length === 0 ? (
+            <p className="py-8 text-center text-sm text-slate-500">
+              Không có buổi hiển thị. Thêm buổi, đổi lớp, hoặc bỏ / nới khoảng ngày.
+            </p>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
+              {WEEK_DAYS.map((d) => (
+                <div
+                  key={d}
+                  className="flex min-h-[140px] flex-col rounded-xl border border-white/10 bg-black/20 p-3"
+                >
+                  <p className="mb-2 border-b border-white/10 pb-2 text-xs font-semibold uppercase tracking-wide text-emerald-300/90">
+                    {d}
+                  </p>
+                  <ul className="flex flex-1 flex-col gap-2">
+                    {byDay[d].length === 0 ? (
+                      <li className="text-xs text-slate-600">—</li>
+                    ) : (
+                      byDay[d].map((s) => (
+                        <li key={s.id}>
+                          <div className="rounded-lg border border-white/10 bg-white/5 p-2 text-xs leading-snug">
+                            <p className="font-mono text-[11px] text-emerald-200/90">{s.time}</p>
+                            {s.startsAt && formatAnchorDateVi(s.startsAt) && (
+                              <p className="text-[10px] text-slate-500">Mốc {formatAnchorDateVi(s.startsAt)}</p>
+                            )}
+                            <Link
+                              to={`/giao-vien/lop-hoc/${encodeURIComponent(s.classId)}`}
+                              className="mt-1 block font-medium text-slate-100 hover:text-emerald-300"
+                            >
+                              {s.className}
+                            </Link>
+                            <p className="mt-0.5 text-slate-500">
+                              {s.subject} · {s.grade}
+                            </p>
+                            <p className="mt-1 text-[11px] text-slate-400">{s.locationLabel}</p>
+                            <div className="mt-2 flex flex-wrap gap-2 border-t border-white/10 pt-2">
+                              <button
+                                type="button"
+                                onClick={() => openForEdit(s)}
+                                className="text-[11px] font-medium text-emerald-400 hover:text-emerald-300"
+                              >
+                                Sửa
+                              </button>
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  if (!confirm('Xóa buổi này?')) return
+                                  try {
+                                    await deleteScheduleSlot(s.id)
+                                  } catch (err) {
+                                    toastActionError(err, 'Không xóa được buổi học.')
+                                  }
+                                }}
+                                className="text-[11px] text-red-400 hover:text-red-300"
+                              >
+                                Xóa
+                              </button>
+                            </div>
+                          </div>
+                        </li>
+                      ))
+                    )}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          )}
+          {nonStandardSlots.length > 0 && (
+            <div className="mt-4 rounded-xl border border-amber-500/25 bg-amber-500/5 p-4">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-200/90">
+                Buổi không vào đúng 7 cột
+              </p>
+              <ul className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                {nonStandardSlots.map((s) => (
+                  <li
+                    key={s.id}
+                    className="min-w-[200px] flex-1 rounded-lg border border-white/10 bg-black/30 p-2 text-xs"
+                  >
+                    <span className="font-medium text-amber-100">{s.day}</span>
+                    <span className="mx-1 text-slate-500">·</span>
+                    <span className="font-mono text-emerald-200/80">{s.time}</span>
+                    <Link
+                      to={`/giao-vien/lop-hoc/${encodeURIComponent(s.classId)}`}
+                      className="mt-1 block text-slate-200 hover:text-emerald-300"
+                    >
+                      {s.className}
+                    </Link>
+                    <p className="text-[11px] text-slate-500">{s.locationLabel}</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => openForEdit(s)}
+                        className="text-[11px] font-medium text-emerald-400 hover:text-emerald-300"
+                      >
+                        Sửa
+                      </button>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (!confirm('Xóa buổi này?')) return
+                          try {
+                            await deleteScheduleSlot(s.id)
+                          } catch (err) {
+                            toastActionError(err, 'Không xóa được buổi học.')
+                          }
+                        }}
+                        className="text-[11px] text-red-400 hover:text-red-300"
+                      >
+                        Xóa
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </Panel>
+      )}
+
+      {view === 'list' && (
+        <Panel
+          title="Bảng chi tiết"
+          subtitle={
+            dateRangeFilter.active && dateFilterSummary
+              ? `Cùng bộ lọc ngày: ${dateFilterSummary}. Thứ, ngày mốc, khung giờ, hình thức.`
+              : 'Thứ (từ ngày đã chọn), khung giờ, hình thức.'
+          }
+        >
+          <div className="overflow-x-auto rounded-xl border border-white/10">
+            <table className="w-full min-w-[960px] text-left text-sm">
+              <thead className="border-b border-white/10 text-xs uppercase text-slate-400">
+                <tr>
+                  <th className="px-4 py-3">Thứ</th>
+                  <th className="px-4 py-3">Ngày mốc</th>
+                  <th className="px-4 py-3">Khung giờ</th>
+                  <th className="px-4 py-3">Lớp</th>
+                  <th className="px-4 py-3">Môn</th>
+                  <th className="px-4 py-3">Khối</th>
+                  <th className="px-4 py-3">Hình thức</th>
+                  <th className="px-4 py-3 text-right">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5 text-slate-200">
+                {sortedAndFiltered.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="px-4 py-10 text-center text-slate-500">
+                      Không có dòng lịch. Thêm buổi hoặc đổi lọc lớp / khoảng ngày.
+                    </td>
+                  </tr>
+                ) : (
+                  sortedAndFiltered.map((s) => (
+                    <tr
+                      key={s.id}
+                      className={`hover:bg-white/[0.04] ${s.legacy ? 'bg-amber-500/10' : ''}`}
+                    >
+                      <td className="px-4 py-3 font-medium text-emerald-200/90">{s.day}</td>
+                      <td className="px-4 py-3 text-slate-400">
+                        {formatAnchorDateVi(s.startsAt) || '—'}
+                      </td>
+                      <td className="px-4 py-3 font-mono text-xs text-slate-300">{s.time}</td>
+                      <td className="px-4 py-3">
+                        <Link
+                          to={`/giao-vien/lop-hoc/${encodeURIComponent(s.classId)}`}
+                          className="font-medium text-cyan-300 hover:text-cyan-200"
+                        >
+                          {s.className}
+                        </Link>
+                      </td>
+                      <td className="px-4 py-3 text-slate-400">{s.subject}</td>
+                      <td className="px-4 py-3 text-slate-400">{s.grade}</td>
+                      <td className="px-4 py-3 text-slate-300">{s.locationLabel}</td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex justify-end gap-3">
+                          <button
+                            type="button"
+                            onClick={() => openForEdit(s)}
+                            className="text-xs font-medium text-emerald-400 hover:text-emerald-300"
+                          >
+                            Sửa
+                          </button>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              if (!confirm('Xóa buổi này khỏi lịch?')) return
+                              try {
+                                await deleteScheduleSlot(s.id)
+                              } catch (err) {
+                                toastActionError(err, 'Không xóa được buổi học.')
+                              }
+                            }}
+                            className="text-xs text-red-400 hover:text-red-300"
+                          >
+                            Xóa
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Panel>
+      )}
 
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-          <form onSubmit={save} className="w-full max-w-md rounded-2xl border border-white/15 bg-slate-900 p-6 shadow-xl">
-            <h3 className="text-lg font-semibold text-white">Thêm buổi học</h3>
+          <form
+            onSubmit={save}
+            className="w-full max-w-lg rounded-2xl border border-white/15 bg-slate-900 p-6 shadow-xl [color-scheme:dark]"
+          >
+            <h3 className="text-lg font-semibold text-white">{editingId ? 'Sửa buổi học' : 'Thêm buổi học'}</h3>
+            <p className="mt-1 text-xs text-slate-500">
+              {editingId
+                ? 'Cập nhật lớp, ngày giờ hoặc hình thức. Lưu để áp dụng cho lịch của bạn và học viên.'
+                : 'Dùng lịch (date picker) chọn ngày, chọn giờ riêng. Thứ trên lưới = thứ của ngày bắt đầu. Hình thức: Học Online hoặc Học Offline.'}
+            </p>
             <label className="mt-4 block text-sm text-slate-400">
               Lớp
               <select
                 value={form.classId}
                 onChange={(e) => setForm((f) => ({ ...f, classId: e.target.value }))}
-                className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white"
+                className={inputCls}
               >
                 <option value="">— Chọn —</option>
                 {state.classes.map((c) => (
@@ -102,42 +608,91 @@ export default function TeacherSchedule() {
                 ))}
               </select>
             </label>
-            <label className="mt-3 block text-sm text-slate-400">
-              Thứ
-              <select
-                value={form.day}
-                onChange={(e) => setForm((f) => ({ ...f, day: e.target.value }))}
-                className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white"
-              >
-                {['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật'].map((d) => (
-                  <option key={d} value={d}>
-                    {d}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="mt-3 block text-sm text-slate-400">
-              Giờ (vd. 18:00–19:30)
-              <input
-                value={form.time}
-                onChange={(e) => setForm((f) => ({ ...f, time: e.target.value }))}
-                className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white"
-              />
-            </label>
-            <label className="mt-3 block text-sm text-slate-400">
-              Phòng / link
-              <input
-                value={form.room}
-                onChange={(e) => setForm((f) => ({ ...f, room: e.target.value }))}
-                className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white"
-              />
-            </label>
+            <div className="mt-3 space-y-1">
+              <p className="text-sm text-slate-400">Bắt đầu</p>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <label className="block text-xs text-slate-500">
+                  Ngày
+                  <input
+                    type="date"
+                    required
+                    value={form.startDate}
+                    onChange={(e) => setForm((f) => ({ ...f, startDate: e.target.value }))}
+                    className={inputCls}
+                  />
+                </label>
+                <label className="block text-xs text-slate-500">
+                  Giờ
+                  <input
+                    type="time"
+                    required
+                    value={form.startTime}
+                    onChange={(e) => setForm((f) => ({ ...f, startTime: e.target.value }))}
+                    className={inputCls}
+                  />
+                </label>
+              </div>
+            </div>
+            <div className="mt-3 space-y-1">
+              <p className="text-sm text-slate-400">Kết thúc</p>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <label className="block text-xs text-slate-500">
+                  Ngày
+                  <input
+                    type="date"
+                    required
+                    value={form.endDate}
+                    onChange={(e) => setForm((f) => ({ ...f, endDate: e.target.value }))}
+                    className={inputCls}
+                  />
+                </label>
+                <label className="block text-xs text-slate-500">
+                  Giờ
+                  <input
+                    type="time"
+                    required
+                    value={form.endTime}
+                    onChange={(e) => setForm((f) => ({ ...f, endTime: e.target.value }))}
+                    className={inputCls}
+                  />
+                </label>
+              </div>
+            </div>
+            <fieldset className="mt-4 space-y-2">
+              <legend className="text-sm text-slate-400">Hình thức</legend>
+              <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-200 hover:bg-white/10">
+                <input
+                  type="radio"
+                  name={editingId ? `deliveryMode-${editingId}` : 'deliveryMode-new'}
+                  value="online"
+                  checked={form.deliveryMode === 'online'}
+                  onChange={() => setForm((f) => ({ ...f, deliveryMode: 'online' }))}
+                  className="text-emerald-500"
+                />
+                Học Online
+              </label>
+              <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-200 hover:bg-white/10">
+                <input
+                  type="radio"
+                  name={editingId ? `deliveryMode-${editingId}` : 'deliveryMode-new'}
+                  value="offline"
+                  checked={form.deliveryMode === 'offline'}
+                  onChange={() => setForm((f) => ({ ...f, deliveryMode: 'offline' }))}
+                  className="text-emerald-500"
+                />
+                Học Offline
+              </label>
+            </fieldset>
             <div className="mt-6 flex justify-end gap-2">
-              <button type="button" onClick={() => setShowForm(false)} className="rounded-xl border border-white/20 px-4 py-2 text-sm text-slate-300">
+              <button
+                type="button"
+                onClick={closeForm}
+                className="rounded-xl border border-white/20 px-4 py-2 text-sm text-slate-300"
+              >
                 Hủy
               </button>
               <button type="submit" className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white">
-                Lưu
+                {editingId ? 'Cập nhật' : 'Lưu'}
               </button>
             </div>
           </form>

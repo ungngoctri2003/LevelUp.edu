@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient.js'
 import { APP_DATA_LOAD_ERROR } from '../lib/publicUserMessages.js'
 import { useAuthSession } from './AuthSessionContext.jsx'
 import * as tq from '../services/teacherQueries.js'
+import { deliveryModeForSupabase, formatTimeRange, weekdayLabelFromDate } from '../lib/teacherScheduleFormat.js'
 import { questionBankDraftsFromStored, sanitizeMcqBankForDatabase } from '../lib/mcqQuestions.js'
 
 function isoToDatetimeLocalValue(iso) {
@@ -77,10 +78,11 @@ export function TeacherDataProvider({ children }) {
         async addEnrollment() {},
         async removeEnrollment() {},
         async updateEnrollmentMetrics() {},
-        async addScheduleSlot() {},
+        async addScheduleSlot(_classIdStr, _payload) {},
+        async updateScheduleSlot(_slotIdStr, _payload) {},
         async deleteScheduleSlot() {},
-        async addLessonPost() {},
-        async updateLessonPost() {},
+        async addLessonPost(_classIdStr, _title, _duration_display) {},
+        async updateLessonPost(_postId, _title, _duration_display) {},
         async deleteLessonPost() {},
         async addAssignment() {},
         async updateAssignment() {},
@@ -105,15 +107,31 @@ export function TeacherDataProvider({ children }) {
       }))
     }
 
-    const lessons = (bundle.lessonPosts || []).map((p) => ({
-      id: String(p.id),
-      classId: String(p.class_id),
-      className: classesById[p.class_id]?.name || `Lớp ${p.class_id}`,
-      title: p.title,
-      duration: p.duration_display || '—',
-      views: p.view_count ?? 0,
-      updated: new Date(p.updated_at).toLocaleDateString('vi-VN'),
-    }))
+    const normDet = (p) => {
+      const d = p.teacher_lesson_post_details
+      if (d == null) return null
+      return Array.isArray(d) ? d[0] ?? null : d
+    }
+    const lessons = (bundle.lessonPosts || []).map((p) => {
+      const det = normDet(p)
+      const fromSummary = det?.summary != null ? String(det.summary).trim() : ''
+      const legacyBody = p.body != null ? String(p.body).trim() : ''
+      const previewSource = fromSummary || legacyBody
+      return {
+        id: String(p.id),
+        classId: String(p.class_id),
+        className: classesById[p.class_id]?.name || `Lớp ${p.class_id}`,
+        title: p.title,
+        body: p.body != null ? String(p.body) : '',
+        bodyPreview:
+          previewSource.length > 0
+            ? `${previewSource.slice(0, 100)}${previewSource.length > 100 ? '…' : ''}`
+            : '—',
+        duration: p.duration_display || '—',
+        views: p.view_count ?? 0,
+        updated: new Date(p.updated_at).toLocaleDateString('vi-VN'),
+      }
+    })
 
     const examClassLinks = (bundle.examClassAssignments || []).map((row) => ({
       examId: String(row.exam_id),
@@ -267,14 +285,62 @@ export function TeacherDataProvider({ children }) {
         await refresh()
       },
 
-      async addScheduleSlot(classIdStr, day_label, time_range, room) {
+      async addScheduleSlot(classIdStr, payload) {
         const cid = Number(classIdStr)
+        const { startsAtIso, endsAtIso, deliveryMode } = payload
+        const start = new Date(startsAtIso)
+        const end = new Date(endsAtIso)
+        if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+          throw new Error('Ngày giờ không hợp lệ.')
+        }
+        if (end.getTime() <= start.getTime()) {
+          throw new Error('Giờ kết thúc phải sau giờ bắt đầu.')
+        }
+        const mode = deliveryModeForSupabase(deliveryMode)
+        const day_label = weekdayLabelFromDate(start)
+        const time_range = formatTimeRange(start, end)
         const { error: err } = await supabase.from('schedule_slots').insert({
           class_id: cid,
+          starts_at: start.toISOString(),
+          ends_at: end.toISOString(),
+          delivery_mode: mode,
           day_label,
           time_range,
-          room: room || null,
+          room: null,
+          room_note: null,
         })
+        if (err) throw new Error(err.message)
+        await refresh()
+      },
+
+      async updateScheduleSlot(slotIdStr, payload) {
+        const id = Number(slotIdStr)
+        const cid = Number(payload.classIdStr)
+        const { startsAtIso, endsAtIso, deliveryMode } = payload
+        const start = new Date(startsAtIso)
+        const end = new Date(endsAtIso)
+        if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+          throw new Error('Ngày giờ không hợp lệ.')
+        }
+        if (end.getTime() <= start.getTime()) {
+          throw new Error('Giờ kết thúc phải sau giờ bắt đầu.')
+        }
+        const mode = deliveryModeForSupabase(deliveryMode)
+        const day_label = weekdayLabelFromDate(start)
+        const time_range = formatTimeRange(start, end)
+        const { error: err } = await supabase
+          .from('schedule_slots')
+          .update({
+            class_id: cid,
+            starts_at: start.toISOString(),
+            ends_at: end.toISOString(),
+            delivery_mode: mode,
+            day_label,
+            time_range,
+            room: null,
+            room_note: null,
+          })
+          .eq('id', id)
         if (err) throw new Error(err.message)
         await refresh()
       },
@@ -287,12 +353,29 @@ export function TeacherDataProvider({ children }) {
 
       async addLessonPost(classIdStr, title, duration_display) {
         const cid = Number(classIdStr)
-        const { error: err } = await supabase.from('teacher_lesson_posts').insert({
-          class_id: cid,
-          title: title.trim(),
-          duration_display: duration_display || null,
-        })
+        const { data: ins, error: err } = await supabase
+          .from('teacher_lesson_posts')
+          .insert({
+            class_id: cid,
+            title: title.trim(),
+            duration_display: duration_display || null,
+          })
+          .select('id')
+          .single()
         if (err) throw new Error(err.message)
+        if (ins?.id) {
+          const { error: dErr } = await supabase.from('teacher_lesson_post_details').upsert(
+            {
+              post_id: ins.id,
+              outline: [],
+              sections: [],
+              resources: [],
+              practice_hints: [],
+            },
+            { onConflict: 'post_id' },
+          )
+          if (dErr) throw new Error(dErr.message)
+        }
         await refresh()
       },
 

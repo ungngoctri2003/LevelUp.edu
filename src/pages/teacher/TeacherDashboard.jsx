@@ -31,16 +31,19 @@ export default function TeacherDashboard() {
         <StatCard accent="teacher" label="Buổi trong lịch" value={String(stats.upcomingSessions)} />
       </div>
 
-      <Panel title="Lịch dạy gần nhất" subtitle="Các buổi sắp tới">
+      <Panel title="Lịch dạy gần nhất" subtitle="Theo thứ & khung giờ đã lưu">
         <ul className="space-y-0">
           {state.schedule.slice(0, 4).map((s) => (
             <li
               key={s.id}
               className="flex flex-wrap items-center justify-between gap-2 border-b border-white/5 py-3 text-sm first:pt-0 last:border-0 last:pb-0"
             >
-              <span className="font-medium text-slate-200">
-                {s.day} · {s.time}
-              </span>
+              <div className="min-w-0 flex-1">
+                <span className="font-medium text-slate-200">
+                  {s.day} · {s.time}
+                </span>
+                <p className="text-xs text-slate-500">{s.locationLabel}</p>
+              </div>
               <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-xs text-slate-400">
                 {s.className}
               </span>

@@ -11,12 +11,15 @@ const quickLinks = [
   { to: '/admin/hoc-vien', label: 'Học viên', desc: 'Tìm kiếm, trạng thái tài khoản' },
   { to: '/admin/giao-vien', label: 'Giáo viên', desc: 'Duyệt hồ sơ, phân lớp' },
   { to: '/admin/khoa-hoc', label: 'Khóa học & môn', desc: 'Danh mục môn, khóa hiển thị web' },
-  { to: '/admin/bai-giang-noi-dung', label: 'Bài giảng', desc: 'Danh sách bài và nội dung chi tiết' },
+  { to: '/admin/bai-giang-noi-dung', label: 'Bài giảng', desc: 'Trực tuyến + bài trong lớp' },
   { to: '/admin/doi-ngu-trang-chu', label: 'Đội ngũ landing', desc: 'Thẻ giáo viên trang chủ' },
-  { to: '/admin/lead-dang-ky', label: 'Lead đăng ký', desc: 'Form trang chủ' },
   { to: '/admin/tin-tuc', label: 'Tin tức', desc: 'Đăng bài, thông báo' },
   { to: '/admin/bai-kiem-tra', label: 'Bài kiểm tra', desc: 'Đề, giao bài, hiển thị công khai' },
-  { to: '/admin/tuyen-sinh', label: 'Tuyển sinh', desc: 'Hồ sơ, trạng thái xét duyệt' },
+  {
+    to: '/admin/tuyen-sinh',
+    label: 'Tuyển sinh & lead',
+    desc: 'Hồ sơ xét duyệt + lead form trang chủ',
+  },
 ]
 
 function formatMoney(n) {

@@ -1,8 +1,9 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom'
 import Layout from './pages/Layout'
 import HomePage from './pages/HomePage'
 import LessonsPage from './pages/LessonsPage'
 import LessonDetailPage from './pages/LessonDetailPage'
+import ClassLessonPostDetailPage from './pages/ClassLessonPostDetailPage'
 import TestsPage from './pages/TestsPage'
 import AdmissionsPage from './pages/AdmissionsPage'
 import NewsPage from './pages/NewsPage'
@@ -19,12 +20,13 @@ import AdminExams from './pages/admin/AdminExams'
 import AdminAdmissions from './pages/admin/AdminAdmissions'
 import AdminLessons from './pages/admin/AdminLessons'
 import AdminLessonDetail from './pages/admin/AdminLessonDetail'
+import AdminTeacherLessonPostDetail from './pages/admin/AdminTeacherLessonPostDetail'
 import AdminLandingTeachers from './pages/admin/AdminLandingTeachers'
-import AdminLeads from './pages/admin/AdminLeads'
 import TeacherLayout from './pages/teacher/TeacherLayout'
 import TeacherDashboard from './pages/teacher/TeacherDashboard'
 import TeacherClasses from './pages/teacher/TeacherClasses'
 import TeacherLessons from './pages/teacher/TeacherLessons'
+import TeacherLessonPostDetail from './pages/teacher/TeacherLessonPostDetail'
 import TeacherSchedule from './pages/teacher/TeacherSchedule'
 import TeacherAssignments from './pages/teacher/TeacherAssignments'
 import TeacherGrading from './pages/teacher/TeacherGrading'
@@ -33,9 +35,15 @@ import TeacherClassDetail from './pages/teacher/TeacherClassDetail'
 import StudentLayout from './pages/student/StudentLayout'
 import StudentDashboard from './pages/student/StudentDashboard'
 import StudentLearningHub from './pages/student/StudentLearningHub'
+import StudentClassSchedule from './pages/student/StudentClassSchedule'
 import StudentWorkHub from './pages/student/StudentWorkHub'
 import StudentProfile from './pages/student/StudentProfile'
 import { DialogflowMessenger } from './components/DialogflowMessenger'
+
+function AdminRedirectOldClassLessonPost() {
+  const { postId } = useParams()
+  return <Navigate to={`/admin/bai-giang-noi-dung/lop/${encodeURIComponent(postId)}`} replace />
+}
 
 function App() {
   return (
@@ -47,6 +55,7 @@ function App() {
           <Route path="dang-ky" element={<Navigate to="/?auth=register" replace />} />
           <Route path="quen-mat-khau" element={<Navigate to="/?auth=forgot" replace />} />
           <Route path="dat-lai-mat-khau" element={<ResetPasswordPage />} />
+          <Route path="bai-giang/lop/:postId" element={<ClassLessonPostDetailPage />} />
           <Route path="bai-giang/:lessonId" element={<LessonDetailPage />} />
           <Route path="bai-giang" element={<LessonsPage />} />
           <Route path="bai-kiem-tra" element={<TestsPage />} />
@@ -65,10 +74,13 @@ function App() {
           <Route path="bai-kiem-tra" element={<AdminExams />} />
           <Route path="tuyen-sinh" element={<AdminAdmissions />} />
           <Route path="mon-hoc" element={<Navigate to="/admin/khoa-hoc" replace />} />
-          <Route path="bai-giang-noi-dung" element={<AdminLessons />} />
+          <Route path="bai-giang-noi-dung/lop/:postId" element={<AdminTeacherLessonPostDetail />} />
           <Route path="bai-giang-noi-dung/:lessonId" element={<AdminLessonDetail />} />
+          <Route path="bai-giang-noi-dung" element={<AdminLessons />} />
+          <Route path="bai-giang-lop" element={<Navigate to="/admin/bai-giang-noi-dung?tab=lop" replace />} />
+          <Route path="bai-giang-lop/:postId" element={<AdminRedirectOldClassLessonPost />} />
           <Route path="doi-ngu-trang-chu" element={<AdminLandingTeachers />} />
-          <Route path="lead-dang-ky" element={<AdminLeads />} />
+          <Route path="lead-dang-ky" element={<Navigate to="/admin/tuyen-sinh?tab=leads" replace />} />
           <Route path="cms-trang-chu" element={<Navigate to="/admin" replace />} />
         </Route>
 
@@ -76,6 +88,7 @@ function App() {
           <Route index element={<TeacherDashboard />} />
           <Route path="lop-hoc" element={<TeacherClasses />} />
           <Route path="lop-hoc/:classId" element={<TeacherClassDetail />} />
+          <Route path="bai-giang/:postId" element={<TeacherLessonPostDetail />} />
           <Route path="bai-giang" element={<TeacherLessons />} />
           <Route path="lich" element={<TeacherSchedule />} />
           <Route path="bai-tap" element={<TeacherAssignments />} />
@@ -86,6 +99,7 @@ function App() {
         <Route path="/hoc-vien" element={<StudentLayout />}>
           <Route index element={<StudentDashboard />} />
           <Route path="khoa-hoc" element={<StudentLearningHub />} />
+          <Route path="lich-lop" element={<StudentClassSchedule />} />
           <Route path="bai-giang" element={<Navigate to="/hoc-vien/khoa-hoc#student-section-bai-giang" replace />} />
           <Route path="bai-tap" element={<StudentWorkHub />} />
           <Route path="bai-kiem-tra" element={<Navigate to="/hoc-vien/bai-tap#student-section-kiem-tra" replace />} />

@@ -6,7 +6,7 @@ const PORT = Number(process.env.PORT) || 3001
 const server = app.listen(PORT, () => {
   console.log(`[levelup-api] http://localhost:${PORT}`)
   console.log(`  health GET  /api/health`)
-  console.log(`  me     GET  /api/me/class-lesson-posts (Bearer — học viên)`)
+  console.log(`  me     GET  /api/me/class-lesson-posts | GET .../class-lesson-posts/:id`)
   console.log(`  admin  POST /api/admin/users/student | /api/admin/users/teacher`)
 })
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { toastActionError } from '../../lib/appToast.js'
 import PageHeader from '../../components/dashboard/PageHeader'
@@ -49,7 +50,10 @@ export default function TeacherLessons() {
 
   return (
     <div className="space-y-8">
-      <PageHeader title="Bài giảng đã đăng" >
+      <PageHeader
+        title="Bài giảng đã đăng"
+        description='Mở "Nội dung" để soạn tóm tắt, video YouTube, dàn ý và các mục — giống trang quản trị bài giảng trực tuyến.'
+      >
         <button
           type="button"
           onClick={() => setShowForm(true)}
@@ -63,10 +67,11 @@ export default function TeacherLessons() {
 
       <Panel noDivider padding={false} className="overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[800px] text-left text-sm">
+          <table className="w-full min-w-[960px] text-left text-sm">
             <thead className="border-b border-white/10 bg-black/20 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
               <tr>
                 <th className="px-4 py-3">Tiêu đề</th>
+                <th className="px-4 py-3 max-w-[220px]">Tóm tắt (rút gọn)</th>
                 <th className="px-4 py-3">Lớp</th>
                 <th className="px-4 py-3">Thời lượng</th>
                 <th className="px-4 py-3">Lượt xem</th>
@@ -78,11 +83,20 @@ export default function TeacherLessons() {
               {state.lessons.map((l) => (
                 <tr key={l.id} className="hover:bg-white/5">
                   <td className="px-4 py-3 font-medium">{l.title}</td>
+                  <td className="max-w-[220px] px-4 py-3 text-xs leading-snug text-slate-500">
+                    {l.bodyPreview}
+                  </td>
                   <td className="px-4 py-3 text-slate-400">{l.className}</td>
                   <td className="px-4 py-3">{l.duration}</td>
                   <td className="px-4 py-3">{l.views}</td>
                   <td className="px-4 py-3 text-slate-500">{l.updated}</td>
                   <td className="px-4 py-3 text-right">
+                    <Link
+                      to={`/giao-vien/bai-giang/${l.id}`}
+                      className="mr-3 text-xs text-emerald-300 hover:text-emerald-200"
+                    >
+                      Nội dung
+                    </Link>
                     <button
                       type="button"
                       onClick={() =>
@@ -121,8 +135,11 @@ export default function TeacherLessons() {
       </Panel>
 
       {editingLesson && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-          <form onSubmit={saveEdit} className="w-full max-w-md rounded-2xl border border-white/15 bg-slate-900 p-6 shadow-xl">
+        <div className="fixed inset-0 z-50 flex max-h-[100dvh] items-center justify-center overflow-y-auto bg-black/70 p-4 backdrop-blur-sm">
+          <form
+            onSubmit={saveEdit}
+            className="my-auto w-full max-w-lg rounded-2xl border border-white/15 bg-slate-900 p-6 shadow-xl"
+          >
             <h3 className="text-lg font-semibold text-white">Sửa bài giảng</h3>
             <p className="mt-2 text-sm text-slate-500">Lớp: {editingLesson.className}</p>
             <label className="mt-4 block text-sm text-slate-400">
@@ -158,8 +175,11 @@ export default function TeacherLessons() {
       )}
 
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-          <form onSubmit={save} className="w-full max-w-md rounded-2xl border border-white/15 bg-slate-900 p-6 shadow-xl">
+        <div className="fixed inset-0 z-50 flex max-h-[100dvh] items-center justify-center overflow-y-auto bg-black/70 p-4 backdrop-blur-sm">
+          <form
+            onSubmit={save}
+            className="my-auto w-full max-w-lg rounded-2xl border border-white/15 bg-slate-900 p-6 shadow-xl"
+          >
             <h3 className="text-lg font-semibold text-white">Thêm bài giảng</h3>
             <label className="mt-4 block text-sm text-slate-400">
               Lớp

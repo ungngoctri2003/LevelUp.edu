@@ -7,8 +7,7 @@ export const adminNavItems = [
   { to: '/admin/khoa-hoc', label: 'Khóa học & môn', icon: 'book' },
   { to: '/admin/bai-giang-noi-dung', label: 'Bài giảng', icon: 'lesson' },
   { to: '/admin/doi-ngu-trang-chu', label: 'Đội ngũ (landing)', icon: 'teacher' },
-  { to: '/admin/lead-dang-ky', label: 'Lead đăng ký', icon: 'mail' },
   { to: '/admin/tin-tuc', label: 'Tin tức', icon: 'news' },
   { to: '/admin/bai-kiem-tra', label: 'Bài kiểm tra', icon: 'exam' },
-  { to: '/admin/tuyen-sinh', label: 'Tuyển sinh', icon: 'admission' },
+  { to: '/admin/tuyen-sinh', label: 'Tuyển sinh & lead', icon: 'admission' },
 ]

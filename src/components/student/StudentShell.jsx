@@ -8,6 +8,7 @@ import { NavIcon } from '../dashboard/DashboardNavIcons'
 export const studentNavItems = [
   { to: '/hoc-vien', label: 'Tổng quan', end: true, icon: 'dashboard' },
   { to: '/hoc-vien/khoa-hoc', label: 'Học tập', icon: 'course' },
+  { to: '/hoc-vien/lich-lop', label: 'Lịch lớp', icon: 'calendar' },
   { to: '/hoc-vien/bai-tap', label: 'Bài tập & kiểm tra', icon: 'assignment' },
   { to: '/hoc-vien/ho-so', label: 'Hồ sơ', icon: 'profile' },
 ]

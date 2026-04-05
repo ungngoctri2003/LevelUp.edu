@@ -808,6 +808,202 @@ export async function adminUpsertLessonDetails(sb, lessonId, raw, user) {
   return out
 }
 
+function normalizeEmbeddedPostDetails(row) {
+  const d = row?.teacher_lesson_post_details
+  if (d == null) return null
+  return Array.isArray(d) ? d[0] ?? null : d
+}
+
+/** Bài giảng đăng trong lớp (teacher_lesson_posts) — admin quản lý toàn bộ. */
+export async function fetchTeacherLessonPostsAdmin(sb) {
+  const { data: posts, error } = await sb
+    .from('teacher_lesson_posts')
+    .select(
+      'id, class_id, title, body, duration_display, view_count, updated_at, teacher_lesson_post_details ( summary )',
+    )
+    .order('updated_at', { ascending: false })
+  if (error) throw new Error(error.message)
+  const classIds = [...new Set((posts || []).map((p) => p.class_id))]
+  const classById = {}
+  if (classIds.length) {
+    const { data: cls, error: cErr } = await sb
+      .from('classes')
+      .select('id, name, code, subject, teacher_id')
+      .in('id', classIds)
+    if (cErr) throw new Error(cErr.message)
+    for (const c of cls || []) classById[c.id] = c
+  }
+  const teacherIds = [...new Set(Object.values(classById).map((c) => c.teacher_id).filter(Boolean))]
+  const nameById = {}
+  if (teacherIds.length) {
+    const { data: profs, error: pErr } = await sb.from('profiles').select('id, full_name').in('id', teacherIds)
+    if (pErr) throw new Error(pErr.message)
+    for (const p of profs || []) nameById[p.id] = p.full_name
+  }
+  return (posts || []).map((p) => {
+    const c = classById[p.class_id]
+    const tid = c?.teacher_id
+    const det = normalizeEmbeddedPostDetails(p)
+    const sum = det?.summary != null && String(det.summary).trim() ? String(det.summary).trim() : ''
+    const legacyBody = p.body != null && String(p.body).trim() ? String(p.body).trim() : ''
+    const previewSource = sum || legacyBody
+    const contentPreview =
+      previewSource.length > 0 ? `${previewSource.slice(0, 100)}${previewSource.length > 100 ? '…' : ''}` : '—'
+    return {
+      id: p.id,
+      class_id: p.class_id,
+      class_name: c?.name || `Lớp ${p.class_id}`,
+      class_code: c?.code || '',
+      subject: c?.subject || '',
+      teacher_id: tid ?? null,
+      teacher_name: tid ? nameById[tid] || '—' : '—',
+      title: p.title,
+      body: p.body ?? '',
+      content_preview: contentPreview,
+      duration_display: p.duration_display || '',
+      view_count: p.view_count ?? 0,
+      updated_at: p.updated_at,
+      updated_label: viDate(p.updated_at),
+    }
+  })
+}
+
+export async function fetchTeacherLessonPostMetaAdmin(sb, postId) {
+  const id = Number(postId)
+  if (!Number.isFinite(id)) return null
+  const { data, error } = await sb
+    .from('teacher_lesson_posts')
+    .select('id, title, class_id, duration_display')
+    .eq('id', id)
+    .maybeSingle()
+  if (error) throw new Error(error.message)
+  return data
+}
+
+export async function fetchTeacherLessonPostDetailsRow(sb, postId) {
+  const id = Number(postId)
+  if (!Number.isFinite(id)) return null
+  const { data, error } = await sb.from('teacher_lesson_post_details').select('*').eq('post_id', id).maybeSingle()
+  if (error) throw new Error(error.message)
+  return data
+}
+
+export async function adminUpsertTeacherLessonPostDetails(sb, postId, raw, user) {
+  const pid = Number(postId)
+  if (!Number.isFinite(pid)) throw new Error('ID bài giảng lớp không hợp lệ')
+  const yt = pickYoutubeUrlFromPayload(raw)
+  const row = {
+    post_id: pid,
+    summary: raw.summary != null ? String(raw.summary) : '',
+    teacher_name: raw.teacher_name != null ? String(raw.teacher_name) : '',
+    youtube_url: yt,
+    outline: parseJsonField(raw.outline, []),
+    sections: parseJsonField(raw.sections, []),
+    resources: parseJsonField(raw.resources, []),
+    practice_hints: parseJsonField(raw.practice_hints, []),
+  }
+  const { data: saved, error } = await sb
+    .from('teacher_lesson_post_details')
+    .upsert(row, { onConflict: 'post_id' })
+    .select('*')
+    .maybeSingle()
+  if (error) throw new Error(error.message)
+  const out = saved ?? (await fetchTeacherLessonPostDetailsRow(sb, pid))
+  if (!out) throw new Error('Không đọc lại được chi tiết bài giảng lớp sau khi lưu.')
+  await logAdminActivity(sb, `Cập nhật chi tiết bài giảng lớp #${pid}`, 'class', user?.email, user?.id)
+  return out
+}
+
+export async function adminInsertTeacherLessonPost(sb, raw, user) {
+  const class_id = Number(raw.class_id)
+  if (!Number.isFinite(class_id)) throw new Error('Lớp (class_id) là bắt buộc')
+  const title = String(raw.title || '').trim()
+  if (!title) throw new Error('Tiêu đề là bắt buộc')
+  const duration_display =
+    raw.duration_display != null && String(raw.duration_display).trim()
+      ? String(raw.duration_display).trim()
+      : null
+  const body = raw.body != null && String(raw.body).trim() ? String(raw.body).trim() : null
+  const { data: ins, error } = await sb
+    .from('teacher_lesson_posts')
+    .insert({
+      class_id,
+      title,
+      duration_display,
+      body,
+    })
+    .select('id')
+    .single()
+  if (error) throw new Error(error.message)
+  const newId = ins?.id
+  if (newId != null) {
+    const { error: dErr } = await sb.from('teacher_lesson_post_details').upsert(
+      {
+        post_id: newId,
+        summary: body || '',
+        teacher_name: '',
+        youtube_url: null,
+        outline: [],
+        sections: [],
+        resources: [],
+        practice_hints: [],
+      },
+      { onConflict: 'post_id' },
+    )
+    if (dErr) throw new Error(dErr.message)
+  }
+  await logAdminActivity(
+    sb,
+    `Thêm bài giảng lớp: ${title} (lớp #${class_id})`,
+    'class',
+    user?.email,
+    user?.id,
+  )
+}
+
+export async function adminUpdateTeacherLessonPost(sb, id, patch, user) {
+  const pid = Number(id)
+  if (!Number.isFinite(pid)) throw new Error('ID bài giảng lớp không hợp lệ')
+  const body = {}
+  if (patch.class_id != null) {
+    const cid = Number(patch.class_id)
+    if (!Number.isFinite(cid)) throw new Error('class_id không hợp lệ')
+    body.class_id = cid
+  }
+  if (patch.title != null) {
+    const t = String(patch.title).trim()
+    if (!t) throw new Error('Tiêu đề không được để trống')
+    body.title = t
+  }
+  if (patch.duration_display !== undefined) {
+    body.duration_display =
+      patch.duration_display != null && String(patch.duration_display).trim()
+        ? String(patch.duration_display).trim()
+        : null
+  }
+  if (patch.body !== undefined) {
+    body.body = patch.body != null && String(patch.body).trim() ? String(patch.body).trim() : null
+  }
+  if (Object.keys(body).length === 0) throw new Error('Không có trường hợp lệ để cập nhật')
+  const { error } = await sb.from('teacher_lesson_posts').update(body).eq('id', pid)
+  if (error) throw new Error(error.message)
+  await logAdminActivity(sb, `Cập nhật bài giảng lớp #${pid}`, 'class', user?.email, user?.id)
+}
+
+export async function adminDeleteTeacherLessonPost(sb, id, title, user) {
+  const pid = Number(id)
+  if (!Number.isFinite(pid)) throw new Error('ID bài giảng lớp không hợp lệ')
+  const { error } = await sb.from('teacher_lesson_posts').delete().eq('id', pid)
+  if (error) throw new Error(error.message)
+  await logAdminActivity(
+    sb,
+    `Xóa bài giảng lớp: ${title || `#${pid}`}`,
+    'class',
+    user?.email,
+    user?.id,
+  )
+}
+
 export async function adminInsertSubject(sb, { name, slug, icon_label, sort_order }, user) {
   const n = String(name || '').trim()
   if (!n) throw new Error('Tên môn là bắt buộc')

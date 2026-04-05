@@ -398,6 +398,72 @@ router.put('/lessons/:id/details', async (req, res) => {
   }
 })
 
+// --- Bài giảng trong lớp (teacher_lesson_posts) ---
+router.get(
+  '/teacher-lesson-posts',
+  jsonData(async (req) => adminApi.fetchTeacherLessonPostsAdmin(req.sbAdmin)),
+)
+
+router.post(
+  '/teacher-lesson-posts',
+  handle(async (req) => {
+    await adminApi.adminInsertTeacherLessonPost(req.sbAdmin, req.body || {}, actor(req))
+  }),
+)
+
+router.get(
+  '/teacher-lesson-posts/:id/details',
+  jsonData(async (req) => {
+    const id = Number(req.params.id)
+    if (!Number.isFinite(id)) throw new Error('ID bài giảng lớp không hợp lệ')
+    const post = await adminApi.fetchTeacherLessonPostMetaAdmin(req.sbAdmin, id)
+    if (!post) throw new Error('Không tìm thấy bài giảng lớp')
+    const row = await adminApi.fetchTeacherLessonPostDetailsRow(req.sbAdmin, id)
+    const details =
+      row ?? {
+        post_id: id,
+        summary: '',
+        teacher_name: '',
+        youtube_url: null,
+        outline: [],
+        sections: [],
+        resources: [],
+        practice_hints: [],
+      }
+    return { post, details }
+  }),
+)
+
+router.put('/teacher-lesson-posts/:id/details', async (req, res) => {
+  try {
+    const id = Number(req.params.id)
+    if (!Number.isFinite(id)) throw new Error('ID bài giảng lớp không hợp lệ')
+    const data = await adminApi.adminUpsertTeacherLessonPostDetails(req.sbAdmin, id, req.body || {}, actor(req))
+    res.json({ ok: true, data })
+  } catch (e) {
+    res.status(400).json({ error: e?.message || 'Lỗi thao tác' })
+  }
+})
+
+router.patch(
+  '/teacher-lesson-posts/:id',
+  handle(async (req) => {
+    const id = Number(req.params.id)
+    if (!Number.isFinite(id)) throw new Error('ID bài giảng lớp không hợp lệ')
+    await adminApi.adminUpdateTeacherLessonPost(req.sbAdmin, id, req.body || {}, actor(req))
+  }),
+)
+
+router.delete(
+  '/teacher-lesson-posts/:id',
+  handle(async (req) => {
+    const id = Number(req.params.id)
+    const title = typeof req.query.title === 'string' ? req.query.title : ''
+    if (!Number.isFinite(id)) throw new Error('ID bài giảng lớp không hợp lệ')
+    await adminApi.adminDeleteTeacherLessonPost(req.sbAdmin, id, title, actor(req))
+  }),
+)
+
 // --- Public teacher cards (landing) ---
 router.get(
   '/public-teachers',

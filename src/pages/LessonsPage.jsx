@@ -311,9 +311,12 @@ export default function LessonsPage() {
                     </div>
                     <ul className="divide-y divide-gray-100 dark:divide-slate-700">
                       {block.items.map((post) => (
-                        <li key={post.id} className="px-6 py-5">
-                          <div className="flex flex-wrap items-start justify-between gap-3">
-                            <div className="min-w-0">
+                        <li key={post.id}>
+                          <Link
+                            to={`/bai-giang/lop/${post.id}`}
+                            className="flex flex-wrap items-start justify-between gap-3 px-6 py-5 transition-colors hover:bg-emerald-50/60 dark:hover:bg-emerald-950/20"
+                          >
+                            <div className="min-w-0 flex-1">
                               <div className="flex flex-wrap items-center gap-2">
                                 <h3 className="font-semibold text-gray-900 dark:text-white">{post.title}</h3>
                                 <span className="shrink-0 rounded-full border border-emerald-500/35 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-800 dark:text-emerald-200">
@@ -325,7 +328,10 @@ export default function LessonsPage() {
                                 {post.subject ? ` · ${post.subject}` : ''}
                               </p>
                             </div>
-                          </div>
+                            <span className="shrink-0 text-sm font-medium text-emerald-600 dark:text-emerald-400">
+                              Xem nội dung →
+                            </span>
+                          </Link>
                         </li>
                       ))}
                     </ul>

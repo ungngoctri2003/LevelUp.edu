@@ -319,6 +319,7 @@ create table public.teacher_lesson_posts (
   id               bigint generated always as identity primary key,
   class_id         bigint not null references public.classes (id) on delete cascade,
   title            text not null,
+  body             text,
   duration_display text,
   view_count       integer not null default 0,
   updated_at       timestamptz not null default now(),
@@ -327,15 +328,34 @@ create table public.teacher_lesson_posts (
 
 create index teacher_lesson_posts_class_id_idx on public.teacher_lesson_posts (class_id);
 
+create table public.teacher_lesson_post_details (
+  post_id        bigint primary key references public.teacher_lesson_posts (id) on delete cascade,
+  summary        text,
+  teacher_name   text,
+  youtube_url    text,
+  outline        jsonb not null default '[]'::jsonb,
+  sections       jsonb not null default '[]'::jsonb,
+  resources      jsonb not null default '[]'::jsonb,
+  practice_hints jsonb not null default '[]'::jsonb
+);
+
 create table public.schedule_slots (
-  id          bigint generated always as identity primary key,
-  class_id    bigint not null references public.classes (id) on delete cascade,
-  day_label   text not null,
-  time_range  text not null,
-  room        text
+  id             bigint generated always as identity primary key,
+  class_id       bigint not null references public.classes (id) on delete cascade,
+  starts_at      timestamptz,
+  ends_at        timestamptz,
+  delivery_mode  text not null default 'hoc_online',
+  room_note      text,
+  day_label      text,
+  time_range     text,
+  room           text,
+  constraint schedule_slots_delivery_mode_chk check (
+    delivery_mode in ('truc_tuyen', 'hoc_online')
+  )
 );
 
 create index schedule_slots_class_id_idx on public.schedule_slots (class_id);
+create index schedule_slots_starts_at_idx on public.schedule_slots (starts_at);
 
 create table public.assignments (
   id               bigint generated always as identity primary key,
@@ -437,6 +457,24 @@ create trigger teacher_lesson_posts_set_updated_at
   before update on public.teacher_lesson_posts
   for each row execute function public.set_updated_at();
 
+create or replace function public.ensure_teacher_lesson_post_details()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.teacher_lesson_post_details (post_id)
+  values (new.id)
+  on conflict (post_id) do nothing;
+  return new;
+end;
+$$;
+
+create trigger trg_teacher_lesson_posts_ensure_details
+  after insert on public.teacher_lesson_posts
+  for each row execute function public.ensure_teacher_lesson_post_details();
+
 create trigger student_course_progress_set_updated_at
   before update on public.student_course_progress
   for each row execute function public.set_updated_at();
@@ -519,6 +557,7 @@ alter table public.system_settings enable row level security;
 alter table public.classes enable row level security;
 alter table public.class_enrollments enable row level security;
 alter table public.teacher_lesson_posts enable row level security;
+alter table public.teacher_lesson_post_details enable row level security;
 alter table public.schedule_slots enable row level security;
 alter table public.assignments enable row level security;
 alter table public.assignment_submissions enable row level security;
@@ -707,6 +746,50 @@ create policy teacher_lesson_posts_modify_teacher_or_admin on public.teacher_les
       select 1 from public.classes c
       where c.id = public.teacher_lesson_posts.class_id
         and c.teacher_id = (select auth.uid())
+    )
+  );
+
+create policy teacher_lesson_post_details_select on public.teacher_lesson_post_details
+  for select using (
+    exists (
+      select 1 from public.teacher_lesson_posts p
+      where p.id = public.teacher_lesson_post_details.post_id
+        and (
+          (select public.is_admin())
+          or exists (
+            select 1 from public.classes c
+            where c.id = p.class_id and c.teacher_id = (select auth.uid())
+          )
+          or exists (
+            select 1 from public.class_enrollments ce
+            where ce.class_id = p.class_id and ce.student_id = (select auth.uid())
+          )
+        )
+    )
+  );
+
+create policy teacher_lesson_post_details_modify on public.teacher_lesson_post_details
+  for all
+  using (
+    exists (
+      select 1 from public.teacher_lesson_posts p
+      join public.classes c on c.id = p.class_id
+      where p.id = public.teacher_lesson_post_details.post_id
+        and (
+          (select public.is_admin())
+          or c.teacher_id = (select auth.uid())
+        )
+    )
+  )
+  with check (
+    exists (
+      select 1 from public.teacher_lesson_posts p
+      join public.classes c on c.id = p.class_id
+      where p.id = public.teacher_lesson_post_details.post_id
+        and (
+          (select public.is_admin())
+          or c.teacher_id = (select auth.uid())
+        )
     )
   );
 

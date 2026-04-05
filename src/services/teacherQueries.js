@@ -1,5 +1,14 @@
 /** @param {import('@supabase/supabase-js').SupabaseClient} sb */
 
+import {
+  weekdayLabelFromDate,
+  formatTimeRange,
+  deliveryModeLabel,
+  normalizeDeliveryMode,
+  parseTimeStartMinutes,
+  daySortKey,
+} from '../lib/teacherScheduleFormat.js'
+
 export async function loadTeacherBundle(sb) {
   const { data: examCatalog, error: examCatErr } = await sb
     .from('exams')
@@ -27,7 +36,13 @@ export async function loadTeacherBundle(sb) {
   const [enRes, slotRes, postRes, asgRes, ecxRes] = await Promise.all([
     sb.from('class_enrollments').select('*, profiles(full_name,email)').in('class_id', classIds),
     sb.from('schedule_slots').select('*').in('class_id', classIds),
-    sb.from('teacher_lesson_posts').select('*').in('class_id', classIds).order('updated_at', { ascending: false }),
+    sb
+      .from('teacher_lesson_posts')
+      .select(
+        '*, teacher_lesson_post_details ( summary, teacher_name, youtube_url, outline, sections, practice_hints )',
+      )
+      .in('class_id', classIds)
+      .order('updated_at', { ascending: false }),
     sb.from('assignments').select('*').in('class_id', classIds).order('due_at', { ascending: true }),
     sb
       .from('exam_class_assignments')
@@ -95,12 +110,46 @@ export function rosterForClass(classIdStr, enrollments) {
 }
 
 export function scheduleRows(slots, classesById) {
-  return (slots || []).map((s) => ({
-    id: String(s.id),
-    classId: String(s.class_id),
-    className: classesById[s.class_id]?.name || `Lớp #${s.class_id}`,
-    day: s.day_label,
-    time: s.time_range,
-    room: s.room || '—',
-  }))
+  return (slots || []).map((s) => {
+    const c = classesById[s.class_id]
+    const start = s.starts_at ? new Date(s.starts_at) : null
+    const end = s.ends_at ? new Date(s.ends_at) : null
+    const hasStart = start && !Number.isNaN(start.getTime())
+
+    let day
+    let time
+    let sortTimestamp
+    if (hasStart) {
+      day = weekdayLabelFromDate(start)
+      const endOk = end && !Number.isNaN(end.getTime()) ? end : null
+      time = formatTimeRange(start, endOk)
+      sortTimestamp = start.getTime()
+    } else {
+      day = s.day_label || '—'
+      time = s.time_range || '—'
+      sortTimestamp = daySortKey(day) * 86400000 + parseTimeStartMinutes(time) * 60000
+    }
+
+    const mode = normalizeDeliveryMode(s.delivery_mode)
+    let locationLabel = deliveryModeLabel(mode)
+    if (!hasStart && s.room != null && String(s.room).trim()) {
+      locationLabel = String(s.room).trim()
+    }
+
+    return {
+      id: String(s.id),
+      classId: String(s.class_id),
+      className: c?.name || `Lớp #${s.class_id}`,
+      subject: c?.subject || '—',
+      grade: c?.grade_label || '—',
+      day,
+      time,
+      startsAt: s.starts_at || null,
+      endsAt: s.ends_at || null,
+      deliveryMode: mode,
+      locationLabel,
+      sortTimestamp,
+      legacy: !hasStart,
+    }
+  })
 }

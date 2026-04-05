@@ -249,6 +249,41 @@ export function adminPutLessonDetails(accessToken, lessonId, body) {
   })
 }
 
+/** Bài giảng giáo viên đăng trong lớp (teacher_lesson_posts). */
+export function adminListTeacherLessonPosts(accessToken) {
+  return adminFetch(accessToken, '/api/admin/teacher-lesson-posts')
+}
+
+export function adminCreateTeacherLessonPost(accessToken, body) {
+  return adminFetch(accessToken, '/api/admin/teacher-lesson-posts', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
+}
+
+export function adminPatchTeacherLessonPost(accessToken, id, patch) {
+  return adminFetch(accessToken, `/api/admin/teacher-lesson-posts/${Number(id)}`, {
+    method: 'PATCH',
+    body: JSON.stringify(patch),
+  })
+}
+
+export function adminDeleteTeacherLessonPostApi(accessToken, id, title) {
+  const q = title ? `?title=${encodeURIComponent(title)}` : ''
+  return adminFetch(accessToken, `/api/admin/teacher-lesson-posts/${Number(id)}${q}`, { method: 'DELETE' })
+}
+
+export function adminGetTeacherLessonPostDetails(accessToken, postId) {
+  return adminFetch(accessToken, `/api/admin/teacher-lesson-posts/${Number(postId)}/details`)
+}
+
+export function adminPutTeacherLessonPostDetails(accessToken, postId, body) {
+  return adminFetch(accessToken, `/api/admin/teacher-lesson-posts/${Number(postId)}/details`, {
+    method: 'PUT',
+    body: JSON.stringify(body),
+  })
+}
+
 export function adminListSubjectsApi(accessToken) {
   return adminFetch(accessToken, '/api/admin/subjects')
 }

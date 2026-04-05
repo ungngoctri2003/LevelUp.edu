@@ -6,6 +6,7 @@ import {
   normalizeMcqForTaking,
   stripMcqAnswersForClient,
 } from '../../src/lib/mcqQuestions.js'
+import { scheduleRows } from '../../src/services/teacherQueries.js'
 
 const router = Router()
 
@@ -77,6 +78,93 @@ router.get('/class-lesson-posts', async (req, res) => {
     view_count: row.view_count ?? 0,
     updated_at: row.updated_at,
   }))
+  res.json({ data: mapped })
+})
+
+/** GET /api/me/class-lesson-posts/:id — meta + chi tiết dạng lesson_details + body cũ (RLS) */
+router.get('/class-lesson-posts/:id', async (req, res) => {
+  const sb = req.supabaseUser
+  const id = Number(req.params.id)
+  if (!Number.isFinite(id)) return res.status(400).json({ error: 'id không hợp lệ' })
+  const { data: post, error } = await sb
+    .from('teacher_lesson_posts')
+    .select(
+      `
+      id, class_id, title, body, duration_display, view_count, updated_at,
+      classes ( id, name, code, subject ),
+      teacher_lesson_post_details (
+        summary, teacher_name, youtube_url, outline, sections, practice_hints
+      )
+    `,
+    )
+    .eq('id', id)
+    .maybeSingle()
+  if (error) return res.status(500).json({ error: error.message })
+  if (!post) {
+    return res.status(404).json({ error: 'Không tìm thấy bài giảng hoặc bạn không có quyền xem.' })
+  }
+  const rawDet = post.teacher_lesson_post_details
+  const detRow = Array.isArray(rawDet) ? rawDet[0] : rawDet
+  const details = detRow
+    ? {
+        summary: detRow.summary ?? '',
+        teacher_name: detRow.teacher_name ?? '',
+        youtube_url: detRow.youtube_url ?? null,
+        outline: Array.isArray(detRow.outline) ? detRow.outline : [],
+        sections: Array.isArray(detRow.sections) ? detRow.sections : [],
+        practice_hints: Array.isArray(detRow.practice_hints) ? detRow.practice_hints : [],
+      }
+    : null
+  res.json({
+    data: {
+      id: post.id,
+      class_id: post.class_id,
+      class_name: post.classes?.name || `Lớp ${post.class_id}`,
+      class_code: post.classes?.code || '',
+      subject: post.classes?.subject || '',
+      title: post.title,
+      body: post.body ?? '',
+      duration_display: post.duration_display || '—',
+      view_count: post.view_count ?? 0,
+      updated_at: post.updated_at,
+      details,
+    },
+  })
+})
+
+/** GET /api/me/class-schedule — buổi học theo lớp đã ghi danh (RLS schedule_slots + classes) */
+router.get('/class-schedule', async (req, res) => {
+  const sb = req.supabaseUser
+  const uid = req.authUser.id
+  const { data: profile } = await sb.from('profiles').select('role').eq('id', uid).maybeSingle()
+  if (profile?.role !== 'student') {
+    return res.status(403).json({ error: 'Chỉ học viên xem được lịch lớp.' })
+  }
+  const { data, error } = await sb
+    .from('schedule_slots')
+    .select(
+      'id, class_id, day_label, time_range, room, starts_at, ends_at, delivery_mode, room_note, classes ( id, name, code, subject, grade_label )',
+    )
+  if (error) return res.status(500).json({ error: error.message })
+  const rows = data || []
+  const classesById = {}
+  for (const r of rows) {
+    const cid = r.class_id
+    const c = r.classes
+    if (c != null && cid != null) {
+      classesById[cid] = {
+        id: c.id ?? cid,
+        name: c.name,
+        subject: c.subject,
+        grade_label: c.grade_label,
+      }
+    }
+  }
+  const slots = rows.map((r) => {
+    const { classes: _cls, ...rest } = r
+    return rest
+  })
+  const mapped = scheduleRows(slots, classesById)
   res.json({ data: mapped })
 })
 
