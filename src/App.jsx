@@ -17,12 +17,10 @@ import AdminCourses from './pages/admin/AdminCourses'
 import AdminNews from './pages/admin/AdminNews'
 import AdminExams from './pages/admin/AdminExams'
 import AdminAdmissions from './pages/admin/AdminAdmissions'
-import AdminSubjects from './pages/admin/AdminSubjects'
 import AdminLessons from './pages/admin/AdminLessons'
 import AdminLessonDetail from './pages/admin/AdminLessonDetail'
 import AdminLandingTeachers from './pages/admin/AdminLandingTeachers'
 import AdminLeads from './pages/admin/AdminLeads'
-import AdminCmsLanding from './pages/admin/AdminCmsLanding'
 import TeacherLayout from './pages/teacher/TeacherLayout'
 import TeacherDashboard from './pages/teacher/TeacherDashboard'
 import TeacherClasses from './pages/teacher/TeacherClasses'
@@ -66,12 +64,12 @@ function App() {
           <Route path="tin-tuc" element={<AdminNews />} />
           <Route path="bai-kiem-tra" element={<AdminExams />} />
           <Route path="tuyen-sinh" element={<AdminAdmissions />} />
-          <Route path="mon-hoc" element={<AdminSubjects />} />
+          <Route path="mon-hoc" element={<Navigate to="/admin/khoa-hoc" replace />} />
           <Route path="bai-giang-noi-dung" element={<AdminLessons />} />
           <Route path="bai-giang-noi-dung/:lessonId" element={<AdminLessonDetail />} />
           <Route path="doi-ngu-trang-chu" element={<AdminLandingTeachers />} />
           <Route path="lead-dang-ky" element={<AdminLeads />} />
-          <Route path="cms-trang-chu" element={<AdminCmsLanding />} />
+          <Route path="cms-trang-chu" element={<Navigate to="/admin" replace />} />
         </Route>
 
         <Route path="/giao-vien" element={<TeacherLayout />}>

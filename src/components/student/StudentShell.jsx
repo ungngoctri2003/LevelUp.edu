@@ -73,6 +73,13 @@ export default function StudentShell() {
                 <p className="truncate text-slate-500">{user?.email}</p>
               </div>
             </div>
+            <NavLink
+              to="/"
+              onClick={closeMobile}
+              className="mt-3 flex w-full items-center justify-center rounded-xl border border-white/15 bg-white/5 py-2.5 text-sm font-medium text-slate-200 transition-colors hover:bg-white/10"
+            >
+              ← Về trang chủ
+            </NavLink>
             <button
               type="button"
               onClick={() => {
@@ -80,17 +87,10 @@ export default function StudentShell() {
                 navigate('/')
                 closeMobile()
               }}
-              className="mt-3 w-full rounded-xl border border-white/15 bg-white/5 py-2.5 text-sm font-medium text-slate-200 transition-colors hover:bg-white/10"
+              className="mt-2 w-full rounded-xl border border-white/15 bg-white/5 py-2.5 text-sm font-medium text-slate-200 transition-colors hover:bg-white/10"
             >
               Đăng xuất
             </button>
-            <NavLink
-              to="/"
-              onClick={closeMobile}
-              className="mt-2 block text-center text-sm text-sky-400/90 hover:text-sky-300"
-            >
-              ← Về trang chủ
-            </NavLink>
           </div>
         </div>
       </div>

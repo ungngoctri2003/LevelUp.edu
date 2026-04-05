@@ -54,3 +54,8 @@ export async function postMyAssignmentSubmission(accessToken, body) {
     body: JSON.stringify(body),
   })
 }
+
+/** Bài giảng đăng trong lớp (teacher_lesson_posts) — chỉ học viên, RLS theo ghi danh */
+export async function getMyClassLessonPosts(accessToken) {
+  return meFetch(accessToken, '/api/me/class-lesson-posts')
+}

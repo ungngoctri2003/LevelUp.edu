@@ -51,6 +51,35 @@ router.get('/profile', async (req, res) => {
   res.json({ data: { profile, student_profile: student, teacher_profile: teacher } })
 })
 
+/** GET /api/me/class-lesson-posts — bài giảng giáo viên đăng trong các lớp học viên đã ghi danh */
+router.get('/class-lesson-posts', async (req, res) => {
+  const sb = req.supabaseUser
+  const uid = req.authUser.id
+  const { data: profile } = await sb.from('profiles').select('role').eq('id', uid).maybeSingle()
+  if (profile?.role !== 'student') {
+    return res.status(403).json({ error: 'Chỉ học viên xem được danh sách bài giảng lớp.' })
+  }
+  const { data, error } = await sb
+    .from('teacher_lesson_posts')
+    .select(
+      'id, class_id, title, duration_display, view_count, updated_at, classes ( id, name, code, subject )',
+    )
+    .order('updated_at', { ascending: false })
+  if (error) return res.status(500).json({ error: error.message })
+  const mapped = (data || []).map((row) => ({
+    id: row.id,
+    class_id: row.class_id,
+    class_name: row.classes?.name || `Lớp ${row.class_id}`,
+    class_code: row.classes?.code || '',
+    subject: row.classes?.subject || '',
+    title: row.title,
+    duration_display: row.duration_display || '—',
+    view_count: row.view_count ?? 0,
+    updated_at: row.updated_at,
+  }))
+  res.json({ data: mapped })
+})
+
 /** GET /api/me/exam-attempts */
 router.get('/exam-attempts', async (req, res) => {
   const sb = req.supabaseUser

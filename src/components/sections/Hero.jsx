@@ -2,18 +2,11 @@ import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
 import Logo from '../Logo'
-import { usePublicContent } from '../../hooks/usePublicContent'
-
-const DEFAULT_HERO_STATS = [
-  { value: '50K+', label: 'Học viên' },
-  { value: '500+', label: 'Bài giảng' },
-  { value: '98%', label: 'Hài lòng' },
-]
+import { landingHeroStats } from '../../data'
 
 const ease = [0.22, 1, 0.36, 1]
 
 export default function Hero() {
-  const { heroStats } = usePublicContent()
   const reduce = useReducedMotion()
 
   const { containerVariants, itemVariants } = useMemo(() => {
@@ -48,13 +41,12 @@ export default function Hero() {
     }
   }, [reduce])
 
-  const items =
-    heroStats && Array.isArray(heroStats.items) && heroStats.items.length > 0
-      ? heroStats.items.filter((x) => x && (x.value != null || x.label != null))
-      : DEFAULT_HERO_STATS
-  const stats = items.map((x, i) => ({
-    value: String(x.value ?? DEFAULT_HERO_STATS[i]?.value ?? '—'),
-    label: String(x.label ?? DEFAULT_HERO_STATS[i]?.label ?? ''),
+  const base = landingHeroStats?.items?.length
+    ? landingHeroStats.items.filter((x) => x && (x.value != null || x.label != null))
+    : []
+  const stats = base.map((x, i) => ({
+    value: String(x.value ?? '—'),
+    label: String(x.label ?? ''),
   }))
 
   const ctaMotion = reduce ? {} : { whileHover: { scale: 1.03 }, whileTap: { scale: 0.98 } }

@@ -1,4 +1,4 @@
-/** Icon theo khóa CMS `landing_benefits[].icon` */
+/** Icon theo khóa `icon` trong `DEFAULT_BENEFIT_ROWS` (trang chủ). */
 
 export const DEFAULT_BENEFIT_ROWS = [
   {

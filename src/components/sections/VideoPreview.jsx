@@ -1,12 +1,51 @@
 import { motion } from 'framer-motion'
 import { Reveal } from '../motion/Reveal'
-import { usePublicContent } from '../../hooks/usePublicContent'
+import { videoPreview as staticVideoPreview } from '../../data'
+
+/** Chuỗi `t` của YouTube (vd. 2141s, 35m41s) → giây bắt đầu embed */
+function youtubeTToSeconds(t) {
+  if (!t || typeof t !== 'string') return null
+  const x = t.trim()
+  if (/^\d+(?:\.\d+)?s?$/i.test(x) && !/[hm]/i.test(x)) {
+    return Math.floor(Number.parseFloat(x.replace(/s$/i, '')))
+  }
+  let sec = 0
+  const h = x.match(/(\d+)h/i)
+  const m = x.match(/(\d+)m/i)
+  const s = x.match(/(\d+)s/i)
+  if (h) sec += Number(h[1]) * 3600
+  if (m) sec += Number(m[1]) * 60
+  if (s) sec += Number(s[1])
+  if (h || m || s) return sec
+  const n = Number.parseInt(x, 10)
+  return Number.isFinite(n) ? n : null
+}
 
 function toEmbedSrc(url) {
   if (!url || typeof url !== 'string') return ''
   const u = url.trim()
   if (!u) return ''
   if (/youtube\.com\/embed\//i.test(u)) return u
+
+  try {
+    const parsed = new URL(u)
+    const host = parsed.hostname.replace(/^www\./i, '')
+    let id = ''
+    if (host === 'youtube.com' && parsed.pathname === '/watch') {
+      id = parsed.searchParams.get('v') || ''
+    } else if (host === 'youtu.be') {
+      id = parsed.pathname.replace(/^\//, '').split('/')[0] || ''
+    }
+    if (id && /^[\w-]{6,}$/i.test(id)) {
+      const t = parsed.searchParams.get('t')
+      const startSec = t != null ? youtubeTToSeconds(t) : null
+      const q = startSec != null && startSec > 0 ? `?start=${startSec}` : ''
+      return `https://www.youtube.com/embed/${id}${q}`
+    }
+  } catch {
+    /* ignore */
+  }
+
   const m = u.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]{6,})/i)
   if (m) return `https://www.youtube.com/embed/${m[1]}`
   if (/^https?:\/\//i.test(u)) return u
@@ -14,12 +53,11 @@ function toEmbedSrc(url) {
 }
 
 export default function VideoPreview() {
-  const { videoPreview } = usePublicContent()
-  const vp = videoPreview && typeof videoPreview === 'object' ? videoPreview : {}
+  const vp = staticVideoPreview && typeof staticVideoPreview === 'object' ? staticVideoPreview : {}
   const features = Array.isArray(vp.features) ? vp.features : []
   const title = vp.title || 'Video bài giảng minh họa'
   const description =
-    vp.description || 'Nội dung video và mô tả được quản trị viên cấu hình trong hệ thống.'
+    vp.description || 'Nội dung video và mô tả được cấu hình trong mã nguồn (src/data.ts).'
   const embedSrc = toEmbedSrc(vp.embed_url)
   const overlayTitle = vp.overlay_title || 'Đại số lớp 10 — Ôn tập tổng hợp'
   const overlaySub = vp.overlay_subtitle || 'Video bài giảng có sẵn khi đăng ký'

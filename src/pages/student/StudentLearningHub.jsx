@@ -6,7 +6,7 @@ import { btnPrimaryStudent } from '../../components/dashboard/dashboardStyles'
 import { useAuthSession } from '../../context/AuthSessionContext'
 import { usePublicContent } from '../../hooks/usePublicContent'
 import { PUBLIC_ACTION_ERROR } from '../../lib/publicUserMessages.js'
-import { buildLessonsBySubject } from '../../services/publicApi.js'
+import { buildLessonsByCourse } from '../../services/publicApi.js'
 import { getMyCourseProgress, patchMyCourseProgress } from '../../services/meApi.js'
 import { toast } from 'sonner'
 
@@ -24,17 +24,12 @@ export default function StudentLearningHub() {
   const [draftPct, setDraftPct] = useState({})
   const [highlightCourseId, setHighlightCourseId] = useState(null)
 
-  const subjectIdToSlug = useMemo(() => {
-    const m = new Map()
-    for (const s of subjects || []) {
-      if (s?.id != null && s?.slug) m.set(Number(s.id), String(s.slug))
-    }
-    return m
-  }, [subjects])
-
-  const lessonsBySubject = useMemo(() => buildLessonsBySubject(subjects, lessons), [subjects, lessons])
-  const firstSubjectBlock = lessonsBySubject[0]
-  const sampleLessons = firstSubjectBlock?.lessons?.slice(0, 4) || []
+  const lessonsByCourse = useMemo(
+    () => buildLessonsByCourse(pubCourses, lessons, subjects),
+    [pubCourses, lessons, subjects],
+  )
+  const firstCourseBlock = lessonsByCourse[0]
+  const sampleLessons = firstCourseBlock?.lessons?.slice(0, 4) || []
 
   const load = useCallback(async () => {
     const token = session?.access_token
@@ -127,7 +122,7 @@ export default function StudentLearningHub() {
     <div className="space-y-10">
       <PageHeader
         title="Học tập"
-        description="Theo dõi khóa học và tiến độ; phía dưới là gợi ý bài giảng theo môn và liên kết thư viện đầy đủ."
+        description="Theo dõi khóa học và tiến độ; phía dưới là vài bài giảng trong khóa đầu danh sách và liên kết mở thư viện đầy đủ."
       />
 
       <section id="student-section-khoa-hoc" className="space-y-4 scroll-mt-24">
@@ -180,11 +175,7 @@ export default function StudentLearningHub() {
                   Lưu tiến độ
                 </button>
                 <Link
-                  to={
-                    c.subject_id != null && subjectIdToSlug.has(Number(c.subject_id))
-                      ? `/bai-giang?subject=${encodeURIComponent(subjectIdToSlug.get(Number(c.subject_id)))}`
-                      : '/bai-giang'
-                  }
+                  to={`/bai-giang?course=${encodeURIComponent(String(c.id))}`}
                   className={`${btnPrimaryStudent} inline-block text-xs`}
                 >
                   Xem bài giảng
@@ -200,8 +191,8 @@ export default function StudentLearningHub() {
       <section id={SECTION_LESSONS_ID} className="space-y-4 scroll-mt-24">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-sky-400/90">Bài giảng</h2>
         <Panel
-          title={`Gợi ý — ${firstSubjectBlock?.name || 'Bài giảng'}`}
-          subtitle="Một số bài đầu theo môn đầu danh sách; mở thư viện để xem tất cả."
+          title={`Gợi ý — ${firstCourseBlock?.courseTitle || 'Bài giảng'}`}
+          subtitle="Một số bài trong khóa đầu danh sách; mở thư viện để chọn khóa và xem toàn bộ bài giảng."
         >
           {pubLoading && <p className="text-sm text-slate-400">Đang tải…</p>}
           <ul className="space-y-2">
@@ -225,8 +216,8 @@ export default function StudentLearningHub() {
           </ul>
           <Link
             to={
-              firstSubjectBlock?.id
-                ? `/bai-giang?subject=${encodeURIComponent(firstSubjectBlock.id)}`
+              firstCourseBlock?.courseId != null
+                ? `/bai-giang?course=${encodeURIComponent(String(firstCourseBlock.courseId))}`
                 : '/bai-giang'
             }
             className="mt-6 inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-sky-500 to-cyan-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-sky-500/20 transition hover:opacity-95"

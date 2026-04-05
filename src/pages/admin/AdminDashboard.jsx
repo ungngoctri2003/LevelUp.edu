@@ -8,11 +8,9 @@ import { useAdminState } from '../../hooks/useAdminState'
 import { computeDashboardStats } from '../../utils/adminStorage'
 
 const quickLinks = [
-  { to: '/admin/cms-trang-chu', label: 'CMS trang chủ', desc: 'Hero, lợi ích, video, đánh giá' },
   { to: '/admin/hoc-vien', label: 'Học viên', desc: 'Tìm kiếm, trạng thái tài khoản' },
   { to: '/admin/giao-vien', label: 'Giáo viên', desc: 'Duyệt hồ sơ, phân lớp' },
-  { to: '/admin/mon-hoc', label: 'Môn học', desc: 'Slug, icon, thứ tự' },
-  { to: '/admin/khoa-hoc', label: 'Khóa học', desc: 'Hiển thị web, chỉnh nội dung' },
+  { to: '/admin/khoa-hoc', label: 'Khóa học & môn', desc: 'Danh mục môn, khóa hiển thị web' },
   { to: '/admin/bai-giang-noi-dung', label: 'Bài giảng', desc: 'Danh sách bài và nội dung chi tiết' },
   { to: '/admin/doi-ngu-trang-chu', label: 'Đội ngũ landing', desc: 'Thẻ giáo viên trang chủ' },
   { to: '/admin/lead-dang-ky', label: 'Lead đăng ký', desc: 'Form trang chủ' },

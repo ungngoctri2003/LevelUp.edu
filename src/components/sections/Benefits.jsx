@@ -1,22 +1,13 @@
 import { motion } from 'framer-motion'
 import { Reveal, RevealStagger, RevealItem } from '../motion/Reveal'
-import { usePublicContent } from '../../hooks/usePublicContent'
 import { BenefitIcon, DEFAULT_BENEFIT_ROWS } from './benefitIcons.jsx'
 
 export default function Benefits() {
-  const { landingBenefits } = usePublicContent()
-  const rows =
-    Array.isArray(landingBenefits) && landingBenefits.length > 0
-      ? landingBenefits.map((b) => ({
-          iconKey: b.icon,
-          title: String(b.title || ''),
-          description: String(b.description || ''),
-        }))
-      : DEFAULT_BENEFIT_ROWS.map((b) => ({
-          iconKey: b.icon,
-          title: b.title,
-          description: b.description,
-        }))
+  const rows = DEFAULT_BENEFIT_ROWS.map((b) => ({
+    iconKey: b.icon,
+    title: b.title,
+    description: b.description,
+  }))
 
   return (
     <section id="benefits" className="bg-gray-50 py-24 dark:bg-slate-900 sm:py-32">

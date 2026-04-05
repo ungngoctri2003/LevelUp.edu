@@ -1,5 +1,6 @@
 /**
- * Dữ liệu nội dung tập trung — hiện tải tĩnh trong ứng dụng (có thể chuyển sang API sau).
+ * Dữ liệu nội dung tập trung — phần landing (hero stats, video, đánh giá, tuyển sinh) cố định trong mã nguồn;
+ * khóa học / giáo viên minh họa có thể song song với dữ liệu API catalog.
  */
 
 /** Mỗi khóa có thể gắn `subject` để hiển thị nhãn môn trên trang chủ */
@@ -278,7 +279,16 @@ export const admissionsInfo = {
   ],
 }
 
-// Video preview — nội dung tĩnh trên trang chủ
+/** Ba số liệu dưới hero — cố định trong mã nguồn */
+export const landingHeroStats = {
+  items: [
+    { value: '50K+', label: 'Học viên' },
+    { value: '500+', label: 'Bài giảng' },
+    { value: '98%', label: 'Hài lòng' },
+  ],
+}
+
+// Video preview — nội dung tĩnh trang chủ (để trống embed_url = khối minh họa có nút play)
 export const videoPreview = {
   title: 'Trải nghiệm bài giảng đa môn',
   description:
@@ -288,4 +298,7 @@ export const videoPreview = {
     'Phụ đề, tài liệu kèm theo và bài tập sau mỗi bài',
     'Gợi ý lộ trình theo môn bạn chọn',
   ],
+  embed_url: 'https://www.youtube.com/watch?v=61Ae22WP8as&t=2141s',
+  overlay_title: 'Đại số lớp 10 — Ôn tập tổng hợp',
+  overlay_subtitle: 'Video bài giảng có sẵn khi đăng ký',
 }

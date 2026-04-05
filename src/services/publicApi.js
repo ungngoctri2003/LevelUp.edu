@@ -83,30 +83,6 @@ export async function fetchPublicCatalog() {
   }
 }
 
-/** CMS từ server (SUPABASE_SERVICE_ROLE_KEY + system_settings) */
-export async function fetchPublicCms() {
-  try {
-    const res = await apiFetch('/api/public/cms')
-    return (
-      res?.data || {
-        testimonials: [],
-        video_preview: {},
-        admissions_info: {},
-        landing_hero_stats: null,
-        landing_benefits: [],
-      }
-    )
-  } catch {
-    return {
-      testimonials: [],
-      video_preview: {},
-      admissions_info: {},
-      landing_hero_stats: null,
-      landing_benefits: [],
-    }
-  }
-}
-
 /**
  * Chi tiết đề (có questions JSON). RLS: đề unpublished trả 404 với client anon.
  * @returns {Promise<object|null>}
@@ -190,6 +166,38 @@ export function buildLessonsBySubject(subjects, lessons) {
     })
   }
   return [...bySubject.values()].filter((b) => b.lessons.length > 0)
+}
+
+/**
+ * Khóa học (course) bao trùm; bên trong là bài giảng cùng subject_id với khóa.
+ * Nếu nhiều khóa trùng môn, mỗi khóa hiển thị cùng danh sách bài — cần course_id trên lessons để tách chính xác (tương lai).
+ */
+export function buildLessonsByCourse(courses, lessons, subjects) {
+  const subjectById = new Map((subjects || []).map((s) => [Number(s.id), s]))
+  return (courses || [])
+    .filter((c) => c.visible !== false)
+    .map((c) => {
+      const sid = c.subject_id != null ? Number(c.subject_id) : NaN
+      const sub = Number.isFinite(sid) ? subjectById.get(sid) : null
+      const lessonItems = (lessons || [])
+        .filter((L) => Number(L.subject_id) === sid)
+        .map((L) => ({
+          id: L.id,
+          title: L.title,
+          duration: L.duration_minutes != null ? `${L.duration_minutes} phút` : '—',
+          level: L.level_label || '—',
+        }))
+      return {
+        id: String(c.id),
+        courseId: c.id,
+        courseTitle: c.title,
+        courseDescription: typeof c.description === 'string' ? c.description : '',
+        subjectName: sub?.name || c.subject || '—',
+        subjectSlug: sub?.slug || '',
+        icon: sub?.icon_label || '📘',
+        lessons: lessonItems,
+      }
+    })
 }
 
 export function findLessonContextFromGroups(groups, lessonId) {

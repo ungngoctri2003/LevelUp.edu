@@ -3,7 +3,7 @@ import { Link, useParams, Navigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Reveal } from '../components/motion/Reveal'
 import { usePublicContent } from '../hooks/usePublicContent'
-import { buildLessonsBySubject, fetchLessonDetail, findLessonContextFromGroups } from '../services/publicApi.js'
+import { buildLessonsByCourse, fetchLessonDetail, findLessonContextFromGroups } from '../services/publicApi.js'
 import { toYouTubeEmbedUrl } from '../lib/youtubeEmbed.js'
 
 /** Hiển thị dòng nội dung công khai — tránh lộ chuỗi JSON kỹ thuật. */
@@ -18,8 +18,11 @@ function lineItemText(item) {
 
 export default function LessonDetailPage() {
   const { lessonId } = useParams()
-  const { subjects, lessons, loading: catLoading } = usePublicContent()
-  const groups = useMemo(() => buildLessonsBySubject(subjects, lessons), [subjects, lessons])
+  const { courses, subjects, lessons, loading: catLoading } = usePublicContent()
+  const groups = useMemo(
+    () => buildLessonsByCourse(courses, lessons, subjects),
+    [courses, lessons, subjects],
+  )
   const ctx = findLessonContextFromGroups(groups, lessonId ?? '')
 
   const [row, setRow] = useState(null)
@@ -80,7 +83,14 @@ export default function LessonDetailPage() {
             Trang chủ
           </Link>
           <span className="mx-2">/</span>
-          <Link to="/bai-giang" className="hover:text-cyan-600 dark:hover:text-cyan-400">
+          <Link
+            to={
+              subject.courseId != null
+                ? `/bai-giang?course=${encodeURIComponent(String(subject.courseId))}`
+                : '/bai-giang'
+            }
+            className="hover:text-cyan-600 dark:hover:text-cyan-400"
+          >
             Bài giảng
           </Link>
           <span className="mx-2">/</span>
@@ -90,7 +100,13 @@ export default function LessonDetailPage() {
         <Reveal>
           <div className="flex flex-wrap items-start gap-3">
             <span className="inline-flex items-center rounded-full bg-cyan-500/15 px-3 py-1 text-sm font-medium text-cyan-700 dark:text-cyan-300">
-              {subject.icon} {subject.name}
+              {subject.icon} {subject.subjectName}
+            </span>
+            <span
+              className="inline-flex max-w-full items-center rounded-full border border-fuchsia-200 bg-fuchsia-50 px-3 py-1 text-sm font-medium text-fuchsia-900 dark:border-fuchsia-500/35 dark:bg-fuchsia-950/40 dark:text-fuchsia-200"
+              title={subject.courseTitle}
+            >
+              Khóa học · {subject.courseTitle}
             </span>
             <span className="inline-flex rounded-full border border-gray-200 bg-white px-3 py-1 text-sm text-gray-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300">
               {lesson.level}
@@ -171,7 +187,11 @@ export default function LessonDetailPage() {
 
         <div className="mt-12 flex flex-wrap gap-4">
           <Link
-            to="/bai-giang"
+            to={
+              subject.courseId != null
+                ? `/bai-giang?course=${encodeURIComponent(String(subject.courseId))}`
+                : '/bai-giang'
+            }
             className="inline-flex items-center rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
           >
             ← Quay lại danh sách bài giảng

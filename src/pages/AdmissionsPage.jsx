@@ -1,13 +1,12 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { usePublicContent } from '../hooks/usePublicContent'
+import { admissionsInfo as staticAdmissionsInfo } from '../data'
 import { PUBLIC_SUBMIT_ERROR } from '../lib/publicUserMessages.js'
 import { toast } from 'sonner'
 import { postAdmissionApplication } from '../services/publicApi.js'
 
 export default function AdmissionsPage() {
-  const { admissionsInfo } = usePublicContent()
-  const info = admissionsInfo || {}
+  const info = staticAdmissionsInfo || {}
   const requirements = Array.isArray(info.requirements) ? info.requirements : []
   const steps = Array.isArray(info.steps) ? info.steps : []
 

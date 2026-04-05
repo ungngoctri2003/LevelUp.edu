@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { Reveal, RevealStagger, RevealItem } from '../motion/Reveal'
-import { usePublicContent } from '../../hooks/usePublicContent'
+import { testimonials as staticTestimonials } from '../../data'
 
 function AvatarPlaceholder({ initial, color }) {
   const bgClass = color === 'purple' ? 'bg-fuchsia-400' : 'bg-cyan-400'
@@ -14,8 +14,7 @@ function AvatarPlaceholder({ initial, color }) {
 }
 
 export default function Testimonials() {
-  const { testimonials } = usePublicContent()
-  const list = Array.isArray(testimonials) ? testimonials : []
+  const list = Array.isArray(staticTestimonials) ? staticTestimonials : []
   return (
     <section
       id="testimonials"

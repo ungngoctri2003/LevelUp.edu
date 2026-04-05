@@ -300,13 +300,3 @@ export function adminListMarketingLeads(accessToken, limit = 200, offset = 0) {
   return adminFetch(accessToken, `/api/admin/marketing-leads?${q}`)
 }
 
-export function adminGetCmsLanding(accessToken) {
-  return adminFetch(accessToken, '/api/admin/cms-landing')
-}
-
-export function adminPatchCmsLanding(accessToken, partial) {
-  return adminFetch(accessToken, '/api/admin/cms-landing', {
-    method: 'PATCH',
-    body: JSON.stringify(partial),
-  })
-}
