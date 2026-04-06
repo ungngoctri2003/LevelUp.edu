@@ -63,7 +63,19 @@ export default function VideoPreview() {
   const overlaySub = vp.overlay_subtitle || 'Video bài giảng có sẵn khi đăng ký'
 
   return (
-    <section id="video-preview" className="bg-gray-50 py-24 dark:bg-slate-900 sm:py-32">
+    <section id="video-preview" className="relative overflow-hidden py-24 sm:py-32">
+      <motion.div
+        className="pointer-events-none absolute -right-32 top-1/4 z-0 h-72 w-72 rounded-full bg-cyan-400/15 blur-3xl dark:bg-cyan-500/20"
+        animate={{ scale: [1, 1.15, 1], opacity: [0.35, 0.55, 0.35] }}
+        transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }}
+        aria-hidden
+      />
+      <motion.div
+        className="pointer-events-none absolute -left-24 bottom-0 z-0 h-64 w-64 rounded-full bg-fuchsia-400/12 blur-3xl dark:bg-fuchsia-500/18"
+        animate={{ scale: [1.08, 1, 1.08] }}
+        transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
+        aria-hidden
+      />
       <div className="mx-auto max-w-7xl px-6">
         <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
           <Reveal>

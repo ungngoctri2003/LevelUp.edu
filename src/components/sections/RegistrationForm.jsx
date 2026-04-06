@@ -69,7 +69,7 @@ export default function RegistrationForm() {
   }
 
   return (
-    <section id="registration" className="bg-gray-50 py-24 dark:bg-slate-900 sm:py-32">
+    <section id="registration" className="py-24 sm:py-32">
       <div className="mx-auto max-w-2xl px-6">
         <AnimatePresence mode="wait">
           {submitted ? (

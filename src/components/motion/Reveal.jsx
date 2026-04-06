@@ -8,16 +8,20 @@ export function Reveal({
   delay = 0,
   y = 32,
   once = true,
+  variant = 'fadeUp',
+  scale = 0.97,
 }) {
   const reduce = useReducedMotion()
   const duration = reduce ? 0.01 : 0.55
   const d = reduce ? 0 : delay
   const yMove = reduce ? 0 : y
+  const useScale = variant === 'fadeUpScale' && !reduce
+  const fromScale = useScale ? scale : 1
 
   return (
     <motion.div
-      initial={{ opacity: reduce ? 1 : 0, y: yMove }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={{ opacity: reduce ? 1 : 0, y: yMove, scale: fromScale }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
       viewport={{ once, margin: '-50px' }}
       transition={{ duration: duration, delay: d, ease }}
       className={className}

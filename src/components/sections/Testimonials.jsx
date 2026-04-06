@@ -18,24 +18,24 @@ export default function Testimonials() {
   return (
     <section
       id="testimonials"
-      className="relative overflow-hidden bg-gradient-to-br from-violet-950 via-fuchsia-950 to-slate-950 py-24 sm:py-32"
+      className="relative overflow-hidden py-24 sm:py-32"
     >
       <motion.div
-        className="pointer-events-none absolute -right-40 top-0 h-96 w-96 rounded-full bg-fuchsia-500/20 blur-3xl"
+        className="pointer-events-none absolute -right-40 top-0 h-96 w-96 rounded-full bg-fuchsia-400/12 blur-3xl dark:bg-fuchsia-500/20"
         animate={{ scale: [1, 1.2, 1], opacity: [0.25, 0.4, 0.25] }}
         transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
       />
       <motion.div
-        className="pointer-events-none absolute -left-40 bottom-0 h-80 w-80 rounded-full bg-cyan-500/20 blur-3xl"
+        className="pointer-events-none absolute -left-40 bottom-0 h-80 w-80 rounded-full bg-cyan-400/12 blur-3xl dark:bg-cyan-500/20"
         animate={{ scale: [1.1, 1, 1.1] }}
         transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
       />
       <div className="relative mx-auto max-w-7xl px-6">
         <Reveal className="text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
+          <h2 className="text-3xl font-bold tracking-tight text-slate-950 dark:text-white sm:text-4xl lg:text-5xl">
             Học viên nói gì về chúng tôi
           </h2>
-          <p className="mt-6 max-w-2xl mx-auto text-lg text-cyan-100/90">
+          <p className="mx-auto mt-6 max-w-2xl text-lg text-slate-700 dark:text-cyan-100/90">
             Cùng lắng nghe những chia sẻ từ học sinh đã theo học tại LevelUp.edu
           </p>
         </Reveal>
@@ -51,15 +51,15 @@ export default function Testimonials() {
               <motion.div
                 whileHover={{ y: -6, scale: 1.02 }}
                 transition={{ duration: 0.25 }}
-                className="group relative h-full rounded-2xl border border-white/10 bg-white/5 p-8 backdrop-blur-md transition-colors duration-300 hover:border-cyan-400/30 hover:bg-white/10"
+                className="group relative h-full rounded-2xl border border-slate-200/80 bg-white/72 p-8 shadow-lg backdrop-blur-md transition-colors duration-300 hover:border-cyan-400/40 hover:bg-white/82 dark:border-white/10 dark:bg-white/5 dark:hover:border-cyan-400/30 dark:hover:bg-white/10"
               >
                 <div className="flex items-center gap-4">
                   <motion.div whileHover={{ rotate: [0, -5, 5, 0] }} transition={{ duration: 0.5 }}>
                     <AvatarPlaceholder initial={item.initial} color={item.color} />
                   </motion.div>
-                  <h3 className="font-semibold text-white">{item.name}</h3>
+                  <h3 className="font-semibold text-slate-950 dark:text-white">{item.name}</h3>
                 </div>
-                <p className="mt-5 leading-relaxed text-slate-200">&ldquo;{item.quote}&rdquo;</p>
+                <p className="mt-5 leading-relaxed text-slate-700 dark:text-slate-200">&ldquo;{item.quote}&rdquo;</p>
               </motion.div>
             </RevealItem>
           ))}

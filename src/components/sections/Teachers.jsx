@@ -31,7 +31,7 @@ function TeacherPortrait({ teacher }) {
 export default function Teachers() {
   const { teachers } = usePublicContent()
   return (
-    <section id="teachers" className="py-24 dark:bg-slate-950 sm:py-32">
+    <section id="teachers" className="py-24 sm:py-32">
       <div className="mx-auto max-w-7xl px-6">
         <Reveal className="text-center">
           <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl lg:text-5xl">
