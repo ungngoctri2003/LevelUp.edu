@@ -10,7 +10,6 @@ const menuItems = [
   { label: 'Trang chủ', path: '/' },
   { label: 'Khóa học', path: '/bai-giang' },
   { label: 'Lớp học', path: '/lop-hoc' },
-  { label: 'Bài kiểm tra', path: '/bai-kiem-tra' },
   { label: 'Tin tức', path: '/tin-tuc' },
 ]
 
