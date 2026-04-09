@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom'
+import { Analytics } from '@vercel/analytics/react'
 import Layout from './pages/Layout'
 import HomePage from './pages/HomePage'
 import LessonsPage from './pages/LessonsPage'
@@ -124,6 +125,7 @@ function App() {
       </Routes>
         <AuthModal />
         <DialogflowMessenger />
+        <Analytics />
       </AuthModalProvider>
     </BrowserRouter>
   )
