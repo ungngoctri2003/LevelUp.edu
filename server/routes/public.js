@@ -138,21 +138,32 @@ router.get('/courses/:id', async (req, res) => {
   res.json({ data })
 })
 
-/** GET /api/public/lessons?subject_id= */
+/** GET /api/public/lessons?subject_id= | ?course_id= */
 router.get('/lessons', async (req, res) => {
   const sb = sbOr503(res, createAnonClient())
   if (!sb) return
-  let q = sb
-    .from('lessons')
-    .select(
-      'id, subject_id, title, duration_minutes, level_label, sort_order, created_at, updated_at',
-    )
-    .order('sort_order', { ascending: true })
+  const baseFields = 'id, course_id, title, duration_minutes, level_label, sort_order, created_at, updated_at'
   const sid = req.query.subject_id
-  if (sid !== undefined && sid !== '') {
+  const cid = req.query.course_id
+  const filterSubject = sid !== undefined && sid !== ''
+  const filterCourse = cid !== undefined && cid !== ''
+  if (filterSubject && filterCourse) {
+    return res.status(400).json({ error: 'Chỉ dùng subject_id hoặc course_id, không kết hợp' })
+  }
+  let select =
+    filterSubject
+      ? `${baseFields}, courses!inner(subject_id)`
+      : `${baseFields}, courses(subject_id)`
+  let q = sb.from('lessons').select(select).order('sort_order', { ascending: true })
+  if (filterSubject) {
     const n = Number(sid)
     if (!Number.isFinite(n)) return res.status(400).json({ error: 'subject_id không hợp lệ' })
-    q = q.eq('subject_id', n)
+    q = q.eq('courses.subject_id', n)
+  }
+  if (filterCourse) {
+    const n = Number(cid)
+    if (!Number.isFinite(n)) return res.status(400).json({ error: 'course_id không hợp lệ' })
+    q = q.eq('course_id', n)
   }
   const { data, error } = await q
   if (error) return res.status(500).json({ error: error.message })
@@ -168,7 +179,7 @@ router.get('/lessons/:id', async (req, res) => {
   const { data, error } = await sb
     .from('lessons')
     .select(
-      'id, subject_id, title, duration_minutes, level_label, sort_order, created_at, updated_at',
+      'id, course_id, title, duration_minutes, level_label, sort_order, created_at, updated_at, courses(subject_id)',
     )
     .eq('id', id)
     .maybeSingle()

@@ -75,13 +75,31 @@ export async function fetchPublicCatalog() {
     imageSrc: t.avatar_url || '',
   }))
 
+  const rawLessons = lessonsRes.data || []
+  const lessons = rawLessons.map((row) => ({
+    id: row.id,
+    course_id: row.course_id != null ? Number(row.course_id) : null,
+    subject_id:
+      row.courses?.subject_id != null
+        ? Number(row.courses.subject_id)
+        : row.subject_id != null
+          ? Number(row.subject_id)
+          : null,
+    title: row.title,
+    duration_minutes: row.duration_minutes,
+    level_label: row.level_label,
+    sort_order: row.sort_order,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  }))
+
   return {
     courses,
     exams,
     news,
     teachers,
     subjects: subjectsRes.data || [],
-    lessons: lessonsRes.data || [],
+    lessons,
     saleClasses: (saleClassesRes.data || []).map((row) => ({
       id: row.id,
       code: row.code || '',
@@ -169,14 +187,15 @@ export async function fetchLessonDetail(lessonId) {
   }
 }
 
-/** Gom lessons theo môn (slug) cho UI Bài giảng */
+/** Gom lessons theo môn (slug) cho UI Bài giảng — subject_id suy ra từ khóa (catalog). */
 export function buildLessonsBySubject(subjects, lessons) {
   const bySubject = new Map()
   for (const s of subjects || []) {
     bySubject.set(s.id, { id: s.slug, name: s.name, icon: s.icon_label || '📘', lessons: [] })
   }
   for (const L of lessons || []) {
-    const bucket = bySubject.get(L.subject_id)
+    const sid = L.subject_id != null ? Number(L.subject_id) : NaN
+    const bucket = Number.isFinite(sid) ? bySubject.get(sid) : null
     if (!bucket) continue
     bucket.lessons.push({
       id: L.id,
@@ -188,10 +207,7 @@ export function buildLessonsBySubject(subjects, lessons) {
   return [...bySubject.values()].filter((b) => b.lessons.length > 0)
 }
 
-/**
- * Khóa học (course) bao trùm; bên trong là bài giảng cùng subject_id với khóa.
- * Nếu nhiều khóa trùng môn, mỗi khóa hiển thị cùng danh sách bài — cần course_id trên lessons để tách chính xác (tương lai).
- */
+/** Mỗi khóa hiển thị đúng các bài có course_id trùng id khóa. */
 export function buildLessonsByCourse(courses, lessons, subjects) {
   const subjectById = new Map((subjects || []).map((s) => [Number(s.id), s]))
   return (courses || [])
@@ -199,8 +215,9 @@ export function buildLessonsByCourse(courses, lessons, subjects) {
     .map((c) => {
       const sid = c.subject_id != null ? Number(c.subject_id) : NaN
       const sub = Number.isFinite(sid) ? subjectById.get(sid) : null
+      const cid = Number(c.id)
       const lessonItems = (lessons || [])
-        .filter((L) => Number(L.subject_id) === sid)
+        .filter((L) => Number(L.course_id) === cid)
         .map((L) => ({
           id: L.id,
           title: L.title,

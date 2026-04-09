@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import PageHeader from '../../components/dashboard/PageHeader'
 import Panel from '../../components/dashboard/Panel'
+import { ModalPortal } from '../../components/dashboard/ModalPortal'
 import {
   btnPrimaryAdmin,
   inputAdmin,
@@ -28,6 +29,18 @@ const STATUS_OPTIONS = [
   { value: 'paid', label: 'Đã thanh toán' },
   { value: 'cancelled', label: 'Hủy' },
 ]
+
+const PAYMENT_STATUS_BADGE =
+  'inline-flex items-center whitespace-nowrap rounded-full border px-2 py-0.5 text-xs font-medium'
+
+const paymentStatusBadgeClass = {
+  paid:
+    'border-emerald-500/35 bg-emerald-500/15 text-emerald-800 dark:border-emerald-400/30 dark:bg-emerald-500/20 dark:text-emerald-200',
+  pending:
+    'border-amber-500/35 bg-amber-500/15 text-amber-900 dark:border-amber-400/30 dark:bg-amber-500/20 dark:text-amber-200',
+  cancelled:
+    'border-slate-300 bg-slate-100 text-slate-700 dark:border-white/10 dark:bg-white/10 dark:text-slate-300',
+}
 
 function formatDateTime(iso) {
   if (!iso) return '—'
@@ -209,40 +222,51 @@ export default function AdminPayments() {
                 {kind === 'class' ? (
                   <>
                     <p className="font-medium text-gray-900 dark:text-white">{row.class_name}</p>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-slate-600 dark:text-slate-400">
                       {row.class_subject} · {row.class_grade_label}
                     </p>
                   </>
                 ) : (
                   <>
                     <p className="font-medium text-gray-900 dark:text-white">{courseDisplayTitle(row)}</p>
-                    <p className="text-xs text-slate-400">Khóa catalog · ID #{row.course_id}</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">Khóa catalog · ID #{row.course_id}</p>
                   </>
                 )}
               </td>
               <td className="px-4 py-3 align-top">
-                <p>{row.student_name}</p>
-                <p className="text-xs text-slate-400">{row.student_email || 'Không có email'}</p>
-                <p className="text-xs text-slate-500">{row.student_phone || 'Không có SĐT'}</p>
+                <p className="text-slate-900 dark:text-slate-200">{row.student_name}</p>
+                <p className="text-xs text-slate-600 dark:text-slate-400">{row.student_email || 'Không có email'}</p>
+                <p className="text-xs text-slate-600 dark:text-slate-500">{row.student_phone || 'Không có SĐT'}</p>
               </td>
-              <td className="px-4 py-3 align-top text-slate-300">
+              <td className="px-4 py-3 align-top text-slate-800 dark:text-slate-300">
                 {SOURCE_OPTIONS.find((opt) => opt.value === row.payment_source)?.label || row.payment_source}
               </td>
-              <td className="px-4 py-3 align-top text-slate-300">{formatCurrency(row.amount)}</td>
+              <td className="px-4 py-3 align-top font-medium text-slate-900 dark:text-slate-300">
+                {formatCurrency(row.amount)}
+              </td>
               <td className="px-4 py-3 align-top">
-                <span className="rounded-full border border-gray-200 bg-slate-100 px-2.5 py-1 text-xs text-gray-800 dark:border-white/10 dark:bg-white/5 dark:text-slate-200">
+                <span
+                  className={`${PAYMENT_STATUS_BADGE} ${
+                    paymentStatusBadgeClass[row.payment_status] ||
+                    'border-slate-300 bg-slate-100 text-slate-700 dark:border-white/10 dark:bg-white/10 dark:text-slate-300'
+                  }`}
+                >
                   {STATUS_OPTIONS.find((opt) => opt.value === row.payment_status)?.label || row.payment_status}
                 </span>
                 {kind === 'class' && row.already_enrolled && (
-                  <p className="mt-2 text-xs text-emerald-300">Đã có trong lớp</p>
+                  <p className="mt-2 text-xs font-medium text-emerald-700 dark:text-emerald-300">Đã có trong lớp</p>
                 )}
               </td>
-              <td className="px-4 py-3 align-top text-xs text-slate-400">
+              <td className="px-4 py-3 align-top text-xs text-slate-600 dark:text-slate-400">
                 <p>Gửi: {formatDateTime(row.submitted_at)}</p>
                 <p>Xác nhận: {formatDateTime(row.confirmed_at)}</p>
               </td>
               <td className="px-4 py-3 align-top">
-                <button type="button" onClick={() => openEditor(row)} className="font-medium text-cyan-400 hover:text-cyan-300">
+                <button
+                  type="button"
+                  onClick={() => openEditor(row)}
+                  className="font-medium text-cyan-700 hover:text-cyan-800 dark:text-cyan-400 dark:hover:text-cyan-300"
+                >
                   Xử lý
                 </button>
               </td>
@@ -436,6 +460,7 @@ export default function AdminPayments() {
       </Panel>
 
       {editingRow && draft && (
+        <ModalPortal>
         <div
           className={modalBackdrop}
           role="dialog"
@@ -574,6 +599,7 @@ export default function AdminPayments() {
             </div>
           </div>
         </div>
+        </ModalPortal>
       )}
     </div>
   )

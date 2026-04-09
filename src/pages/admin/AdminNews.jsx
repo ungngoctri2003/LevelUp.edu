@@ -4,6 +4,7 @@ import { toastActionError } from '../../lib/appToast.js'
 import { Link } from 'react-router-dom'
 import PageHeader from '../../components/dashboard/PageHeader'
 import Panel from '../../components/dashboard/Panel'
+import { ModalPortal } from '../../components/dashboard/ModalPortal'
 import {
   inputAdmin,
   modalBackdrop,
@@ -162,6 +163,7 @@ export default function AdminNews() {
       </Panel>
 
       {editModal != null && (
+        <ModalPortal>
         <div className={modalBackdrop}>
           <form onSubmit={saveEdit} className={modalPanelAdmin}>
             <h3 className={modalTitle}>Sửa tin</h3>
@@ -209,6 +211,7 @@ export default function AdminNews() {
             </div>
           </form>
         </div>
+        </ModalPortal>
       )}
     </div>
   )

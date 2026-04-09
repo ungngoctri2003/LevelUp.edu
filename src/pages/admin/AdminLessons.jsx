@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import PageHeader from '../../components/dashboard/PageHeader'
 import Panel from '../../components/dashboard/Panel'
+import { ModalPortal } from '../../components/dashboard/ModalPortal'
 import {
   inputAdmin,
   btnPrimaryAdmin,
@@ -15,6 +16,7 @@ import {
   btnSecondaryAdmin,
 } from '../../components/dashboard/dashboardStyles'
 import { useAuthSession } from '../../context/AuthSessionContext'
+import { useAdminState } from '../../hooks/useAdminState'
 import { toast } from 'sonner'
 import { toastActionError } from '../../lib/appToast.js'
 import * as srv from '../../services/adminServerApi.js'
@@ -27,6 +29,7 @@ const tabBtn =
 export default function AdminLessons() {
   const { session } = useAuthSession()
   const token = session?.access_token
+  const { state: adminState } = useAdminState()
   const [searchParams, setSearchParams] = useSearchParams()
   const tab = searchParams.get('tab') === 'lop' ? 'lop' : 'online'
 
@@ -36,31 +39,34 @@ export default function AdminLessons() {
   }
 
   // --- Trực tuyến (lessons) ---
-  const [subjects, setSubjects] = useState([])
   const [lessons, setLessons] = useState([])
   const [onlineLoading, setOnlineLoading] = useState(true)
   const [draft, setDraft] = useState({
-    subject_id: '',
+    course_id: '',
     title: '',
     duration_minutes: '',
     level_label: '',
     sort_order: 0,
   })
 
+  const catalogCourses = adminState.courses || []
+  const sortedCatalogCourses = [...catalogCourses].sort((a, b) => {
+    const sa = String(a.subject || '')
+    const sb = String(b.subject || '')
+    if (sa !== sb) return sa.localeCompare(sb, 'vi')
+    return String(a.title || '').localeCompare(String(b.title || ''), 'vi')
+  })
+  const firstCourseId = sortedCatalogCourses[0]?.id
+
   const loadOnline = useCallback(async () => {
     if (!token) {
-      setSubjects([])
       setLessons([])
       setOnlineLoading(false)
       return
     }
     setOnlineLoading(true)
     try {
-      const [subRes, lesRes] = await Promise.all([
-        srv.adminListSubjectsApi(token),
-        srv.adminListLessons(token),
-      ])
-      setSubjects(subRes.data || [])
+      const lesRes = await srv.adminListLessons(token)
       setLessons(lesRes.data || [])
     } catch (e) {
       if (import.meta.env.DEV) console.error('[AdminLessons online]', e)
@@ -108,20 +114,19 @@ export default function AdminLessons() {
     if (tab === 'lop') loadLop()
   }, [tab, loadLop])
 
-  const firstSid = subjects[0]?.id
   const firstClassId = classes[0]?.id
 
   const addOnline = async (e) => {
     e.preventDefault()
     if (!token || !draft.title.trim()) return
-    const sid = Number(draft.subject_id) || Number(firstSid)
-    if (!Number.isFinite(sid)) {
-      toast.warning('Chưa có môn — hãy tạo môn trước.')
+    const cid = Number(draft.course_id) || Number(firstCourseId)
+    if (!Number.isFinite(cid)) {
+      toast.warning('Chưa có khóa học — hãy tạo khóa trong mục Khóa học trước.')
       return
     }
     try {
       await srv.adminCreateLesson(token, {
-        subject_id: sid,
+        course_id: cid,
         title: draft.title.trim(),
         duration_minutes: draft.duration_minutes === '' ? null : Number(draft.duration_minutes),
         level_label: draft.level_label.trim() || null,
@@ -244,20 +249,25 @@ export default function AdminLessons() {
         <>
           {onlineLoading && <p className="text-sm text-slate-400">Đang tải…</p>}
 
-          <Panel title="Thêm bài giảng trực tuyến" subtitle="Tạo bài mới kèm nội dung trống để chỉnh sau">
+          <Panel title="Thêm bài giảng trực tuyến" subtitle="Gắn bài với một khóa học (môn học theo khóa). Nội dung chi tiết chỉnh sau.">
             <form onSubmit={addOnline} className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               <label className="block text-sm text-slate-400 sm:col-span-2 lg:col-span-1">
-                Môn *
+                Khóa học *
                 <select
-                  value={draft.subject_id || String(firstSid || '')}
-                  onChange={(e) => setDraft((d) => ({ ...d, subject_id: e.target.value }))}
+                  value={draft.course_id || String(firstCourseId ?? '')}
+                  onChange={(e) => setDraft((d) => ({ ...d, course_id: e.target.value }))}
                   className={field}
+                  disabled={sortedCatalogCourses.length === 0}
                 >
-                  {subjects.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
+                  {sortedCatalogCourses.length === 0 ? (
+                    <option value="">— Chưa có khóa —</option>
+                  ) : (
+                    sortedCatalogCourses.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.subject} — {c.title}
+                      </option>
+                    ))
+                  )}
                 </select>
               </label>
               <label className="block text-sm text-slate-400 sm:col-span-2">
@@ -297,20 +307,25 @@ export default function AdminLessons() {
                 />
               </label>
               <div className="flex items-end sm:col-span-2 lg:col-span-3">
-                <button type="submit" className={btnPrimaryAdmin} disabled={!token}>
+                <button
+                  type="submit"
+                  className={btnPrimaryAdmin}
+                  disabled={!token || sortedCatalogCourses.length === 0}
+                >
                   Thêm bài
                 </button>
               </div>
             </form>
           </Panel>
 
-          <Panel title="Danh sách bài trực tuyến" noDivider padding={false} className="overflow-hidden">
+          <Panel title="Danh sách bài trực tuyến" noDivider padding={false} className="overflow-hidden p-4">
             <div className={tableShell}>
-              <table className="w-full min-w-[720px] text-left text-sm">
+              <table className="w-full min-w-[880px] text-left text-sm">
                 <thead className={tableHeadAdmin}>
                   <tr>
                     <th className="px-4 py-3">ID</th>
                     <th className="px-4 py-3">Môn</th>
+                    <th className="px-4 py-3">Khóa</th>
                     <th className="px-4 py-3">Tiêu đề</th>
                     <th className="px-4 py-3">Phút</th>
                     <th className="px-4 py-3"> </th>
@@ -319,18 +334,30 @@ export default function AdminLessons() {
                 <tbody className={tableBodyAdmin}>
                   {lessons.map((r) => (
                     <tr key={r.id} className={tableRowHover}>
-                      <td className="px-4 py-3 font-mono text-slate-500">{r.id}</td>
-                      <td className="px-4 py-3 text-slate-400">{r.subjects?.name || '—'}</td>
-                      <td className="px-4 py-3 font-medium">{r.title}</td>
-                      <td className="px-4 py-3">{r.duration_minutes ?? '—'}</td>
+                      <td className="px-4 py-3 font-mono text-slate-600 dark:text-slate-500">{r.id}</td>
+                      <td className="px-4 py-3 text-slate-800 dark:text-slate-400">
+                        {r.courses?.subjects?.name || '—'}
+                      </td>
+                      <td
+                        className="max-w-[200px] px-4 py-3 text-slate-800 line-clamp-2 dark:text-slate-500"
+                        title={r.courses?.title || ''}
+                      >
+                        {r.courses?.title || '—'}
+                      </td>
+                      <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-200">{r.title}</td>
+                      <td className="px-4 py-3 text-slate-800 dark:text-slate-300">{r.duration_minutes ?? '—'}</td>
                       <td className="px-4 py-3 text-right">
                         <Link
                           to={`/admin/bai-giang-noi-dung/${r.id}`}
-                          className="mr-2 inline-block text-cyan-400 hover:text-cyan-300"
+                          className="mr-2 inline-block font-medium text-cyan-700 hover:text-cyan-800 dark:text-cyan-400 dark:hover:text-cyan-300"
                         >
                           Chi tiết
                         </Link>
-                        <button type="button" onClick={() => removeOnline(r)} className="text-red-400 hover:text-red-300">
+                        <button
+                          type="button"
+                          onClick={() => removeOnline(r)}
+                          className="font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                        >
                           Xóa
                         </button>
                       </td>
@@ -419,29 +446,29 @@ export default function AdminLessons() {
                     <tr key={r.id} className={tableRowHover}>
                       <td className="px-4 py-3 font-mono text-slate-500">{r.id}</td>
                       <td className="max-w-[200px] px-4 py-3 font-medium">{r.title}</td>
-                      <td className="max-w-[180px] px-4 py-3 text-xs leading-snug text-slate-500">
+                      <td className="max-w-[180px] px-4 py-3 text-xs leading-snug text-slate-700 dark:text-slate-500">
                         {r.content_preview || '—'}
                       </td>
-                      <td className="px-4 py-3 text-slate-400">
+                      <td className="px-4 py-3 text-slate-800 dark:text-slate-400">
                         {r.class_name}
                         {r.class_code ? (
-                          <span className="block text-xs text-slate-500">({r.class_code})</span>
+                          <span className="block text-xs text-slate-600 dark:text-slate-500">({r.class_code})</span>
                         ) : null}
                       </td>
-                      <td className="px-4 py-3 text-slate-400">{r.teacher_name}</td>
+                      <td className="px-4 py-3 text-slate-800 dark:text-slate-400">{r.teacher_name}</td>
                       <td className="px-4 py-3">{r.duration_display || '—'}</td>
                       <td className="px-4 py-3">{r.view_count}</td>
                       <td className="px-4 py-3 text-slate-500">{r.updated_label}</td>
                       <td className="px-4 py-3 text-right">
                         <Link
                           to={`/admin/bai-giang-noi-dung/lop/${r.id}`}
-                          className="mr-2 inline-block text-cyan-400 hover:text-cyan-300"
+                          className="mr-2 inline-block font-medium text-cyan-700 hover:text-cyan-800 dark:text-cyan-400 dark:hover:text-cyan-300"
                         >
                           Chi tiết
                         </Link>
                         <Link
                           to={`/bai-giang/lop/${r.id}`}
-                          className="mr-2 inline-block text-slate-400 hover:text-slate-300"
+                          className="mr-2 p-y inline-block font-medium text-slate-700 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-300"
                           target="_blank"
                           rel="noreferrer"
                         >
@@ -457,11 +484,15 @@ export default function AdminLessons() {
                               duration_display: r.duration_display || '45 phút',
                             })
                           }
-                          className="mr-2 text-cyan-400 hover:text-cyan-300"
+                          className="mr-2 font-medium text-cyan-700 hover:text-cyan-800 dark:text-cyan-400 dark:hover:text-cyan-300"
                         >
                           Sửa
                         </button>
-                        <button type="button" onClick={() => removeLop(r)} className="text-red-400 hover:text-red-300">
+                        <button
+                          type="button"
+                          onClick={() => removeLop(r)}
+                          className="font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                        >
                           Xóa
                         </button>
                       </td>
@@ -476,6 +507,7 @@ export default function AdminLessons() {
           </Panel>
 
           {editing && (
+            <ModalPortal>
             <div className={`${modalBackdrop} max-h-[100dvh] overflow-y-auto`}>
               <form onSubmit={saveEditLop} className={`${modalPanelAdmin} my-auto max-w-lg`}>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Sửa bài giảng lớp</h3>
@@ -519,6 +551,7 @@ export default function AdminLessons() {
                 </div>
               </form>
             </div>
+            </ModalPortal>
           )}
         </>
       )}

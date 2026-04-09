@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { toastActionError } from '../../lib/appToast.js'
 import PageHeader from '../../components/dashboard/PageHeader'
 import Panel from '../../components/dashboard/Panel'
+import { ModalPortal } from '../../components/dashboard/ModalPortal'
 import { useTeacherState } from '../../hooks/useTeacherState'
 import {
   inputTeacher,
@@ -592,6 +593,7 @@ export default function TeacherSchedule() {
       )}
 
       {showForm && (
+        <ModalPortal>
         <div className={modalBackdrop}>
           <form onSubmit={save} className={`${modalPanelTeacher} max-w-lg`}>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{editingId ? 'Sửa buổi học' : 'Thêm buổi học'}</h3>
@@ -704,6 +706,7 @@ export default function TeacherSchedule() {
             </div>
           </form>
         </div>
+        </ModalPortal>
       )}
     </div>
   )

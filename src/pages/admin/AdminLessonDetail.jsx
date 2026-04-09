@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import PageHeader from '../../components/dashboard/PageHeader'
 import Panel from '../../components/dashboard/Panel'
-import { inputAdmin, btnPrimaryAdmin } from '../../components/dashboard/dashboardStyles'
+import { inputAdmin, btnPrimaryAdmin, btnSecondaryAdmin } from '../../components/dashboard/dashboardStyles'
 import { useAuthSession } from '../../context/AuthSessionContext'
+import { useAdminState } from '../../hooks/useAdminState'
 import { toast } from 'sonner'
 import { toastActionError } from '../../lib/appToast.js'
 import {
@@ -20,8 +21,19 @@ export default function AdminLessonDetail() {
   const navigate = useNavigate()
   const { session } = useAuthSession()
   const token = session?.access_token
+  const { state: adminState } = useAdminState()
+  const sortedCatalogCourses = useMemo(() => {
+    const list = adminState.courses || []
+    return [...list].sort((a, b) => {
+      const sa = String(a.subject || '')
+      const sb = String(b.subject || '')
+      if (sa !== sb) return sa.localeCompare(sb, 'vi')
+      return String(a.title || '').localeCompare(String(b.title || ''), 'vi')
+    })
+  }, [adminState.courses])
 
   const [lessonRow, setLessonRow] = useState(null)
+  const [courseSelectId, setCourseSelectId] = useState('')
   const [loading, setLoading] = useState(true)
   const [detailForm, setDetailForm] = useState({
     summary: '',
@@ -59,6 +71,8 @@ export default function AdminLessonDetail() {
         if (cancelled) return
         const row = (listRes.data || []).find((r) => Number(r.id) === nid)
         setLessonRow(row || null)
+        if (row?.course_id != null) setCourseSelectId(String(row.course_id))
+        else setCourseSelectId('')
         const d = detRes?.data ?? {}
         setDetailForm({
           summary: d.summary || '',
@@ -81,6 +95,28 @@ export default function AdminLessonDetail() {
       cancelled = true
     }
   }, [lessonId, hasSession])
+
+  const saveCourseMeta = async () => {
+    if (!token || !idValid) return
+    const cid = Number(courseSelectId)
+    if (!Number.isFinite(cid)) {
+      toast.warning('Chọn khóa học hợp lệ.')
+      return
+    }
+    if (Number(lessonRow?.course_id) === cid) {
+      toast.info('Khóa học không đổi.')
+      return
+    }
+    try {
+      await srv.adminPatchLesson(token, idNum, { course_id: cid })
+      const listRes = await srv.adminListLessons(token)
+      const row = (listRes.data || []).find((r) => Number(r.id) === idNum)
+      if (row) setLessonRow(row)
+      toast.success('Đã cập nhật khóa học.')
+    } catch (e2) {
+      toastActionError(e2, 'Không cập nhật được khóa học.')
+    }
+  }
 
   const saveDetail = async (e) => {
     e.preventDefault()
@@ -156,6 +192,35 @@ export default function AdminLessonDetail() {
 
       {!loading && lessonRow && (
         <Panel title={`Bài #${lessonRow.id} — ${lessonRow.title}`} subtitle="Tóm tắt, video và dàn ý trên trang bài giảng">
+          <div className="mt-4 flex flex-wrap items-end gap-3 border-b border-gray-200 pb-5 dark:border-white/10">
+            <label className="block min-w-[min(100%,280px)] flex-1 text-sm text-slate-400">
+              Khóa học (catalog)
+              <select
+                value={courseSelectId}
+                onChange={(e) => setCourseSelectId(e.target.value)}
+                className={field}
+                disabled={sortedCatalogCourses.length === 0}
+              >
+                {sortedCatalogCourses.length === 0 ? (
+                  <option value="">— Chưa có khóa —</option>
+                ) : (
+                  sortedCatalogCourses.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.subject} — {c.title}
+                    </option>
+                  ))
+                )}
+              </select>
+            </label>
+            <button
+              type="button"
+              onClick={saveCourseMeta}
+              className={btnSecondaryAdmin}
+              disabled={!token || sortedCatalogCourses.length === 0}
+            >
+              Lưu khóa
+            </button>
+          </div>
           <form onSubmit={saveDetail} className="mt-4 space-y-5">
             <label className="block text-sm text-slate-400">
               Tóm tắt

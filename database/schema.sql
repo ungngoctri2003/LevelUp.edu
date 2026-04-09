@@ -154,7 +154,7 @@ create index courses_visible_list_idx on public.courses (sort_order, id) where v
 
 create table public.lessons (
   id               bigint generated always as identity primary key,
-  subject_id       bigint not null references public.subjects (id) on delete cascade,
+  course_id        bigint not null references public.courses (id) on delete cascade,
   title            text not null,
   duration_minutes integer,
   level_label      text,
@@ -163,7 +163,7 @@ create table public.lessons (
   updated_at       timestamptz not null default now()
 );
 
-create index lessons_subject_id_idx on public.lessons (subject_id);
+create index lessons_course_id_idx on public.lessons (course_id);
 
 create table public.lesson_details (
   lesson_id      bigint primary key references public.lessons (id) on delete cascade,
@@ -567,6 +567,15 @@ alter table public.public_teacher_profiles enable row level security;
 create policy profiles_select_own_or_admin on public.profiles
   for select using (
     id = (select auth.uid()) or (select public.is_admin())
+  );
+create policy profiles_select_students_in_my_classes on public.profiles
+  for select using (
+    exists (
+      select 1
+      from public.class_enrollments ce
+      where ce.student_id = profiles.id
+        and public.class_teacher_id(ce.class_id) = (select auth.uid())
+    )
   );
 create policy profiles_update_own_or_admin on public.profiles
   for update using (

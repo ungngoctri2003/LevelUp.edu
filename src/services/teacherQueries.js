@@ -68,9 +68,57 @@ export async function loadTeacherBundle(sb) {
     submissions = subRes.data || []
   }
 
+  const enrollmentRows = enRes.data || []
+  const studentIdSet = new Set()
+  for (const e of enrollmentRows) {
+    if (e.student_id) studentIdSet.add(e.student_id)
+  }
+  for (const s of submissions) {
+    if (s.student_id) studentIdSet.add(s.student_id)
+  }
+  const allStudentIds = [...studentIdSet]
+  /** @type {Record<string, { full_name: string, email: string }>} */
+  const profileById = {}
+  if (allStudentIds.length) {
+    const { data: profRows, error: profErr } = await sb
+      .from('profiles')
+      .select('id, full_name, email')
+      .in('id', allStudentIds)
+    if (profErr) {
+      if (import.meta.env.DEV) console.warn('[loadTeacherBundle] profiles batch skipped:', profErr.message)
+    } else {
+      for (const p of profRows || []) {
+        profileById[p.id] = { full_name: p.full_name, email: p.email }
+      }
+    }
+  }
+
+  const enrollments = enrollmentRows.map((e) => {
+    const emb = e.profiles
+    const ex = profileById[e.student_id]
+    return {
+      ...e,
+      profiles: {
+        full_name: emb?.full_name || ex?.full_name || null,
+        email: emb?.email || ex?.email || null,
+      },
+    }
+  })
+  submissions = submissions.map((s) => {
+    const emb = s.profiles
+    const ex = profileById[s.student_id]
+    return {
+      ...s,
+      profiles: {
+        full_name: emb?.full_name || ex?.full_name || null,
+        email: emb?.email || ex?.email || null,
+      },
+    }
+  })
+
   return {
     classes: cls,
-    enrollments: enRes.data || [],
+    enrollments,
     slots: slotRes.data || [],
     lessonPosts: postRes.data || [],
     assignments,

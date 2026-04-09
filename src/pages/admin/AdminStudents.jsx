@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 import { toastActionError } from '../../lib/appToast.js'
 import PageHeader from '../../components/dashboard/PageHeader'
 import Panel from '../../components/dashboard/Panel'
+import { ModalPortal } from '../../components/dashboard/ModalPortal'
 import {
   inputAdmin,
   btnPrimaryAdmin,
@@ -226,8 +227,7 @@ export default function AdminStudents() {
           <table className="w-full min-w-[880px] text-left text-sm">
             <thead className={tableHeadAdmin}>
               <tr>
-                <th className="px-4 py-3">Mã</th>
-                <th className="px-4 py-3">Họ tên</th>
+                <th className="px-4 py-3">Học sinh</th>
                 <th className="px-4 py-3">Email</th>
                 <th className="px-4 py-3">SĐT</th>
                 <th className="px-4 py-3">Khối</th>
@@ -240,7 +240,7 @@ export default function AdminStudents() {
             <tbody className={tableBodyAdmin}>
               {!loading && filtered.length === 0 && (
                 <tr>
-                  <td colSpan={9} className="px-4 py-14 text-center align-top">
+                  <td colSpan={8} className="px-4 py-14 text-center align-top">
                     <p className="text-slate-600 dark:text-slate-300">
                       {state.students.length === 0
                         ? 'Chưa có học viên nào.'
@@ -267,11 +267,8 @@ export default function AdminStudents() {
               )}
               {filtered.map((r) => (
                 <tr key={r.id} className={tableRowHover}>
-                  <td className="max-w-[120px] truncate px-4 py-3 font-mono text-[10px] text-cyan-700 dark:text-cyan-300" title={r.id}>
-                    {r.id.slice(0, 8)}…
-                  </td>
-                  <td className="px-4 py-3">
-                    {r.name}
+                  <td className="px-4 py-3" title={`Mã tài khoản: ${r.id}`}>
+                    <span className="font-medium text-gray-900 dark:text-white">{r.name}</span>
                     {r.source === 'registered' && (
                       <span className="ml-1 rounded bg-fuchsia-500/20 px-1.5 py-0.5 text-[10px] text-fuchsia-200">ĐK</span>
                     )}
@@ -318,6 +315,7 @@ export default function AdminStudents() {
       </Panel>
 
       {modal === 'edit' && (
+        <ModalPortal>
         <div className={modalBackdrop}>
           <form onSubmit={save} className={`${modalPanelAdmin} max-h-[90vh] overflow-y-auto`}>
             <h3 className={modalTitle}>Sửa học viên</h3>
@@ -381,6 +379,7 @@ export default function AdminStudents() {
             </div>
           </form>
         </div>
+        </ModalPortal>
       )}
     </div>
   )

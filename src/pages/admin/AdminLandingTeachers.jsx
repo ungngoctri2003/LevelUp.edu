@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import PageHeader from '../../components/dashboard/PageHeader'
 import Panel from '../../components/dashboard/Panel'
+import { ModalPortal } from '../../components/dashboard/ModalPortal'
 import {
   inputAdmin,
   btnPrimaryAdmin,
@@ -233,6 +234,7 @@ export default function AdminLandingTeachers() {
       </Panel>
 
       {editId != null && (
+        <ModalPortal>
         <div className={`${modalBackdrop} overflow-y-auto`} role="dialog">
           <form onSubmit={saveEdit} className={`${modalPanelAdmin} my-8 max-w-lg space-y-3`}>
             <h3 className={modalTitle}>Sửa thẻ giáo viên</h3>
@@ -265,6 +267,7 @@ export default function AdminLandingTeachers() {
             </div>
           </form>
         </div>
+        </ModalPortal>
       )}
     </div>
   )

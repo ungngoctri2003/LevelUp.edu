@@ -65,7 +65,7 @@ SELECT setval(pg_get_serial_sequence('public.courses', 'id'), (SELECT COALESCE(M
 -- ---------------------------------------------------------------------------
 -- Lessons (id 1..17 — trung id route / findLessonContext)
 -- ---------------------------------------------------------------------------
-INSERT INTO public.lessons (id, subject_id, title, duration_minutes, level_label, sort_order)
+INSERT INTO public.lessons (id, course_id, title, duration_minutes, level_label, sort_order)
 OVERRIDING SYSTEM VALUE
 VALUES
   (1, 1, 'Đại số - Phương trình bậc hai', 45, 'Lớp 10', 1),

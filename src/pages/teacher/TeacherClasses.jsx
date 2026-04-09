@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 import { toastActionError } from '../../lib/appToast.js'
 import { Link } from 'react-router-dom'
 import { useTeacherState } from '../../hooks/useTeacherState'
+import { ModalPortal } from '../../components/dashboard/ModalPortal'
 import {
   inputTeacher,
   modalBackdrop,
@@ -134,6 +135,7 @@ export default function TeacherClasses() {
       </div>
 
       {editing && (
+        <ModalPortal>
         <div className={modalBackdrop}>
           <form onSubmit={save} className={`${modalPanelTeacher} max-h-[90vh] max-w-md overflow-y-auto`}>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{editing === 'new' ? 'Thêm lớp' : 'Sửa lớp'}</h3>
@@ -195,6 +197,7 @@ export default function TeacherClasses() {
             </div>
           </form>
         </div>
+        </ModalPortal>
       )}
     </div>
   )

@@ -103,7 +103,10 @@ export function TeacherDataProvider({ children }) {
     for (const c of classesUi) {
       rosters[c.id] = tq.rosterForClass(c.id, bundle.enrollments).map((r) => ({
         ...r,
-        name: r.name && r.name !== '—' ? r.name : `Học viên ${String(r.id).slice(0, 8)}…`,
+        name:
+          (r.name && r.name !== '—' && String(r.name).trim()) ||
+          (r.email && r.email !== '—' ? r.email : null) ||
+          `Học viên ${String(r.id).slice(0, 8)}…`,
       }))
     }
 
@@ -164,7 +167,10 @@ export function TeacherDataProvider({ children }) {
     const gradingQueue = (bundle.submissions || []).map((s) => ({
       id: String(s.id),
       assignmentId: String(s.assignment_id),
-      studentName: s.profiles?.full_name || `Học viên ${String(s.student_id).slice(0, 8)}`,
+      studentName:
+        (s.profiles?.full_name && String(s.profiles.full_name).trim()) ||
+        s.profiles?.email ||
+        `Học viên ${String(s.student_id).slice(0, 8)}`,
       assignment: s.assignments?.title || 'Bài tập',
       submittedAt: new Date(s.submitted_at).toLocaleString('vi-VN'),
       status: s.status,
@@ -178,7 +184,10 @@ export function TeacherDataProvider({ children }) {
       if (!studentMap.has(sid)) {
         studentMap.set(sid, {
           id: sid,
-          name: e.profiles?.full_name || `Học viên ${String(sid).slice(0, 8)}…`,
+          name:
+            (e.profiles?.full_name && String(e.profiles.full_name).trim()) ||
+            e.profiles?.email ||
+            `Học viên ${String(sid).slice(0, 8)}…`,
           email: e.profiles?.email || '—',
           classes: [],
         })

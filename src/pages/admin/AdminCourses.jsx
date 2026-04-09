@@ -4,6 +4,7 @@ import { toastActionError } from '../../lib/appToast.js'
 import { Link } from 'react-router-dom'
 import PageHeader from '../../components/dashboard/PageHeader'
 import Panel from '../../components/dashboard/Panel'
+import { ModalPortal } from '../../components/dashboard/ModalPortal'
 import {
   inputAdmin,
   modalBackdrop,
@@ -316,52 +317,56 @@ export default function AdminCourses() {
           {state.courses.map((c) => (
             <div
               key={c.id}
-              className={`rounded-2xl border bg-white/5 p-5 backdrop-blur-sm ${
-                c.visible === false ? 'border-amber-500/30 opacity-80' : 'border-gray-200 dark:border-white/10'
+              className={`rounded-2xl border p-5 shadow-sm transition-shadow hover:shadow-md ${
+                c.visible === false
+                  ? 'border-amber-300/90 bg-amber-50/90 ring-1 ring-amber-200/80 dark:border-amber-500/35 dark:bg-white/5 dark:ring-amber-500/20'
+                  : 'border-slate-200 bg-white ring-1 ring-slate-200/70 dark:border-white/10 dark:bg-white/5 dark:ring-0'
               }`}
             >
               <div className="flex items-start justify-between gap-2">
                 <div>
                   {c.subject && (
-                    <span className="mb-1.5 inline-block rounded-full bg-cyan-500/20 px-2 py-0.5 text-[10px] text-cyan-200">
+                    <span className="mb-1.5 inline-block rounded-full bg-cyan-100 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-cyan-900 dark:bg-cyan-500/20 dark:text-cyan-200">
                       {c.subject}
                     </span>
                   )}
-                  <h3 className="font-semibold text-gray-900 dark:text-white">{c.title}</h3>
+                  <h3 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">{c.title}</h3>
                   {c.list_price != null && Number.isFinite(Number(c.list_price)) ? (
-                    <p className="mt-1 text-xs text-slate-400">
+                    <p className="mt-1 text-xs font-medium text-slate-600 dark:text-slate-400">
                       Giá niêm yết: {Number(c.list_price).toLocaleString('vi-VN')}đ
                     </p>
                   ) : (
-                    <p className="mt-1 text-xs text-amber-400/90">Chưa có giá niêm yết (không bán online qua form)</p>
+                    <p className="mt-1 text-xs font-medium text-amber-800 dark:text-amber-400/90">
+                      Chưa có giá niêm yết (không bán online qua form)
+                    </p>
                   )}
                 </div>
                 {c.visible === false && (
-                  <span className="shrink-0 rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] text-amber-200">
+                  <span className="shrink-0 rounded-full bg-amber-200/90 px-2.5 py-0.5 text-[10px] font-semibold text-amber-950 dark:bg-amber-500/20 dark:text-amber-200">
                     Đang ẩn
                   </span>
                 )}
               </div>
-              <p className="mt-2 text-sm leading-relaxed text-slate-400">{c.description}</p>
+              <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">{c.description}</p>
               <div className="mt-4 flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={() => openEdit(c)}
-                  className="rounded-lg border border-cyan-500/40 px-3 py-1.5 text-xs font-medium text-cyan-200 hover:bg-cyan-500/10"
+                  className="rounded-lg border border-cyan-600/35 bg-cyan-50/80 px-3 py-1.5 text-xs font-medium text-cyan-900 transition hover:bg-cyan-100 dark:border-cyan-500/40 dark:bg-transparent dark:text-cyan-200 dark:hover:bg-cyan-500/10"
                 >
                   Chỉnh sửa
                 </button>
                 <button
                   type="button"
                   onClick={() => toggleVisible(c)}
-                  className="rounded-lg border border-white/20 px-3 py-1.5 text-xs text-slate-200 hover:bg-white/10"
+                  className="rounded-lg border border-slate-300 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-800 transition hover:bg-slate-100 dark:border-white/20 dark:bg-transparent dark:text-slate-200 dark:hover:bg-white/10"
                 >
                   {c.visible === false ? 'Hiện trên web' : 'Ẩn khóa'}
                 </button>
                 <button
                   type="button"
                   onClick={() => handleDelete(c)}
-                  className="rounded-lg border border-red-500/40 px-3 py-1.5 text-xs text-red-400 hover:bg-red-500/10"
+                  className="rounded-lg border border-red-300 bg-red-50/60 px-3 py-1.5 text-xs font-medium text-red-800 transition hover:bg-red-100 dark:border-red-500/40 dark:bg-transparent dark:text-red-400 dark:hover:bg-red-500/10"
                 >
                   Xóa
                 </button>
@@ -372,6 +377,7 @@ export default function AdminCourses() {
       </Panel>
 
       {editing && (
+        <ModalPortal>
         <div className={modalBackdrop}>
           <form onSubmit={saveEdit} className={modalPanelAdmin}>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Chỉnh khóa học</h3>
@@ -432,9 +438,11 @@ export default function AdminCourses() {
             </div>
           </form>
         </div>
+        </ModalPortal>
       )}
 
       {subjectEditId != null && (
+        <ModalPortal>
         <div className={modalBackdrop} role="dialog">
           <form onSubmit={saveSubjectEdit} className={modalPanelAdmin}>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Sửa môn #{subjectEditId}</h3>
@@ -485,6 +493,7 @@ export default function AdminCourses() {
             </div>
           </form>
         </div>
+        </ModalPortal>
       )}
     </div>
   )

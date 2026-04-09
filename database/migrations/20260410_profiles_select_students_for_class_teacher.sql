@@ -1,6 +1,6 @@
--- Cho phép giáo viên đọc profile học sinh trong lớp của mình (roster, chấm điểm).
--- Chạy sau schema.sql nếu roster giáo viên cần tên/email từ profiles.
--- Khuyến nghị: dùng migration database/migrations/20260410_profiles_select_students_for_class_teacher.sql trên Supabase.
+-- Cho phép giáo viên đọc profiles (tên, email) của học viên đã ghi danh lớp do chính họ phụ trách.
+-- Cần cho roster, chấm điểm, và truy vấn batch profiles trong loadTeacherBundle.
+-- (Trước đây chỉ có file database/rls_teacher_profiles_students.sql — nhiều project chưa chạy.)
 
 drop policy if exists profiles_select_students_in_my_classes on public.profiles;
 

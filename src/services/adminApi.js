@@ -1005,8 +1005,10 @@ function parseJsonField(val, fallback) {
 export async function fetchLessonsAdmin(sb) {
   const { data, error } = await sb
     .from('lessons')
-    .select('id, subject_id, title, duration_minutes, level_label, sort_order, created_at, subjects(id, name, slug)')
-    .order('subject_id')
+    .select(
+      'id, course_id, title, duration_minutes, level_label, sort_order, created_at, courses(id, title, subject_id, subjects(id, name, slug))',
+    )
+    .order('course_id')
     .order('sort_order')
     .order('id')
   if (error) throw new Error(error.message)
@@ -1023,17 +1025,20 @@ export async function fetchLessonDetailsRow(sb, lessonId) {
 
 export async function adminInsertLesson(
   sb,
-  { subject_id, title, duration_minutes, level_label, sort_order },
+  { course_id, title, duration_minutes, level_label, sort_order },
   user,
 ) {
-  const sid = Number(subject_id)
-  if (!Number.isFinite(sid)) throw new Error('Môn (subject_id) không hợp lệ')
+  const cid = Number(course_id)
+  if (!Number.isFinite(cid)) throw new Error('Khóa học (course_id) không hợp lệ')
+  const { data: co, error: cErr } = await sb.from('courses').select('id').eq('id', cid).maybeSingle()
+  if (cErr) throw new Error(cErr.message)
+  if (!co) throw new Error('Không tìm thấy khóa học')
   const t = String(title || '').trim()
   if (!t) throw new Error('Tiêu đề bài giảng là bắt buộc')
   const { data, error } = await sb
     .from('lessons')
     .insert({
-      subject_id: sid,
+      course_id: cid,
       title: t,
       duration_minutes: duration_minutes != null ? Number(duration_minutes) : null,
       level_label: level_label != null && String(level_label).trim() ? String(level_label).trim() : null,
@@ -1067,13 +1072,21 @@ export async function adminUpdateLesson(sb, id, patch, user) {
   const lid = Number(id)
   if (!Number.isFinite(lid)) throw new Error('ID bài giảng không hợp lệ')
   const body = {}
-  if (patch.subject_id != null) body.subject_id = Number(patch.subject_id)
+  if (patch.course_id != null) {
+    const cid = Number(patch.course_id)
+    if (!Number.isFinite(cid)) throw new Error('Khóa học (course_id) không hợp lệ')
+    const { data: co, error: cErr } = await sb.from('courses').select('id').eq('id', cid).maybeSingle()
+    if (cErr) throw new Error(cErr.message)
+    if (!co) throw new Error('Không tìm thấy khóa học')
+    body.course_id = cid
+  }
   if (patch.title != null) body.title = String(patch.title).trim()
   if (patch.duration_minutes !== undefined)
     body.duration_minutes = patch.duration_minutes === null || patch.duration_minutes === '' ? null : Number(patch.duration_minutes)
   if (patch.level_label !== undefined)
     body.level_label = patch.level_label != null && String(patch.level_label).trim() ? String(patch.level_label).trim() : null
   if (patch.sort_order != null) body.sort_order = Number(patch.sort_order) || 0
+  if (Object.keys(body).length === 0) return
   const { error } = await sb.from('lessons').update(body).eq('id', lid)
   if (error) throw new Error(error.message)
   await logAdminActivity(sb, `Cập nhật bài giảng #${lid}`, 'course', user?.email, user?.id)

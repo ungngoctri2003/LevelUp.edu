@@ -35,7 +35,7 @@ export const tableShell =
   'overflow-x-auto rounded-xl border border-slate-300 bg-white shadow-sm dark:border-white/10 dark:bg-white/[0.03] dark:shadow-none'
 
 export const modalBackdrop =
-  'fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-md dark:bg-black/75'
+  'fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-md dark:bg-black/75'
 
 export const modalPanelAdmin =
   'w-full max-w-lg rounded-2xl border border-slate-300 bg-white p-6 shadow-2xl ring-1 ring-slate-300/70 dark:border-white/15 dark:bg-gradient-to-b dark:from-slate-900 dark:to-slate-950 dark:shadow-cyan-500/10 dark:ring-white/10'
