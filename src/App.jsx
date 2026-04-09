@@ -1,3 +1,4 @@
+import { Analytics } from '@vercel/analytics/react'
 import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom'
 import Layout from './pages/Layout'
 import HomePage from './pages/HomePage'
@@ -53,6 +54,7 @@ function AdminRedirectOldClassLessonPost() {
 function App() {
   return (
     <BrowserRouter>
+      <Analytics />
       <AuthModalProvider>
         <AuthSearchParamsSync />
         <Routes>
