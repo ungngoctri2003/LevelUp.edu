@@ -3,6 +3,13 @@ import { toast } from 'sonner'
 import { toastActionError } from '../../lib/appToast.js'
 import { Link } from 'react-router-dom'
 import { useTeacherState } from '../../hooks/useTeacherState'
+import {
+  inputTeacher,
+  modalBackdrop,
+  modalPanelTeacher,
+  labelAdmin,
+  btnPrimaryTeacher,
+} from '../../components/dashboard/dashboardStyles'
 
 const empty = { code: '', name: '', subject: '', grade: '12', schedule: '' }
 
@@ -70,7 +77,7 @@ export default function TeacherClasses() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-bold text-white">Lớp học của tôi</h2>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Lớp học của tôi</h2>
           <p className="text-sm text-slate-400">Danh sách lớp bạn đang phụ trách.</p>
         </div>
         <button
@@ -86,9 +93,9 @@ export default function TeacherClasses() {
 
       <div className="grid gap-4 md:grid-cols-2">
         {state.classes.map((c) => (
-          <div key={c.id} className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
+          <div key={c.id} className="rounded-2xl border border-gray-200 bg-slate-50 dark:border-white/10 dark:bg-white/5 p-5 backdrop-blur-sm">
             <div className="flex items-start justify-between gap-2">
-              <h3 className="font-semibold text-white">{c.name}</h3>
+              <h3 className="font-semibold text-gray-900 dark:text-white">{c.name}</h3>
               <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-xs text-emerald-300">{c.id}</span>
             </div>
             <p className="mt-2 text-sm text-slate-400">
@@ -103,7 +110,7 @@ export default function TeacherClasses() {
             <div className="mt-4 flex flex-wrap gap-2">
               <Link
                 to={`/giao-vien/lop-hoc/${c.id}`}
-                className="rounded-lg border border-white/20 px-3 py-1.5 text-xs text-slate-200 hover:bg-white/10"
+                className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-slate-700 transition hover:bg-slate-50 dark:border-white/20 dark:text-slate-200 dark:hover:bg-white/10"
               >
                 Chi tiết lớp →
               </Link>
@@ -127,62 +134,62 @@ export default function TeacherClasses() {
       </div>
 
       {editing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-          <form onSubmit={save} className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-white/15 bg-slate-900 p-6 shadow-xl">
-            <h3 className="text-lg font-semibold text-white">{editing === 'new' ? 'Thêm lớp' : 'Sửa lớp'}</h3>
+        <div className={modalBackdrop}>
+          <form onSubmit={save} className={`${modalPanelTeacher} max-h-[90vh] max-w-md overflow-y-auto`}>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{editing === 'new' ? 'Thêm lớp' : 'Sửa lớp'}</h3>
             {editing === 'new' && (
-              <label className="mt-4 block text-sm text-slate-400">
+              <label className={`mt-4 ${labelAdmin}`}>
                 Mã lớp (tùy chọn, unique)
                 <input
                   value={form.code}
                   onChange={(e) => setForm((f) => ({ ...f, code: e.target.value }))}
-                  className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white focus:border-emerald-500/50 focus:outline-none"
+                  className={`${inputTeacher} mt-1 w-full`}
                 />
               </label>
             )}
-            <label className="mt-3 block text-sm text-slate-400">
+            <label className={`mt-3 ${labelAdmin}`}>
               Tên lớp
               <input
                 value={form.name}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white focus:border-emerald-500/50 focus:outline-none"
+                className={`${inputTeacher} mt-1 w-full`}
               />
             </label>
             <div className="mt-3 grid grid-cols-2 gap-3">
-              <label className="text-sm text-slate-400">
+              <label className={labelAdmin}>
                 Môn
                 <input
                   value={form.subject}
                   onChange={(e) => setForm((f) => ({ ...f, subject: e.target.value }))}
-                  className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white focus:border-emerald-500/50 focus:outline-none"
+                  className={`${inputTeacher} mt-1 w-full`}
                 />
               </label>
-              <label className="text-sm text-slate-400">
+              <label className={labelAdmin}>
                 Khối
                 <input
                   value={form.grade}
                   onChange={(e) => setForm((f) => ({ ...f, grade: e.target.value }))}
-                  className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white focus:border-emerald-500/50 focus:outline-none"
+                  className={`${inputTeacher} mt-1 w-full`}
                 />
               </label>
             </div>
-            <label className="mt-3 block text-sm text-slate-400">
+            <label className={`mt-3 ${labelAdmin}`}>
               Tóm tắt lịch (text)
               <input
                 value={form.schedule}
                 onChange={(e) => setForm((f) => ({ ...f, schedule: e.target.value }))}
-                className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white focus:border-emerald-500/50 focus:outline-none"
+                className={`${inputTeacher} mt-1 w-full`}
               />
             </label>
             <div className="mt-6 flex justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setEditing(null)}
-                className="rounded-xl border border-white/20 px-4 py-2 text-sm text-slate-300 hover:bg-white/5"
+                className="rounded-xl border border-gray-200 px-4 py-2 text-sm text-slate-700 transition hover:bg-slate-50 dark:border-white/20 dark:text-slate-300 dark:hover:bg-white/5"
               >
                 Hủy
               </button>
-              <button type="submit" className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500">
+              <button type="submit" className={btnPrimaryTeacher}>
                 Lưu
               </button>
             </div>

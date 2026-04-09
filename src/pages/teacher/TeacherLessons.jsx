@@ -4,6 +4,12 @@ import { toast } from 'sonner'
 import { toastActionError } from '../../lib/appToast.js'
 import PageHeader from '../../components/dashboard/PageHeader'
 import Panel from '../../components/dashboard/Panel'
+import {
+  tableShell,
+  tableHeadTeacher,
+  tableBodyTeacher,
+  tableRowHover,
+} from '../../components/dashboard/dashboardStyles'
 import { useTeacherState } from '../../hooks/useTeacherState'
 
 const empty = { classId: '', title: '', duration: '45 phút' }
@@ -57,18 +63,18 @@ export default function TeacherLessons() {
         <button
           type="button"
           onClick={() => setShowForm(true)}
-          className="rounded-xl border border-dashed border-emerald-400/45 bg-emerald-500/10 px-4 py-2.5 text-sm font-medium text-emerald-200 transition hover:bg-emerald-500/20"
+          className="rounded-xl border border-dashed border-emerald-500/60 bg-emerald-50 px-4 py-2.5 text-sm font-medium text-emerald-900 transition hover:bg-emerald-100 dark:border-emerald-400/45 dark:bg-emerald-500/10 dark:text-emerald-200 dark:hover:bg-emerald-500/20"
         >
           + Thêm bài giảng
         </button>
       </PageHeader>
 
-      {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
+      {loading && <p className="text-sm text-slate-600 dark:text-slate-400">Đang tải…</p>}
 
       <Panel noDivider padding={false} className="overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className={tableShell}>
           <table className="w-full min-w-[960px] text-left text-sm">
-            <thead className="border-b border-white/10 bg-black/20 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+            <thead className={tableHeadTeacher}>
               <tr>
                 <th className="px-4 py-3">Tiêu đề</th>
                 <th className="px-4 py-3 max-w-[220px]">Tóm tắt (rút gọn)</th>
@@ -79,21 +85,21 @@ export default function TeacherLessons() {
                 <th className="px-4 py-3" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5 text-slate-200">
+            <tbody className={tableBodyTeacher}>
               {state.lessons.map((l) => (
-                <tr key={l.id} className="hover:bg-white/5">
+                <tr key={l.id} className={tableRowHover}>
                   <td className="px-4 py-3 font-medium">{l.title}</td>
-                  <td className="max-w-[220px] px-4 py-3 text-xs leading-snug text-slate-500">
+                  <td className="max-w-[220px] px-4 py-3 text-xs leading-snug text-slate-600 dark:text-slate-500">
                     {l.bodyPreview}
                   </td>
-                  <td className="px-4 py-3 text-slate-400">{l.className}</td>
+                  <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{l.className}</td>
                   <td className="px-4 py-3">{l.duration}</td>
                   <td className="px-4 py-3">{l.views}</td>
-                  <td className="px-4 py-3 text-slate-500">{l.updated}</td>
+                  <td className="px-4 py-3 text-slate-600 dark:text-slate-500">{l.updated}</td>
                   <td className="px-4 py-3 text-right">
                     <Link
                       to={`/giao-vien/bai-giang/${l.id}`}
-                      className="mr-3 text-xs text-emerald-300 hover:text-emerald-200"
+                      className="mr-3 text-xs font-medium text-emerald-700 hover:text-emerald-800 dark:text-emerald-300 dark:hover:text-emerald-200"
                     >
                       Nội dung
                     </Link>
@@ -108,7 +114,7 @@ export default function TeacherLessons() {
                           duration: l.duration === '—' ? '45 phút' : l.duration,
                         })
                       }
-                      className="mr-3 text-xs text-emerald-400 hover:text-emerald-300"
+                      className="mr-3 text-xs font-medium text-emerald-700 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300"
                     >
                       Sửa
                     </button>
@@ -122,7 +128,7 @@ export default function TeacherLessons() {
                           toastActionError(err, 'Không xóa được bài giảng.')
                         }
                       }}
-                      className="text-xs text-red-400"
+                      className="text-xs font-medium text-red-600 dark:text-red-400"
                     >
                       Xóa
                     </button>

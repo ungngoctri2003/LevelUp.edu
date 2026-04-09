@@ -52,7 +52,7 @@ const statusToneClass = {
   cyan: 'border-cyan-500/40 bg-cyan-500/10 text-cyan-200',
   amber: 'border-amber-500/40 bg-amber-500/10 text-amber-100',
   rose: 'border-rose-500/40 bg-rose-500/10 text-rose-100',
-  slate: 'border-white/15 bg-white/5 text-slate-300',
+  slate: 'border-gray-200 bg-slate-100 text-slate-700 dark:border-white/15 dark:bg-white/5 dark:text-slate-300',
   violet: 'border-violet-500/40 bg-violet-500/10 text-violet-200',
 }
 
@@ -220,12 +220,12 @@ export default function StudentRegisteredCoursesPage() {
       )}
 
       {dataLoading && (
-        <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/20 px-4 py-6 sm:px-6">
+        <div className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-slate-50 px-4 py-6 sm:px-6 dark:border-white/10 dark:bg-black/20">
           <span
             className="inline-block h-5 w-5 shrink-0 animate-spin rounded-full border-2 border-sky-400/30 border-t-sky-400"
             aria-hidden
           />
-          <p className="text-sm text-slate-300">Đang tải dữ liệu khóa học và thanh toán…</p>
+          <p className="text-sm text-slate-600 dark:text-slate-300">Đang tải dữ liệu khóa học và thanh toán…</p>
         </div>
       )}
 
@@ -249,40 +249,40 @@ export default function StudentRegisteredCoursesPage() {
         )}
 
       {isStudent && !dataLoading && tableRows.length > 0 && (
-        <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-          <div className="border-b border-white/10 px-4 py-4 sm:px-6">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-sky-400/90">Khóa học — thống kê &amp; thanh toán</h2>
+        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-black/20 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+          <div className="border-b border-gray-200 px-4 py-4 sm:px-6 dark:border-white/10">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-sky-600 dark:text-sky-400/90">Khóa học — thống kê &amp; thanh toán</h2>
             <p className="mt-1 text-xs text-slate-500">
               Chỉ khóa đã có yêu cầu thanh toán của bạn. Trạng thái gồm thanh toán khóa hoặc quyền xem thêm qua lớp / thanh
               toán lớp cùng môn.
             </p>
           </div>
           <div className="overflow-x-auto">
-            <table className="min-w-[720px] w-full border-collapse text-left text-sm text-slate-200">
+            <table className="min-w-[720px] w-full border-collapse text-left text-sm text-gray-800 dark:text-slate-200">
               <thead>
-                <tr className="border-b border-white/10 bg-white/[0.04]">
-                  <th className="px-4 py-3 font-semibold text-slate-300 sm:px-5">Khóa học</th>
-                  <th className="px-4 py-3 font-semibold text-slate-300 sm:px-5">Môn</th>
-                  <th className="whitespace-nowrap px-4 py-3 font-semibold text-slate-300 sm:px-5">Bài giảng</th>
-                  <th className="whitespace-nowrap px-4 py-3 font-semibold text-slate-300 sm:px-5">Giá / ghi nhận</th>
-                  <th className="px-4 py-3 font-semibold text-slate-300 sm:px-5">Trạng thái</th>
-                  <th className="whitespace-nowrap px-4 py-3 font-semibold text-slate-300 sm:px-5">Thao tác</th>
+                <tr className="border-b border-gray-200 bg-slate-50 dark:border-white/10 dark:bg-white/[0.04]">
+                  <th className="px-4 py-3 font-semibold text-slate-700 sm:px-5 dark:text-slate-300">Khóa học</th>
+                  <th className="px-4 py-3 font-semibold text-slate-700 sm:px-5 dark:text-slate-300">Môn</th>
+                  <th className="whitespace-nowrap px-4 py-3 font-semibold text-slate-700 sm:px-5 dark:text-slate-300">Bài giảng</th>
+                  <th className="whitespace-nowrap px-4 py-3 font-semibold text-slate-700 sm:px-5 dark:text-slate-300">Giá / ghi nhận</th>
+                  <th className="px-4 py-3 font-semibold text-slate-700 sm:px-5 dark:text-slate-300">Trạng thái</th>
+                  <th className="whitespace-nowrap px-4 py-3 font-semibold text-slate-700 sm:px-5 dark:text-slate-300">Thao tác</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/10">
+              <tbody className="divide-y divide-gray-200 dark:divide-white/10">
                 {tableRows.map(({ co, cpRow, lessonCount, status, unlocked, amount }) => (
-                  <tr key={co.id} className="transition-colors hover:bg-white/[0.04]">
-                    <td className="max-w-[220px] px-4 py-3 font-medium text-white sm:px-5">
+                  <tr key={co.id} className="transition-colors hover:bg-slate-50 dark:hover:bg-white/[0.04]">
+                    <td className="max-w-[220px] px-4 py-3 font-medium text-gray-900 sm:px-5 dark:text-white">
                       <span className="line-clamp-2">{co.courseTitle}</span>
                     </td>
-                    <td className="px-4 py-3 text-slate-300 sm:px-5">
+                    <td className="px-4 py-3 text-slate-600 sm:px-5 dark:text-slate-300">
                       <span className="inline-flex items-center gap-1">
                         <span aria-hidden>{co.icon}</span>
                         {co.subjectName}
                       </span>
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 tabular-nums text-slate-200 sm:px-5">{lessonCount}</td>
-                    <td className="whitespace-nowrap px-4 py-3 text-slate-300 sm:px-5">
+                    <td className="whitespace-nowrap px-4 py-3 tabular-nums text-gray-800 sm:px-5 dark:text-slate-200">{lessonCount}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-slate-600 sm:px-5 dark:text-slate-300">
                       {amount != null ? `${amount.toLocaleString('vi-VN')}đ` : '—'}
                     </td>
                     <td className="px-4 py-3 sm:px-5">

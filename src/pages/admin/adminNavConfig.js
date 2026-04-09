@@ -10,4 +10,5 @@ export const adminNavItems = [
   { to: '/admin/doi-ngu-trang-chu', label: 'Đội ngũ (landing)', icon: 'teacher' },
   { to: '/admin/tin-tuc', label: 'Tin tức', icon: 'news' },
   { to: '/admin/bai-kiem-tra', label: 'Bài kiểm tra', icon: 'exam' },
+  { to: '/admin/ho-so', label: 'Hồ sơ', icon: 'profile' },
 ]

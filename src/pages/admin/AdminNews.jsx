@@ -10,6 +10,12 @@ import {
   modalPanelAdmin,
   btnPrimaryAdmin,
   tableHeadAdmin,
+  tableBodyAdmin,
+  tableRowHover,
+  tableShell,
+  modalTitle,
+  btnSecondaryAdmin,
+  labelAdmin,
 } from '../../components/dashboard/dashboardStyles'
 import { useAdminState } from '../../hooks/useAdminState'
 
@@ -77,7 +83,7 @@ export default function AdminNews() {
         description={
           <>
             Bài viết đăng tại đây sẽ xuất hiện trên{' '}
-            <Link className="font-medium text-cyan-400 hover:text-cyan-300" to="/tin-tuc">
+            <Link className="font-medium text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300" to="/tin-tuc">
               trang Tin tức
             </Link>
             .
@@ -122,7 +128,7 @@ export default function AdminNews() {
       </Panel>
 
       <Panel noDivider padding={false} className="overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className={tableShell}>
           <table className="w-full min-w-[640px] text-left text-sm">
             <thead className={tableHeadAdmin}>
               <tr>
@@ -133,18 +139,18 @@ export default function AdminNews() {
                 <th className="px-4 py-3">Thao tác</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5 text-slate-200">
+            <tbody className={tableBodyAdmin}>
               {items.map((n) => (
-                <tr key={n.id} className="hover:bg-white/5">
+                <tr key={n.id} className={tableRowHover}>
                   <td className="px-4 py-3 font-mono text-xs">{n.id}</td>
                   <td className="max-w-xs truncate px-4 py-3">{n.title}</td>
-                  <td className="px-4 py-3 text-slate-400">{n.category}</td>
-                  <td className="px-4 py-3 text-slate-400">{n.date}</td>
+                  <td className="px-4 py-3 text-slate-500 dark:text-slate-400">{n.category}</td>
+                  <td className="px-4 py-3 text-slate-500 dark:text-slate-400">{n.date}</td>
                   <td className="space-x-2 px-4 py-3">
-                    <button type="button" onClick={() => openEdit(n)} className="text-xs text-cyan-400 hover:text-cyan-300">
+                    <button type="button" onClick={() => openEdit(n)} className="text-xs text-cyan-600 hover:text-cyan-800 dark:text-cyan-400 dark:hover:text-cyan-300">
                       Sửa
                     </button>
-                    <button type="button" onClick={() => remove(n.id)} className="text-xs text-red-400 hover:text-red-300">
+                    <button type="button" onClick={() => remove(n.id)} className="text-xs text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">
                       Xóa
                     </button>
                   </td>
@@ -158,8 +164,8 @@ export default function AdminNews() {
       {editModal != null && (
         <div className={modalBackdrop}>
           <form onSubmit={saveEdit} className={modalPanelAdmin}>
-            <h3 className="text-lg font-semibold text-white">Sửa tin</h3>
-            <label className="mt-4 block text-sm text-slate-400">
+            <h3 className={modalTitle}>Sửa tin</h3>
+            <label className={`mt-4 ${labelAdmin}`}>
               Tiêu đề
               <input
                 value={editForm.title}
@@ -167,7 +173,7 @@ export default function AdminNews() {
                 className={field}
               />
             </label>
-            <label className="mt-3 block text-sm text-slate-400">
+            <label className={`mt-3 ${labelAdmin}`}>
               Danh mục
               <select
                 value={editForm.category}
@@ -180,7 +186,7 @@ export default function AdminNews() {
                 <option>Cập nhật</option>
               </select>
             </label>
-            <label className="mt-3 block text-sm text-slate-400">
+            <label className={`mt-3 ${labelAdmin}`}>
               Mô tả / lead
               <textarea
                 value={editForm.excerpt}
@@ -193,7 +199,7 @@ export default function AdminNews() {
               <button
                 type="button"
                 onClick={() => setEditModal(null)}
-                className="rounded-xl border border-white/20 px-4 py-2 text-sm text-slate-300 hover:bg-white/5"
+                className={btnSecondaryAdmin}
               >
                 Hủy
               </button>

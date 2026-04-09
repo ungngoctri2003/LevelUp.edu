@@ -47,7 +47,7 @@ const classPayStatusToneClass = {
   cyan: 'border-cyan-500/40 bg-cyan-500/10 text-cyan-200',
   amber: 'border-amber-500/40 bg-amber-500/10 text-amber-100',
   rose: 'border-rose-500/40 bg-rose-500/10 text-rose-100',
-  slate: 'border-white/15 bg-white/5 text-slate-300',
+  slate: 'border-gray-200 bg-slate-100 text-slate-700 dark:border-white/15 dark:bg-white/5 dark:text-slate-300',
   violet: 'border-violet-500/40 bg-violet-500/10 text-violet-200',
 }
 
@@ -230,7 +230,7 @@ export default function StudentLearningHub() {
           <div
             role="tablist"
             aria-label="Nội dung lớp học"
-            className="flex gap-1 overflow-x-auto border-b border-white/10 pb-px [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="flex gap-1 overflow-x-auto border-b border-gray-200 pb-px [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden dark:border-white/10"
           >
             {tabItems.map((tab) => {
               const isActive = activeHash === tab.id
@@ -244,8 +244,8 @@ export default function StudentLearningHub() {
                   onClick={() => goTab(tab.id)}
                   className={`${tabBtn} shrink-0 border-b-2 border-transparent ${
                     isActive
-                      ? 'border-sky-400 text-white'
-                      : 'text-slate-400 hover:text-slate-200'
+                      ? 'border-sky-500 text-sky-700 dark:border-sky-400 dark:text-white'
+                      : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
                   }`}
                 >
                   {tab.label}
@@ -257,10 +257,10 @@ export default function StudentLearningHub() {
           <div className="min-h-[12rem]" role="tabpanel" aria-labelledby={`hub-tab-${activeHash}`}>
             {activeHash === H.BAI_GIANG && (
               <section id={H.BAI_GIANG} className="space-y-4">
-                <h2 className="text-sm font-semibold uppercase tracking-wider text-sky-400/90">Bài giảng theo lớp</h2>
-                <p className="text-sm text-slate-400">
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-sky-600 dark:text-sky-400/90">Bài giảng theo lớp</h2>
+                <p className="text-sm text-slate-600 dark:text-slate-400">
                   Nội dung do giáo viên đăng trong từng lớp bạn đã ghi danh. Khóa học trực tuyến (catalog) xem tại{' '}
-                  <Link to="/bai-giang" className="font-semibold text-sky-400 hover:text-sky-300">
+                  <Link to="/bai-giang" className="font-semibold text-sky-600 hover:text-sky-800 dark:text-sky-400 dark:hover:text-sky-300">
                     trang Bài giảng
                   </Link>
                   .
@@ -275,8 +275,8 @@ export default function StudentLearningHub() {
                   <div className="space-y-6">
                     {lessonsByEnrolledClass.map((block) => (
                       <Panel key={String(block.classId)} noDivider padding>
-                        <div className="border-b border-white/10 pb-3">
-                          <h3 className="text-lg font-semibold text-white">{block.className}</h3>
+                        <div className="border-b border-gray-200 pb-3 dark:border-white/10">
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{block.className}</h3>
                           {block.classCode ? (
                             <p className="mt-0.5 font-mono text-xs text-slate-500">{block.classCode}</p>
                           ) : null}
@@ -289,21 +289,21 @@ export default function StudentLearningHub() {
                             Chưa có bài giảng nào trong lớp này — giáo viên có thể đăng sau.
                           </p>
                         ) : (
-                          <ul className="mt-4 divide-y divide-white/10">
+                          <ul className="mt-4 divide-y divide-gray-200 dark:divide-white/10">
                             {block.items.map((post) => (
                               <li key={post.id}>
                                 <Link
                                   to={`/bai-giang/lop/${post.id}`}
-                                  className="flex flex-wrap items-start justify-between gap-3 py-4 transition-colors hover:bg-white/[0.04]"
+                                  className="flex flex-wrap items-start justify-between gap-3 py-4 transition-colors hover:bg-slate-50 dark:hover:bg-white/[0.04]"
                                 >
                                   <div className="min-w-0">
-                                    <p className="font-semibold text-white">{post.title}</p>
+                                    <p className="font-semibold text-gray-900 dark:text-white">{post.title}</p>
                                     <p className="mt-1 text-sm text-slate-400">
                                       {post.duration_display}
                                       {post.subject ? ` · ${post.subject}` : ''}
                                     </p>
                                   </div>
-                                  <span className="shrink-0 text-sm font-medium text-sky-400">Xem →</span>
+                                  <span className="shrink-0 text-sm font-medium text-sky-600 dark:text-sky-400">Xem →</span>
                                 </Link>
                               </li>
                             ))}
@@ -318,7 +318,7 @@ export default function StudentLearningHub() {
 
             {activeHash === H.LOP && (
               <section id={H.LOP} className="space-y-4">
-                <h2 className="text-sm font-semibold uppercase tracking-wider text-sky-400/90">Lớp đã kích hoạt</h2>
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-sky-600 dark:text-sky-400/90">Lớp đã kích hoạt</h2>
                 {classes.length === 0 ? (
                   <EmptyState
                     icon="🎓"
@@ -331,7 +331,7 @@ export default function StudentLearningHub() {
                       <Panel key={row.class_id} noDivider padding className="transition hover:border-sky-500/20">
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div className="min-w-0">
-                            <h3 className="text-lg font-semibold text-white">{row.class_name}</h3>
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{row.class_name}</h3>
                             <p className="mt-1 text-sm text-slate-400">
                               {row.subject} · {row.grade_label} · GV {row.teacher_name}
                             </p>
@@ -345,21 +345,21 @@ export default function StudentLearningHub() {
                         </div>
 
                         <div className="mt-5 grid gap-3 sm:grid-cols-4">
-                          <div className="rounded-xl border border-white/10 bg-black/20 px-4 py-3">
+                          <div className="rounded-xl border border-gray-200 bg-slate-50 px-4 py-3 dark:border-white/10 dark:bg-black/20">
                             <p className="text-xs uppercase tracking-wide text-slate-500">Bài giảng</p>
-                            <p className="mt-1 text-lg font-semibold text-white">{row.lesson_count}</p>
+                            <p className="mt-1 text-lg font-semibold text-gray-900 dark:text-white">{row.lesson_count}</p>
                           </div>
-                          <div className="rounded-xl border border-white/10 bg-black/20 px-4 py-3">
+                          <div className="rounded-xl border border-gray-200 bg-slate-50 px-4 py-3 dark:border-white/10 dark:bg-black/20">
                             <p className="text-xs uppercase tracking-wide text-slate-500">Bài tập</p>
-                            <p className="mt-1 text-lg font-semibold text-white">{row.assignment_count}</p>
+                            <p className="mt-1 text-lg font-semibold text-gray-900 dark:text-white">{row.assignment_count}</p>
                           </div>
-                          <div className="rounded-xl border border-white/10 bg-black/20 px-4 py-3">
+                          <div className="rounded-xl border border-gray-200 bg-slate-50 px-4 py-3 dark:border-white/10 dark:bg-black/20">
                             <p className="text-xs uppercase tracking-wide text-slate-500">Bài kiểm tra</p>
-                            <p className="mt-1 text-lg font-semibold text-white">{row.exam_count}</p>
+                            <p className="mt-1 text-lg font-semibold text-gray-900 dark:text-white">{row.exam_count}</p>
                           </div>
-                          <div className="rounded-xl border border-white/10 bg-black/20 px-4 py-3">
+                          <div className="rounded-xl border border-gray-200 bg-slate-50 px-4 py-3 dark:border-white/10 dark:bg-black/20">
                             <p className="text-xs uppercase tracking-wide text-slate-500">Lịch buổi học</p>
-                            <p className="mt-1 text-lg font-semibold text-white">{row.schedule_count}</p>
+                            <p className="mt-1 text-lg font-semibold text-gray-900 dark:text-white">{row.schedule_count}</p>
                           </div>
                         </div>
 
@@ -369,13 +369,13 @@ export default function StudentLearningHub() {
                           </Link>
                           <Link
                             to={`/hoc-vien/khoa-hoc#${H.BAI_TAP}`}
-                            className="rounded-xl border border-white/15 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-white/5"
+                            className="rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-white/15 dark:text-slate-200 dark:hover:bg-white/5"
                           >
                             Bài tập &amp; kiểm tra
                           </Link>
                           <Link
                             to={`/hoc-vien/khoa-hoc?lop=${encodeURIComponent(String(row.class_id))}#${H.LICH}`}
-                            className="rounded-xl border border-white/15 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-white/5"
+                            className="rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-white/15 dark:text-slate-200 dark:hover:bg-white/5"
                           >
                             Lịch học / meet
                           </Link>
@@ -398,7 +398,7 @@ export default function StudentLearningHub() {
 
             {activeHash === H.THANH_TOAN && (
               <section id={H.THANH_TOAN} className="space-y-4">
-                <h2 className="text-sm font-semibold uppercase tracking-wider text-emerald-400/90">
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400/90">
                   Trạng thái thanh toán lớp đã đăng ký
                 </h2>
                 <p className="text-sm text-slate-400">
@@ -417,34 +417,34 @@ export default function StudentLearningHub() {
                     </p>
                   </Panel>
                 ) : (
-                  <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                  <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-black/20 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
                     <div className="overflow-x-auto">
-                      <table className="min-w-[720px] w-full border-collapse text-left text-sm text-slate-200">
+                      <table className="min-w-[720px] w-full border-collapse text-left text-sm text-gray-800 dark:text-slate-200">
                         <thead>
-                          <tr className="border-b border-white/10 bg-white/[0.04]">
-                            <th className="px-4 py-3 font-semibold text-slate-300 sm:px-5">Lớp</th>
-                            <th className="px-4 py-3 font-semibold text-slate-300 sm:px-5">Môn</th>
-                            <th className="whitespace-nowrap px-4 py-3 font-semibold text-slate-300 sm:px-5">Học phí</th>
-                            <th className="px-4 py-3 font-semibold text-slate-300 sm:px-5">Trạng thái</th>
-                            <th className="whitespace-nowrap px-4 py-3 font-semibold text-slate-300 sm:px-5">Thao tác</th>
+                          <tr className="border-b border-gray-200 bg-slate-50 dark:border-white/10 dark:bg-white/[0.04]">
+                            <th className="px-4 py-3 font-semibold text-slate-700 sm:px-5 dark:text-slate-300">Lớp</th>
+                            <th className="px-4 py-3 font-semibold text-slate-700 sm:px-5 dark:text-slate-300">Môn</th>
+                            <th className="whitespace-nowrap px-4 py-3 font-semibold text-slate-700 sm:px-5 dark:text-slate-300">Học phí</th>
+                            <th className="px-4 py-3 font-semibold text-slate-700 sm:px-5 dark:text-slate-300">Trạng thái</th>
+                            <th className="whitespace-nowrap px-4 py-3 font-semibold text-slate-700 sm:px-5 dark:text-slate-300">Thao tác</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-white/10">
+                        <tbody className="divide-y divide-gray-200 dark:divide-white/10">
                           {classPaymentRows.map((p) => {
                             const status = getClassPaymentRowStatus(p, classes)
                             const amount =
                               p.amount != null && Number.isFinite(Number(p.amount)) ? Number(p.amount) : null
                             const enrolled = classes?.some((c) => Number(c.class_id) === Number(p.class_id))
                             return (
-                              <tr key={`${p.class_id}-${p.id}`} className="transition-colors hover:bg-white/[0.04]">
-                                <td className="max-w-[240px] px-4 py-3 font-medium text-white sm:px-5">
+                              <tr key={`${p.class_id}-${p.id}`} className="transition-colors hover:bg-slate-50 dark:hover:bg-white/[0.04]">
+                                <td className="max-w-[240px] px-4 py-3 font-medium text-gray-900 sm:px-5 dark:text-white">
                                   <span className="line-clamp-2">{p.class_name}</span>
                                   {p.class_code ? (
                                     <span className="mt-0.5 block font-mono text-xs text-slate-500">{p.class_code}</span>
                                   ) : null}
                                 </td>
-                                <td className="px-4 py-3 text-slate-300 sm:px-5">{p.class_subject || '—'}</td>
-                                <td className="whitespace-nowrap px-4 py-3 text-slate-300 sm:px-5">
+                                <td className="px-4 py-3 text-slate-600 sm:px-5 dark:text-slate-300">{p.class_subject || '—'}</td>
+                                <td className="whitespace-nowrap px-4 py-3 text-slate-600 sm:px-5 dark:text-slate-300">
                                   {amount != null ? `${amount.toLocaleString('vi-VN')}đ` : '—'}
                                 </td>
                                 <td className="px-4 py-3 sm:px-5">
@@ -491,11 +491,11 @@ export default function StudentLearningHub() {
 
             {activeHash === H.MO_BAN && showMoBanTab && (
               <section id={H.MO_BAN} className="space-y-4">
-                <h2 className="text-sm font-semibold uppercase tracking-wider text-sky-400/90">Lớp đang mở bán</h2>
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-sky-600 dark:text-sky-400/90">Lớp đang mở bán</h2>
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                   {saleRecommendations.map((row) => (
                     <Panel key={row.id} noDivider padding>
-                      <h3 className="text-lg font-semibold text-white">{row.name}</h3>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{row.name}</h3>
                       <p className="mt-1 text-sm text-slate-400">
                         {row.subject} · {row.grade_label} · GV {row.teacher_name}
                       </p>

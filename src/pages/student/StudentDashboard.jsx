@@ -77,8 +77,8 @@ export default function StudentDashboard() {
 
       <Panel title="Việc cần làm" subtitle="Gợi ý bước tiếp theo.">
         <ul className="space-y-0 text-sm">
-          <li className="flex items-center justify-between gap-2 border-b border-white/5 py-3 first:pt-0">
-            <span className="text-slate-300">Khóa học đã đăng ký (catalog)</span>
+          <li className="flex items-center justify-between gap-2 border-b border-gray-200 py-3 first:pt-0 dark:border-white/5">
+            <span className="text-slate-700 dark:text-slate-300">Khóa học đã đăng ký (catalog)</span>
             <Link
               to="/hoc-vien/khoa-hoc-da-dang-ky"
               className="rounded-lg bg-sky-500/15 px-3 py-1 text-xs font-semibold text-sky-300 hover:bg-sky-500/25"
@@ -86,8 +86,8 @@ export default function StudentDashboard() {
               Mở →
             </Link>
           </li>
-          <li className="flex items-center justify-between gap-2 border-b border-white/5 py-3">
-            <span className="text-slate-300">Trạng thái thanh toán lớp</span>
+          <li className="flex items-center justify-between gap-2 border-b border-gray-200 py-3 dark:border-white/5">
+            <span className="text-slate-700 dark:text-slate-300">Trạng thái thanh toán lớp</span>
             <Link
               to="/hoc-vien/khoa-hoc#student-section-thanh-toan"
               className="rounded-lg bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-300 hover:bg-emerald-500/25"
@@ -95,14 +95,14 @@ export default function StudentDashboard() {
               Mở →
             </Link>
           </li>
-          <li className="flex items-center justify-between gap-2 border-b border-white/5 py-3">
-            <span className="text-slate-300">Danh mục khóa công khai (trang chủ)</span>
+          <li className="flex items-center justify-between gap-2 border-b border-gray-200 py-3 dark:border-white/5">
+            <span className="text-slate-700 dark:text-slate-300">Danh mục khóa công khai (trang chủ)</span>
             <Link to="/bai-giang" className="rounded-lg bg-sky-500/15 px-3 py-1 text-xs font-semibold text-sky-300 hover:bg-sky-500/25">
               Mở →
             </Link>
           </li>
-          <li className="flex items-center justify-between gap-2 border-b border-white/5 py-3">
-            <span className="text-slate-300">Lớp mở bán — đăng ký &amp; thanh toán</span>
+          <li className="flex items-center justify-between gap-2 border-b border-gray-200 py-3 dark:border-white/5">
+            <span className="text-slate-700 dark:text-slate-300">Lớp mở bán — đăng ký &amp; thanh toán</span>
             <Link
               to="/lop-hoc"
               className="rounded-lg bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-300 hover:bg-emerald-500/25"
@@ -110,14 +110,14 @@ export default function StudentDashboard() {
               Mở →
             </Link>
           </li>
-          <li className="flex items-center justify-between gap-2 border-b border-white/5 py-3">
-            <span className="text-slate-300">Lớp học của tôi — lớp đã kích hoạt, lịch, bài tập &amp; kiểm tra</span>
+          <li className="flex items-center justify-between gap-2 border-b border-gray-200 py-3 dark:border-white/5">
+            <span className="text-slate-700 dark:text-slate-300">Lớp học của tôi — lớp đã kích hoạt, lịch, bài tập &amp; kiểm tra</span>
             <Link to="/hoc-vien/khoa-hoc" className="rounded-lg bg-sky-500/15 px-3 py-1 text-xs font-semibold text-sky-300 hover:bg-sky-500/25">
               Mở →
             </Link>
           </li>
           <li className="flex items-center justify-between gap-2 py-3 last:pb-0">
-            <span className="text-slate-300">Cập nhật hồ sơ</span>
+            <span className="text-slate-700 dark:text-slate-300">Cập nhật hồ sơ</span>
             <Link to="/hoc-vien/ho-so" className="rounded-lg bg-sky-500/15 px-3 py-1 text-xs font-semibold text-sky-300 hover:bg-sky-500/25">
               Mở →
             </Link>

@@ -7,6 +7,9 @@ import {
   modalBackdrop,
   modalPanelAdmin,
   tableHeadAdmin,
+  tableBodyAdmin,
+  tableRowHover,
+  tableShell,
 } from '../../components/dashboard/dashboardStyles'
 import { useAdminState } from '../../hooks/useAdminState'
 import { toast } from 'sonner'
@@ -172,7 +175,7 @@ export default function AdminPayments() {
   const isCoursePayment = editingRow?.payment_kind === 'course' || editingRow?.course_id != null
 
   const renderPaymentsTable = (rows, kind) => (
-    <div className="overflow-x-auto rounded-xl border border-white/10">
+    <div className={tableShell}>
       <table className="w-full min-w-[940px] text-left text-sm">
         <thead className={tableHeadAdmin}>
           <tr>
@@ -185,7 +188,7 @@ export default function AdminPayments() {
             <th className="px-4 py-3">Thao tác</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-white/5 text-slate-200">
+        <tbody className={tableBodyAdmin}>
           {loading && (
             <tr>
               <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
@@ -201,18 +204,18 @@ export default function AdminPayments() {
             </tr>
           )}
           {rows.map((row) => (
-            <tr key={row.id} className="hover:bg-white/5">
+            <tr key={row.id} className={tableRowHover}>
               <td className="px-4 py-3 align-top">
                 {kind === 'class' ? (
                   <>
-                    <p className="font-medium text-white">{row.class_name}</p>
+                    <p className="font-medium text-gray-900 dark:text-white">{row.class_name}</p>
                     <p className="text-xs text-slate-400">
                       {row.class_subject} · {row.class_grade_label}
                     </p>
                   </>
                 ) : (
                   <>
-                    <p className="font-medium text-white">{courseDisplayTitle(row)}</p>
+                    <p className="font-medium text-gray-900 dark:text-white">{courseDisplayTitle(row)}</p>
                     <p className="text-xs text-slate-400">Khóa catalog · ID #{row.course_id}</p>
                   </>
                 )}
@@ -227,7 +230,7 @@ export default function AdminPayments() {
               </td>
               <td className="px-4 py-3 align-top text-slate-300">{formatCurrency(row.amount)}</td>
               <td className="px-4 py-3 align-top">
-                <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs">
+                <span className="rounded-full border border-gray-200 bg-slate-100 px-2.5 py-1 text-xs text-gray-800 dark:border-white/10 dark:bg-white/5 dark:text-slate-200">
                   {STATUS_OPTIONS.find((opt) => opt.value === row.payment_status)?.label || row.payment_status}
                 </span>
                 {kind === 'class' && row.already_enrolled && (
@@ -261,7 +264,7 @@ export default function AdminPayments() {
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Panel padding className="space-y-1">
           <p className="text-xs uppercase tracking-wide text-slate-500">Tổng (cả hai)</p>
-          <p className="text-2xl font-semibold text-white">{summaryAll.total}</p>
+          <p className="text-2xl font-semibold text-gray-900 dark:text-white">{summaryAll.total}</p>
         </Panel>
         <Panel padding className="space-y-1">
           <p className="text-xs uppercase tracking-wide text-slate-500">Đang chờ (cả hai)</p>
@@ -286,7 +289,7 @@ export default function AdminPayments() {
           role="tablist"
           aria-label="Chọn loại thanh toán"
         >
-          <div className="inline-flex gap-2 rounded-xl border border-white/10 bg-black/30 p-2 sm:gap-3">
+          <div className="inline-flex gap-2 rounded-xl border border-gray-200 bg-slate-100 p-2 sm:gap-3 dark:border-white/10 dark:bg-black/30">
             <button
               type="button"
               role="tab"
@@ -447,7 +450,7 @@ export default function AdminPayments() {
             className={`${modalPanelAdmin} max-w-5xl! w-full max-h-[90vh] overflow-y-auto`}
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 id="payment-edit-title" className="text-lg font-semibold text-white">
+            <h3 id="payment-edit-title" className="text-lg font-semibold text-gray-900 dark:text-white">
               Xử lý yêu cầu #{editingRow.id}
               <span className="ml-2 text-sm font-normal text-slate-500">
                 {isCoursePayment ? '(Khóa học)' : '(Lớp học)'}
@@ -460,8 +463,8 @@ export default function AdminPayments() {
             </p>
 
             <div className="mt-4 space-y-4">
-              <div className="rounded-xl border border-white/10 bg-black/20 p-4 text-sm text-slate-300">
-                <p className="font-medium text-white">
+              <div className="rounded-xl border border-gray-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-white/10 dark:bg-black/20 dark:text-slate-300">
+                <p className="font-medium text-gray-900 dark:text-white">
                   {isCoursePayment ? courseDisplayTitle(editingRow) : editingRow.class_name}
                 </p>
                 {!isCoursePayment && (
@@ -563,7 +566,7 @@ export default function AdminPayments() {
                     setEditingId(null)
                     setDraft(null)
                   }}
-                  className="rounded-xl border border-white/15 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-white/5"
+                  className="rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-white/15 dark:text-slate-300 dark:hover:bg-white/5"
                 >
                   Đóng
                 </button>

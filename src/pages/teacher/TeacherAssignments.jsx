@@ -4,6 +4,14 @@ import { toastActionError } from '../../lib/appToast.js'
 import { useTeacherState } from '../../hooks/useTeacherState'
 import QuestionBankEditor from '../../components/dashboard/QuestionBankEditor.jsx'
 import { mergeDateTimeForDeadline, splitDatetimeLocalParts } from '../../lib/datetimeParts.js'
+import {
+  tableShell,
+  tableHeadTeacher,
+  tableBodyTeacher,
+  tableRowHover,
+  inputTeacher,
+  labelAdmin,
+} from '../../components/dashboard/dashboardStyles'
 
 const empty = { classId: '', title: '', dueDate: '', dueTime: '', questionItems: [] }
 const emptyExamAssign = { examId: '', classId: '' }
@@ -79,26 +87,26 @@ export default function TeacherAssignments() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-bold text-white">Bài tập & kiểm tra</h2>
-          <p className="text-sm text-slate-400">
-            <span className="text-slate-300">Bài tập</span>: giao bài do bạn soạn cho lớp.{' '}
-            <span className="text-slate-300">Đề kiểm tra</span>: chọn từ kho đề trung tâm (admin đã đăng) và gán cho lớp của bạn — học viên làm tại trang Bài kiểm tra công khai.
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Bài tập & kiểm tra</h2>
+          <p className="text-sm text-slate-700 dark:text-slate-400">
+            <span className="font-medium text-slate-900 dark:text-slate-300">Bài tập</span>: giao bài do bạn soạn cho lớp.{' '}
+            <span className="font-medium text-slate-900 dark:text-slate-300">Đề kiểm tra</span>: chọn từ kho đề trung tâm (admin đã đăng) và gán cho lớp của bạn — học viên làm tại trang Bài kiểm tra công khai.
           </p>
         </div>
         <button
           type="button"
           onClick={openCreate}
-          className="rounded-xl border border-dashed border-emerald-500/40 px-4 py-2 text-sm text-emerald-300 hover:bg-emerald-500/10"
+          className="rounded-xl border border-dashed border-emerald-500/60 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-900 hover:bg-emerald-100 dark:border-emerald-500/40 dark:bg-transparent dark:text-emerald-300 dark:hover:bg-emerald-500/10"
         >
           + Giao bài
         </button>
       </div>
 
-      {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
+      {loading && <p className="text-sm text-slate-600 dark:text-slate-400">Đang tải…</p>}
 
-      <div className="overflow-x-auto rounded-2xl border border-white/10 bg-white/5">
+      <div className={tableShell}>
         <table className="w-full min-w-[800px] text-left text-sm">
-          <thead className="border-b border-white/10 text-xs uppercase text-slate-400">
+          <thead className={tableHeadTeacher}>
             <tr>
               <th className="px-4 py-3">Bài</th>
               <th className="px-4 py-3">Lớp</th>
@@ -108,13 +116,13 @@ export default function TeacherAssignments() {
               <th className="px-4 py-3" />
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/5 text-slate-200">
+          <tbody className={tableBodyTeacher}>
             {state.assignments.map((a) => (
-              <tr key={a.id} className="hover:bg-white/5">
+              <tr key={a.id} className={tableRowHover}>
                 <td className="px-4 py-3 font-medium">{a.title}</td>
-                <td className="px-4 py-3 text-slate-400">{a.className}</td>
-                <td className="px-4 py-3 text-slate-400">{a.due}</td>
-                <td className="px-4 py-3 text-slate-400">{a.mcqCount > 0 ? `${a.mcqCount} câu` : '—'}</td>
+                <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{a.className}</td>
+                <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{a.due}</td>
+                <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{a.mcqCount > 0 ? `${a.mcqCount} câu` : '—'}</td>
                 <td className="px-4 py-3">
                   {a.submitted}/{a.total}
                 </td>
@@ -122,7 +130,7 @@ export default function TeacherAssignments() {
                   <button
                     type="button"
                     onClick={() => openEdit(a)}
-                    className="rounded-lg border border-emerald-500/35 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-200 hover:bg-emerald-500/20"
+                    className="rounded-lg border border-emerald-500/50 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-900 hover:bg-emerald-100 dark:border-emerald-500/35 dark:bg-emerald-500/10 dark:text-emerald-200 dark:hover:bg-emerald-500/20"
                   >
                     Sửa
                   </button>
@@ -136,7 +144,7 @@ export default function TeacherAssignments() {
                         toastActionError(err, 'Không xóa được bài tập.')
                       }
                     }}
-                    className="text-xs text-red-400 hover:text-red-300"
+                    className="text-xs font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                   >
                     Xóa
                   </button>
@@ -150,15 +158,15 @@ export default function TeacherAssignments() {
       <div className="mt-10 space-y-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-white">Giao đề kiểm tra (kho đề)</h3>
-            <p className="text-sm text-slate-500">
-              Chỉ các đề <span className="text-slate-400">đã xuất bản</span> trên hệ thống mới hiện trong danh sách. Mỗi cặp đề–lớp chỉ giao một lần.
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Giao đề kiểm tra (kho đề)</h3>
+            <p className="text-sm text-slate-600 dark:text-slate-500">
+              Chỉ các đề <span className="font-medium text-slate-800 dark:text-slate-400">đã xuất bản</span> trên hệ thống mới hiện trong danh sách. Mỗi cặp đề–lớp chỉ giao một lần.
             </p>
           </div>
         </div>
 
         <form
-          className="flex flex-wrap items-end gap-3 rounded-2xl border border-white/10 bg-white/5 p-4"
+          className="flex flex-wrap items-end gap-3 rounded-2xl border border-slate-300 bg-white p-4 shadow-sm ring-1 ring-slate-900/5 dark:border-white/10 dark:bg-white/5 dark:shadow-none dark:ring-0"
           onSubmit={async (e) => {
             e.preventDefault()
             if (!examAssign.examId || !examAssign.classId) return
@@ -170,12 +178,12 @@ export default function TeacherAssignments() {
             }
           }}
         >
-          <label className="min-w-[200px] flex-1 text-sm text-slate-400">
+          <label className={`min-w-[200px] flex-1 ${labelAdmin}`}>
             Đề từ kho
             <select
               value={examAssign.examId}
               onChange={(e) => setExamAssign((f) => ({ ...f, examId: e.target.value }))}
-              className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white"
+              className={`mt-1 ${inputTeacher}`}
             >
               <option value="">— Chọn đề —</option>
               {(state.examCatalog || []).map((ex) => (
@@ -185,12 +193,12 @@ export default function TeacherAssignments() {
               ))}
             </select>
           </label>
-          <label className="min-w-[180px] flex-1 text-sm text-slate-400">
+          <label className={`min-w-[180px] flex-1 ${labelAdmin}`}>
             Lớp nhận đề
             <select
               value={examAssign.classId}
               onChange={(e) => setExamAssign((f) => ({ ...f, classId: e.target.value }))}
-              className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white"
+              className={`mt-1 ${inputTeacher}`}
             >
               <option value="">— Chọn lớp —</option>
               {state.classes.map((c) => (
@@ -209,9 +217,9 @@ export default function TeacherAssignments() {
           </button>
         </form>
 
-        <div className="overflow-x-auto rounded-2xl border border-white/10 bg-white/5">
+        <div className={tableShell}>
           <table className="w-full min-w-[720px] text-left text-sm">
-            <thead className="border-b border-white/10 text-xs uppercase text-slate-400">
+            <thead className={tableHeadTeacher}>
               <tr>
                 <th className="px-4 py-3">Đề</th>
                 <th className="px-4 py-3">Lớp</th>
@@ -219,22 +227,22 @@ export default function TeacherAssignments() {
                 <th className="px-4 py-3" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5 text-slate-200">
+            <tbody className={tableBodyTeacher}>
               {state.examClassLinks.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center text-slate-500">
+                  <td colSpan={4} className="px-4 py-8 text-center text-slate-600 dark:text-slate-500">
                     Chưa giao đề nào từ kho. Chọn đề và lớp ở trên.
                   </td>
                 </tr>
               )}
               {state.examClassLinks.map((row) => (
-                <tr key={`${row.examId}-${row.classId}`} className="hover:bg-white/5">
+                <tr key={`${row.examId}-${row.classId}`} className={tableRowHover}>
                   <td className="px-4 py-3">
                     <div className="font-medium">{row.examTitle}</div>
-                    <div className="text-xs text-slate-500">{row.examSubject}</div>
+                    <div className="text-xs text-slate-600 dark:text-slate-500">{row.examSubject}</div>
                   </td>
-                  <td className="px-4 py-3 text-slate-400">{row.className}</td>
-                  <td className="px-4 py-3 text-slate-400">
+                  <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{row.className}</td>
+                  <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
                     {row.contentMode === 'embed' ? 'Nhúng / tương tác' : `${row.questionCount ?? 0} câu TN`}
                   </td>
                   <td className="px-4 py-3 text-right">
@@ -248,7 +256,7 @@ export default function TeacherAssignments() {
                           toastActionError(err, 'Không bỏ giao được.')
                         }
                       }}
-                      className="text-xs text-red-400 hover:text-red-300"
+                      className="text-xs font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                     >
                       Bỏ giao
                     </button>
@@ -318,7 +326,7 @@ export default function TeacherAssignments() {
                 </label>
               </div>
             </div>
-            <div className="mt-6 border-t border-white/10 pt-4">
+            <div className="mt-6 border-t border-gray-200 dark:border-white/10 pt-4">
               <p className="mb-3 text-sm text-slate-400">
                 Bộ câu hỏi (tùy chọn): nếu có, học viên làm trắc nghiệm và hệ thống chấm tự động (thang 10). Không thêm câu
                 thì giữ kiểu xác nhận nộp bài như trước.

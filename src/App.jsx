@@ -39,6 +39,7 @@ import StudentDashboard from './pages/student/StudentDashboard'
 import StudentLearningHub from './pages/student/StudentLearningHub'
 import StudentRegisteredCoursesPage from './pages/student/StudentRegisteredCoursesPage'
 import StudentProfile from './pages/student/StudentProfile'
+import StaffProfilePage from './pages/dashboard/StaffProfilePage'
 import AuthModal from './components/AuthModal'
 import AuthSearchParamsSync from './components/AuthSearchParamsSync'
 import { DialogflowMessenger } from './components/DialogflowMessenger'
@@ -93,6 +94,7 @@ function App() {
           <Route path="doi-ngu-trang-chu" element={<AdminLandingTeachers />} />
           <Route path="lead-dang-ky" element={<Navigate to="/admin/thanh-toan" replace />} />
           <Route path="cms-trang-chu" element={<Navigate to="/admin" replace />} />
+          <Route path="ho-so" element={<StaffProfilePage variant="admin" />} />
         </Route>
 
         <Route path="/giao-vien" element={<TeacherLayout />}>
@@ -105,6 +107,7 @@ function App() {
           <Route path="bai-tap" element={<TeacherAssignments />} />
           <Route path="cham-diem" element={<TeacherGrading />} />
           <Route path="hoc-sinh" element={<TeacherStudents />} />
+          <Route path="ho-so" element={<StaffProfilePage variant="teacher" />} />
         </Route>
 
         <Route path="/hoc-vien" element={<StudentLayout />}>

@@ -7,7 +7,12 @@ export default function AdminLayout() {
   return (
     <ProtectedRoute allowedRoles={['admin']}>
       <AdminDataProvider>
-        <DashboardShell navItems={adminNavItems} title="Khu vực quản trị" accent="admin" />
+        <DashboardShell
+          navItems={adminNavItems}
+          title="Khu vực quản trị"
+          accent="admin"
+          profileTo="/admin/ho-so"
+        />
       </AdminDataProvider>
     </ProtectedRoute>
   )

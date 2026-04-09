@@ -11,6 +11,7 @@ import {
 } from '../../lib/teacherScheduleFormat.js'
 import { PUBLIC_ACTION_ERROR } from '../../lib/publicUserMessages.js'
 import { toast } from 'sonner'
+import { tableShell, tableHeadAdmin, tableBodyAdmin } from '../../components/dashboard/dashboardStyles'
 
 function daySortKeyFromRow(row) {
   const i = WEEK_DAYS.indexOf(row.day)
@@ -245,15 +246,9 @@ export default function StudentClassSchedule({ embedded = false, lockedClassId =
   const slotClass = ps ? 'mt-1 font-medium text-gray-900 dark:text-slate-100' : 'mt-1 font-medium text-slate-100'
   const slotSub = ps ? 'mt-0.5 text-gray-600 dark:text-slate-500' : 'mt-0.5 text-slate-500'
   const slotLoc = ps ? 'mt-1 text-[11px] text-gray-500 dark:text-slate-400' : 'mt-1 text-[11px] text-slate-400'
-  const listTableWrap = ps
-    ? 'overflow-x-auto rounded-xl border border-gray-200 dark:border-white/10'
-    : 'overflow-x-auto rounded-xl border border-white/10'
-  const listThead = ps
-    ? 'border-b border-gray-200 text-xs uppercase text-gray-600 dark:border-white/10 dark:text-slate-400'
-    : 'border-b border-white/10 text-xs uppercase text-slate-400'
-  const listTbody = ps
-    ? 'divide-y divide-gray-200 text-gray-800 dark:divide-white/5 dark:text-slate-200'
-    : 'divide-y divide-white/5 text-slate-200'
+  const listTableWrap = ps ? tableShell : 'overflow-x-auto rounded-xl border border-white/10'
+  const listThead = ps ? tableHeadAdmin : 'border-b border-white/10 text-xs uppercase text-slate-400'
+  const listTbody = ps ? tableBodyAdmin : 'divide-y divide-white/5 text-slate-200'
 
   const isStudent = user?.dbRole === 'student'
 

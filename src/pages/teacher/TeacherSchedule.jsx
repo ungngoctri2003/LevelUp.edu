@@ -6,6 +6,17 @@ import PageHeader from '../../components/dashboard/PageHeader'
 import Panel from '../../components/dashboard/Panel'
 import { useTeacherState } from '../../hooks/useTeacherState'
 import {
+  inputTeacher,
+  modalBackdrop,
+  modalPanelTeacher,
+  labelAdmin,
+  btnPrimaryTeacher,
+  tableShell,
+  tableHeadTeacher,
+  tableBodyTeacher,
+  tableRowHover,
+} from '../../components/dashboard/dashboardStyles'
+import {
   WEEK_DAYS,
   defaultNewSlotFormValues,
   localDateFromParts,
@@ -252,8 +263,7 @@ export default function TeacherSchedule() {
     if (error) toast.error(error)
   }, [error])
 
-  const inputCls =
-    'mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white placeholder:text-slate-500 [color-scheme:dark]'
+  const inputCls = `${inputTeacher} mt-1 w-full`
 
   return (
     <div className="space-y-8">
@@ -275,13 +285,13 @@ export default function TeacherSchedule() {
 
       <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
         <div className="flex flex-wrap gap-3">
-          <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+          <div className="rounded-xl border border-gray-200 bg-white px-4 py-3 dark:border-white/10 dark:bg-white/5">
             <p className="text-xs uppercase tracking-wide text-slate-500">Tổng buổi</p>
-            <p className="text-lg font-semibold text-white">{stats.totalSlots}</p>
+            <p className="text-lg font-semibold text-gray-900 dark:text-white">{stats.totalSlots}</p>
           </div>
-          <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+          <div className="rounded-xl border border-gray-200 bg-white px-4 py-3 dark:border-white/10 dark:bg-white/5">
             <p className="text-xs uppercase tracking-wide text-slate-500">Lớp có lịch</p>
-            <p className="text-lg font-semibold text-white">{stats.classCount}</p>
+            <p className="text-lg font-semibold text-gray-900 dark:text-white">{stats.classCount}</p>
           </div>
           {(filterClassId || dateRangeFilter.active) && (
             <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3">
@@ -411,7 +421,7 @@ export default function TeacherSchedule() {
                               {s.subject} · {s.grade}
                             </p>
                             <p className="mt-1 text-[11px] text-slate-400">{s.locationLabel}</p>
-                            <div className="mt-2 flex flex-wrap gap-2 border-t border-white/10 pt-2">
+                            <div className="mt-2 flex flex-wrap gap-2 border-t border-gray-200 dark:border-white/10 pt-2">
                               <button
                                 type="button"
                                 onClick={() => openForEdit(s)}
@@ -504,9 +514,9 @@ export default function TeacherSchedule() {
               : 'Thứ (từ ngày đã chọn), khung giờ, hình thức.'
           }
         >
-          <div className="overflow-x-auto rounded-xl border border-white/10">
+          <div className={tableShell}>
             <table className="w-full min-w-[960px] text-left text-sm">
-              <thead className="border-b border-white/10 text-xs uppercase text-slate-400">
+              <thead className={tableHeadTeacher}>
                 <tr>
                   <th className="px-4 py-3">Thứ</th>
                   <th className="px-4 py-3">Ngày mốc</th>
@@ -518,10 +528,10 @@ export default function TeacherSchedule() {
                   <th className="px-4 py-3 text-right">Thao tác</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5 text-slate-200">
+              <tbody className={tableBodyTeacher}>
                 {sortedAndFiltered.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-4 py-10 text-center text-slate-500">
+                    <td colSpan={8} className="px-4 py-10 text-center text-slate-600 dark:text-slate-500">
                       Không có dòng lịch. Thêm buổi hoặc đổi lọc lớp / khoảng ngày.
                     </td>
                   </tr>
@@ -529,30 +539,30 @@ export default function TeacherSchedule() {
                   sortedAndFiltered.map((s) => (
                     <tr
                       key={s.id}
-                      className={`hover:bg-white/[0.04] ${s.legacy ? 'bg-amber-500/10' : ''}`}
+                      className={`${tableRowHover} ${s.legacy ? 'bg-amber-100/80 dark:bg-amber-500/10' : ''}`}
                     >
-                      <td className="px-4 py-3 font-medium text-emerald-200/90">{s.day}</td>
-                      <td className="px-4 py-3 text-slate-400">
+                      <td className="px-4 py-3 font-medium text-emerald-800 dark:text-emerald-200/90">{s.day}</td>
+                      <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
                         {formatAnchorDateVi(s.startsAt) || '—'}
                       </td>
-                      <td className="px-4 py-3 font-mono text-xs text-slate-300">{s.time}</td>
+                      <td className="px-4 py-3 font-mono text-xs text-slate-700 dark:text-slate-300">{s.time}</td>
                       <td className="px-4 py-3">
                         <Link
                           to={`/giao-vien/lop-hoc/${encodeURIComponent(s.classId)}`}
-                          className="font-medium text-cyan-300 hover:text-cyan-200"
+                          className="font-medium text-cyan-700 hover:text-cyan-800 dark:text-cyan-300 dark:hover:text-cyan-200"
                         >
                           {s.className}
                         </Link>
                       </td>
-                      <td className="px-4 py-3 text-slate-400">{s.subject}</td>
-                      <td className="px-4 py-3 text-slate-400">{s.grade}</td>
-                      <td className="px-4 py-3 text-slate-300">{s.locationLabel}</td>
+                      <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{s.subject}</td>
+                      <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{s.grade}</td>
+                      <td className="px-4 py-3 text-slate-700 dark:text-slate-300">{s.locationLabel}</td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex justify-end gap-3">
                           <button
                             type="button"
                             onClick={() => openForEdit(s)}
-                            className="text-xs font-medium text-emerald-400 hover:text-emerald-300"
+                            className="text-xs font-medium text-emerald-700 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300"
                           >
                             Sửa
                           </button>
@@ -566,7 +576,7 @@ export default function TeacherSchedule() {
                                 toastActionError(err, 'Không xóa được buổi học.')
                               }
                             }}
-                            className="text-xs text-red-400 hover:text-red-300"
+                            className="text-xs font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                           >
                             Xóa
                           </button>
@@ -582,18 +592,15 @@ export default function TeacherSchedule() {
       )}
 
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-          <form
-            onSubmit={save}
-            className="w-full max-w-lg rounded-2xl border border-white/15 bg-slate-900 p-6 shadow-xl [color-scheme:dark]"
-          >
-            <h3 className="text-lg font-semibold text-white">{editingId ? 'Sửa buổi học' : 'Thêm buổi học'}</h3>
+        <div className={modalBackdrop}>
+          <form onSubmit={save} className={`${modalPanelTeacher} max-w-lg`}>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{editingId ? 'Sửa buổi học' : 'Thêm buổi học'}</h3>
             <p className="mt-1 text-xs text-slate-500">
               {editingId
                 ? 'Cập nhật lớp, ngày giờ hoặc hình thức. Lưu để áp dụng cho lịch của bạn và học viên.'
                 : 'Dùng lịch (date picker) chọn ngày, chọn giờ riêng. Thứ trên lưới = thứ của ngày bắt đầu. Hình thức: Học Online hoặc Học Offline.'}
             </p>
-            <label className="mt-4 block text-sm text-slate-400">
+            <label className={`mt-4 ${labelAdmin}`}>
               Lớp
               <select
                 value={form.classId}
@@ -660,7 +667,7 @@ export default function TeacherSchedule() {
             </div>
             <fieldset className="mt-4 space-y-2">
               <legend className="text-sm text-slate-400">Hình thức</legend>
-              <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-200 hover:bg-white/10">
+              <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 hover:bg-slate-100 dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-white/10">
                 <input
                   type="radio"
                   name={editingId ? `deliveryMode-${editingId}` : 'deliveryMode-new'}
@@ -671,7 +678,7 @@ export default function TeacherSchedule() {
                 />
                 Học Online
               </label>
-              <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-200 hover:bg-white/10">
+              <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 hover:bg-slate-100 dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-white/10">
                 <input
                   type="radio"
                   name={editingId ? `deliveryMode-${editingId}` : 'deliveryMode-new'}
@@ -687,11 +694,11 @@ export default function TeacherSchedule() {
               <button
                 type="button"
                 onClick={closeForm}
-                className="rounded-xl border border-white/20 px-4 py-2 text-sm text-slate-300"
+                className="rounded-xl border border-gray-200 px-4 py-2 text-sm text-slate-700 transition hover:bg-slate-50 dark:border-white/20 dark:text-slate-300 dark:hover:bg-white/5"
               >
                 Hủy
               </button>
-              <button type="submit" className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white">
+              <button type="submit" className={btnPrimaryTeacher}>
                 {editingId ? 'Cập nhật' : 'Lưu'}
               </button>
             </div>

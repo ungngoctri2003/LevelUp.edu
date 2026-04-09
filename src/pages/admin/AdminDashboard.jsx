@@ -41,10 +41,16 @@ export default function AdminDashboard() {
         title="Tổng quan hệ thống"
         description="Tổng hợp nhanh số liệu vận hành và lối tắt tới các mục quản trị."
       >
+        <Link
+          to="/admin/ho-so"
+          className="rounded-lg bg-cyan-500/15 px-3 py-1.5 text-xs font-semibold text-cyan-800 hover:bg-cyan-500/25 dark:text-cyan-300 dark:hover:bg-cyan-500/25"
+        >
+          Hồ sơ
+        </Link>
         <button
           type="button"
           onClick={() => refresh()}
-          className="rounded-xl border border-white/20 px-4 py-2.5 text-sm font-medium text-slate-200 transition-colors hover:bg-white/10"
+          className="rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-white/20 dark:text-slate-200 dark:hover:bg-white/10"
         >
           Tải lại dữ liệu
         </button>
@@ -66,11 +72,11 @@ export default function AdminDashboard() {
       </div>
 
       <Panel title="Hoạt động gần đây" subtitle="Nhật ký thao tác gần nhất">
-        <ul className="divide-y divide-white/5 text-sm text-slate-300">
+        <ul className="divide-y divide-gray-200 text-sm text-slate-700 dark:divide-white/5 dark:text-slate-300">
           {(state.activity || []).slice(0, 12).map((a) => (
             <li key={a.id} className="flex flex-wrap gap-2 py-3">
               <span className="text-slate-500">{a.time}</span>
-              <span className="text-cyan-200/90">{a.user}</span>
+              <span className="text-cyan-700 dark:text-cyan-200/90">{a.user}</span>
               <span>{a.action}</span>
             </li>
           ))}
@@ -83,10 +89,10 @@ export default function AdminDashboard() {
             <Link
               key={l.to}
               to={l.to}
-              className="rounded-xl border border-white/10 bg-white/5 p-4 transition hover:border-cyan-500/30 hover:bg-white/[0.07]"
+              className="rounded-xl border border-gray-200 bg-white p-4 transition hover:border-cyan-400/50 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:hover:border-cyan-500/30 dark:hover:bg-white/[0.07]"
             >
-              <div className="font-medium text-white">{l.label}</div>
-              <p className="mt-1 text-xs text-slate-400">{l.desc}</p>
+              <div className="font-medium text-gray-900 dark:text-white">{l.label}</div>
+              <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">{l.desc}</p>
             </Link>
           ))}
         </div>

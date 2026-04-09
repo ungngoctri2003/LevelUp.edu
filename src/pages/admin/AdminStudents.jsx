@@ -3,7 +3,18 @@ import { toast } from 'sonner'
 import { toastActionError } from '../../lib/appToast.js'
 import PageHeader from '../../components/dashboard/PageHeader'
 import Panel from '../../components/dashboard/Panel'
-import { inputAdmin, btnPrimaryAdmin } from '../../components/dashboard/dashboardStyles'
+import {
+  inputAdmin,
+  btnPrimaryAdmin,
+  tableHeadAdmin,
+  tableBodyAdmin,
+  tableRowHover,
+  tableShell,
+  modalBackdrop,
+  modalPanelAdmin,
+  modalTitle,
+  labelAdmin,
+} from '../../components/dashboard/dashboardStyles'
 import { useAdminState } from '../../hooks/useAdminState'
 
 const statusLabel = {
@@ -129,9 +140,6 @@ export default function AdminStudents() {
     if (error) toast.error(error)
   }, [error])
 
-  const inputCls =
-    'rounded-xl border border-white/15 bg-black/35 px-3 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-cyan-500/50 focus:outline-none focus:ring-2 focus:ring-cyan-500/15'
-
   return (
     <div className="space-y-8">
       <PageHeader
@@ -146,7 +154,7 @@ export default function AdminStudents() {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className={`${inputCls} min-w-[160px]`}
+          className={`${inputAdmin} min-w-[160px]`}
         >
           <option value="all">Mọi trạng thái</option>
           <option value="active">Đang học</option>
@@ -157,7 +165,7 @@ export default function AdminStudents() {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Tìm theo tên, email, mã..."
-          className={`${inputCls} w-full min-w-0 sm:max-w-md sm:flex-1`}
+          className={`${inputAdmin} w-full min-w-0 sm:max-w-md sm:flex-1`}
         />
       </div>
 
@@ -214,9 +222,9 @@ export default function AdminStudents() {
       </Panel>
 
       <Panel noDivider padding={false} className="overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className={tableShell}>
           <table className="w-full min-w-[880px] text-left text-sm">
-            <thead className="border-b border-white/10 bg-black/20 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+            <thead className={tableHeadAdmin}>
               <tr>
                 <th className="px-4 py-3">Mã</th>
                 <th className="px-4 py-3">Họ tên</th>
@@ -229,11 +237,11 @@ export default function AdminStudents() {
                 <th className="px-4 py-3">Thao tác</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5 text-slate-200">
+            <tbody className={tableBodyAdmin}>
               {!loading && filtered.length === 0 && (
                 <tr>
                   <td colSpan={9} className="px-4 py-14 text-center align-top">
-                    <p className="text-slate-300">
+                    <p className="text-slate-600 dark:text-slate-300">
                       {state.students.length === 0
                         ? 'Chưa có học viên nào.'
                         : 'Không có dòng nào khớp bộ lọc hoặc tìm kiếm.'}
@@ -248,7 +256,7 @@ export default function AdminStudents() {
                         <button
                           type="button"
                           onClick={() => refresh()}
-                          className="mt-3 rounded-xl border border-white/20 px-4 py-2 text-sm text-slate-200 hover:bg-white/10"
+                          className="mt-3 rounded-xl border border-gray-200 px-4 py-2 text-sm text-slate-700 transition hover:bg-slate-50 dark:border-white/20 dark:text-slate-200 dark:hover:bg-white/10"
                         >
                           Tải lại danh sách
                         </button>
@@ -258,8 +266,8 @@ export default function AdminStudents() {
                 </tr>
               )}
               {filtered.map((r) => (
-                <tr key={r.id} className="hover:bg-white/5">
-                  <td className="max-w-[120px] truncate px-4 py-3 font-mono text-[10px] text-cyan-300" title={r.id}>
+                <tr key={r.id} className={tableRowHover}>
+                  <td className="max-w-[120px] truncate px-4 py-3 font-mono text-[10px] text-cyan-700 dark:text-cyan-300" title={r.id}>
                     {r.id.slice(0, 8)}…
                   </td>
                   <td className="px-4 py-3">
@@ -271,8 +279,8 @@ export default function AdminStudents() {
                       <span className="ml-1 rounded bg-cyan-500/20 px-1.5 py-0.5 text-[10px] text-cyan-200">Thủ công</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-slate-400">{r.email}</td>
-                  <td className="px-4 py-3 text-slate-400">{r.phone || '—'}</td>
+                  <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{r.email}</td>
+                  <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{r.phone || '—'}</td>
                   <td className="px-4 py-3">{r.grade}</td>
                   <td className="px-4 py-3">
                     <span
@@ -287,17 +295,17 @@ export default function AdminStudents() {
                       {statusLabel[r.status] || r.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-slate-400">{attemptCounts[r.id] ?? 0}</td>
-                  <td className="px-4 py-3 text-slate-400">{r.joined}</td>
+                  <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{attemptCounts[r.id] ?? 0}</td>
+                  <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{r.joined}</td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-2">
-                      <button type="button" onClick={() => openEdit(r)} className="text-xs text-cyan-400 hover:text-cyan-300">
+                      <button type="button" onClick={() => openEdit(r)} className="text-xs text-cyan-600 hover:text-cyan-800 dark:text-cyan-400 dark:hover:text-cyan-300">
                         Sửa
                       </button>
-                      <button type="button" onClick={() => toggle(r)} className="text-xs text-amber-400 hover:text-amber-300">
+                      <button type="button" onClick={() => toggle(r)} className="text-xs text-amber-700 hover:text-amber-900 dark:text-amber-400 dark:hover:text-amber-300">
                         {r.status === 'inactive' ? 'Mở' : 'Khóa'}
                       </button>
-                      <button type="button" onClick={() => removeStudent(r.id)} className="text-xs text-red-400 hover:text-red-300">
+                      <button type="button" onClick={() => removeStudent(r.id)} className="text-xs text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">
                         Vô hiệu hóa
                       </button>
                     </div>
@@ -310,52 +318,49 @@ export default function AdminStudents() {
       </Panel>
 
       {modal === 'edit' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-md">
-          <form
-            onSubmit={save}
-            className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-white/15 bg-gradient-to-b from-slate-900 to-slate-950 p-6 shadow-2xl shadow-cyan-500/10 ring-1 ring-white/10"
-          >
-            <h3 className="text-lg font-semibold text-white">Sửa học viên</h3>
+        <div className={modalBackdrop}>
+          <form onSubmit={save} className={`${modalPanelAdmin} max-h-[90vh] overflow-y-auto`}>
+            <h3 className={modalTitle}>Sửa học viên</h3>
             <p className="mt-1 text-xs text-slate-500">Mã tài khoản: {form.id}</p>
-            <label className="mt-4 block text-sm text-slate-400">
+            <label className={`mt-4 ${labelAdmin}`}>
               Họ tên
               <input
                 value={form.name}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                className={`${inputCls} mt-1 w-full`}
+                className={`${inputAdmin} mt-1 w-full`}
               />
             </label>
-            <label className="mt-3 block text-sm text-slate-400">
+            <label className={`mt-3 ${labelAdmin}`}>
               Email
               <input
                 type="email"
                 value={form.email}
                 onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-                className={`${inputCls} mt-1 w-full`}
+                className={`${inputAdmin} mt-1 w-full`}
               />
             </label>
-            <label className="mt-3 block text-sm text-slate-400">
+            <label className={`mt-3 ${labelAdmin}`}>
               SĐT
               <input
                 value={form.phone}
                 onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-                className={`${inputCls} mt-1 w-full`}
+                className={`${inputAdmin} mt-1 w-full`}
               />
             </label>
-            <label className="mt-3 block text-sm text-slate-400">
+            <label className={`mt-3 ${labelAdmin}`}>
               Khối
               <input
                 value={form.grade}
                 onChange={(e) => setForm((f) => ({ ...f, grade: e.target.value }))}
-                className={`${inputCls} mt-1 w-full`}
+                className={`${inputAdmin} mt-1 w-full`}
               />
             </label>
-            <label className="mt-3 block text-sm text-slate-400">
+            <label className={`mt-3 ${labelAdmin}`}>
               Trạng thái học tập
               <select
                 value={form.status}
                 onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
-                className={`${inputCls} mt-1 w-full`}
+                className={`${inputAdmin} mt-1 w-full`}
               >
                 <option value="active">Đang học</option>
                 <option value="trial">Học thử</option>
@@ -366,11 +371,11 @@ export default function AdminStudents() {
               <button
                 type="button"
                 onClick={() => setModal(null)}
-                className="rounded-xl border border-white/20 px-4 py-2 text-sm text-slate-300 hover:bg-white/5"
+                className="rounded-xl border border-gray-200 px-4 py-2 text-sm text-slate-700 transition hover:bg-slate-50 dark:border-white/20 dark:text-slate-300 dark:hover:bg-white/5"
               >
                 Hủy
               </button>
-              <button type="submit" className="rounded-xl bg-gradient-to-r from-cyan-500 to-fuchsia-600 px-4 py-2 text-sm font-semibold text-white">
+              <button type="submit" className={btnPrimaryAdmin}>
                 Lưu
               </button>
             </div>

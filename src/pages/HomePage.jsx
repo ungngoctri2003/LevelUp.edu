@@ -52,17 +52,17 @@ export default function HomePage() {
 
   return (
     <div className="home-page-unified-bg text-slate-950 dark:text-slate-100">
-      <div className="home-page-unified-effects pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden>
-        <div className="home-page-ribbon home-page-ribbon--a absolute top-[6%] left-[-10%] h-104 w-160 rounded-full bg-cyan-300/12 dark:bg-cyan-400/18 blur-3xl" />
-        <div className="home-page-ribbon home-page-ribbon--b absolute top-[34%] right-[-12%] h-120 w-2xl rounded-full bg-fuchsia-300/10 dark:bg-fuchsia-500/18 blur-3xl" />
-        <div className="home-page-ribbon home-page-ribbon--c absolute bottom-[6%] left-[18%] h-88 w-136 rounded-full bg-violet-300/10 dark:bg-violet-500/16 blur-3xl" />
+      <div className="home-page-unified-effects pointer-events-none z-0" aria-hidden>
+        <div className="home-page-ribbon home-page-ribbon--a absolute top-[6%] left-[-10%] h-104 w-160 rounded-full bg-cyan-300/12 dark:bg-cyan-400/18 blur-2xl" />
+        <div className="home-page-ribbon home-page-ribbon--b absolute top-[34%] right-[-12%] h-120 w-2xl rounded-full bg-fuchsia-300/10 dark:bg-fuchsia-500/18 blur-2xl" />
+        <div className="home-page-ribbon home-page-ribbon--c absolute bottom-[6%] left-[18%] h-88 w-136 rounded-full bg-violet-300/10 dark:bg-violet-500/16 blur-2xl" />
         <div className="home-page-beam home-page-beam--a absolute top-[18%] left-1/2 h-260 w-36 -translate-x-1/2 bg-linear-to-b from-transparent via-cyan-200/18 to-transparent dark:via-cyan-200/14" />
         <div className="home-page-beam home-page-beam--b absolute top-[48%] left-[18%] h-128 w-24 -rotate-18 bg-linear-to-b from-transparent via-fuchsia-200/16 to-transparent dark:via-fuchsia-200/14" />
-        <div className="home-page-glow home-page-glow--a absolute top-[28%] left-[14%] h-32 w-32 rounded-full bg-cyan-200/20 dark:bg-cyan-300/24 blur-3xl" />
-        <div className="home-page-glow home-page-glow--b absolute top-[56%] right-[14%] h-40 w-40 rounded-full bg-fuchsia-200/18 dark:bg-fuchsia-300/22 blur-3xl" />
-        <div className="home-page-glow home-page-glow--c absolute bottom-[14%] left-[42%] h-36 w-36 rounded-full bg-amber-200/12 dark:bg-amber-300/18 blur-3xl" />
+        <div className="home-page-glow home-page-glow--a absolute top-[28%] left-[14%] h-32 w-32 rounded-full bg-cyan-200/20 dark:bg-cyan-300/24 blur-2xl" />
+        <div className="home-page-glow home-page-glow--b absolute top-[56%] right-[14%] h-40 w-40 rounded-full bg-fuchsia-200/18 dark:bg-fuchsia-300/22 blur-2xl" />
+        <div className="home-page-glow home-page-glow--c absolute bottom-[14%] left-[42%] h-36 w-36 rounded-full bg-amber-200/12 dark:bg-amber-300/18 blur-2xl" />
         <div
-          className="hero-grid-drift absolute inset-0 opacity-[0.04] dark:opacity-[0.07]"
+          className="absolute inset-0 opacity-[0.04] dark:opacity-[0.07]"
           style={{
             backgroundImage: `radial-gradient(circle at 25% 25%, rgba(255,255,255,0.9) 1px, transparent 1px),
                               radial-gradient(circle at 75% 75%, rgba(6,182,212,0.5) 1px, transparent 1px)`,

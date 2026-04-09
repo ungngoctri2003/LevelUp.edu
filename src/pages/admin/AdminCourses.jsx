@@ -10,6 +10,9 @@ import {
   modalPanelAdmin,
   btnPrimaryAdmin,
   tableHeadAdmin,
+  tableBodyAdmin,
+  tableRowHover,
+  tableShell,
 } from '../../components/dashboard/dashboardStyles'
 import { useAuthSession } from '../../context/AuthSessionContext'
 import { useAdminState } from '../../hooks/useAdminState'
@@ -223,7 +226,7 @@ export default function AdminCourses() {
           </div>
         </form>
 
-        <div className="mt-8 overflow-x-auto rounded-xl border border-white/10">
+        <div className={`mt-8 ${tableShell}`}>
           <table className="w-full min-w-[640px] text-left text-sm">
             <thead className={tableHeadAdmin}>
               <tr>
@@ -235,9 +238,9 @@ export default function AdminCourses() {
                 <th className="px-4 py-3"> </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5 text-slate-200">
+            <tbody className={tableBodyAdmin}>
               {subjects.map((r) => (
-                <tr key={r.id} className="hover:bg-white/[0.03]">
+                <tr key={r.id} className={tableRowHover}>
                   <td className="px-4 py-3 font-mono text-slate-500">{r.id}</td>
                   <td className="px-4 py-3 font-medium">{r.name}</td>
                   <td className="px-4 py-3 text-slate-400">{r.slug}</td>
@@ -314,7 +317,7 @@ export default function AdminCourses() {
             <div
               key={c.id}
               className={`rounded-2xl border bg-white/5 p-5 backdrop-blur-sm ${
-                c.visible === false ? 'border-amber-500/30 opacity-80' : 'border-white/10'
+                c.visible === false ? 'border-amber-500/30 opacity-80' : 'border-gray-200 dark:border-white/10'
               }`}
             >
               <div className="flex items-start justify-between gap-2">
@@ -324,7 +327,7 @@ export default function AdminCourses() {
                       {c.subject}
                     </span>
                   )}
-                  <h3 className="font-semibold text-white">{c.title}</h3>
+                  <h3 className="font-semibold text-gray-900 dark:text-white">{c.title}</h3>
                   {c.list_price != null && Number.isFinite(Number(c.list_price)) ? (
                     <p className="mt-1 text-xs text-slate-400">
                       Giá niêm yết: {Number(c.list_price).toLocaleString('vi-VN')}đ
@@ -371,7 +374,7 @@ export default function AdminCourses() {
       {editing && (
         <div className={modalBackdrop}>
           <form onSubmit={saveEdit} className={modalPanelAdmin}>
-            <h3 className="text-lg font-semibold text-white">Chỉnh khóa học</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Chỉnh khóa học</h3>
             <label className="mt-4 block text-sm text-slate-400">
               Tiêu đề
               <input
@@ -419,7 +422,7 @@ export default function AdminCourses() {
               <button
                 type="button"
                 onClick={() => setEditing(null)}
-                className="rounded-xl border border-white/20 px-4 py-2 text-sm text-slate-300 hover:bg-white/5"
+                className="rounded-xl border border-gray-200 px-4 py-2 text-sm text-slate-700 transition hover:bg-slate-50 dark:border-white/20 dark:text-slate-300 dark:hover:bg-white/5"
               >
                 Hủy
               </button>
@@ -434,7 +437,7 @@ export default function AdminCourses() {
       {subjectEditId != null && (
         <div className={modalBackdrop} role="dialog">
           <form onSubmit={saveSubjectEdit} className={modalPanelAdmin}>
-            <h3 className="text-lg font-semibold text-white">Sửa môn #{subjectEditId}</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Sửa môn #{subjectEditId}</h3>
             <label className="mt-4 block text-sm text-slate-400">
               Tên
               <input
@@ -472,7 +475,7 @@ export default function AdminCourses() {
               <button
                 type="button"
                 onClick={() => setSubjectEditId(null)}
-                className="rounded-xl border border-white/20 px-4 py-2 text-sm text-slate-300 hover:bg-white/5"
+                className="rounded-xl border border-gray-200 px-4 py-2 text-sm text-slate-700 transition hover:bg-slate-50 dark:border-white/20 dark:text-slate-300 dark:hover:bg-white/5"
               >
                 Huỷ
               </button>

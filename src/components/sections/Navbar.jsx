@@ -41,7 +41,7 @@ export default function Navbar() {
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-      className={`sticky top-0 z-50 w-full backdrop-blur-xl transition-shadow duration-300 ${headerBg}`}
+      className={`sticky top-0 z-50 w-full backdrop-blur-md transition-shadow duration-300 ${headerBg}`}
     >
       <nav className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-6 py-4">
         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>

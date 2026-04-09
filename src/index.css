@@ -165,11 +165,21 @@ html.motion-reduce *::after {
   inset: 0;
   z-index: 0;
   pointer-events: none;
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 20%, transparent 75%);
+}
+
+/* Lưới nhẹ trên nền sáng */
+html:not(.dark) .dashboard-app-bg::before {
+  background-image:
+    linear-gradient(rgba(15, 23, 42, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 23, 42, 0.06) 1px, transparent 1px);
+}
+
+html.dark .dashboard-app-bg::before {
   background-image:
     linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-  background-size: 48px 48px;
-  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 20%, transparent 75%);
 }
 
 .dashboard-app-bg::after {
@@ -178,8 +188,16 @@ html.motion-reduce *::after {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.35;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+html:not(.dark) .dashboard-app-bg::after {
+  opacity: 0.08;
+  mix-blend-mode: multiply;
+}
+
+html.dark .dashboard-app-bg::after {
+  opacity: 0.35;
   mix-blend-mode: overlay;
 }
 
@@ -372,23 +390,6 @@ df-messenger {
   animation: meshShiftReverse 18s ease-in-out infinite;
 }
 
-/* Trang chủ: một nền gradient dọc suốt chiều dài + ambient một lớp */
-@keyframes landingAmbientDrift {
-  0%,
-  100% {
-    background-position:
-      0 0,
-      0 0,
-      0% 42%;
-  }
-  50% {
-    background-position:
-      0 0,
-      0 0,
-      100% 58%;
-  }
-}
-
 .home-page-unified-bg {
   position: relative;
   isolation: isolate;
@@ -420,9 +421,19 @@ df-messenger {
   background-size: 100% 100%;
 }
 
+/* Cao tối đa một viewport: không tạo layer blur/animation suốt chiều dài trang (cuộn mượt hơn) */
 .home-page-unified-effects {
-  inset: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
   opacity: 0.58;
+  contain: strict;
   mask-image: linear-gradient(
     180deg,
     rgba(0, 0, 0, 0.92) 0%,
@@ -458,8 +469,7 @@ df-messenger {
   background-position:
     0 0,
     0 0,
-    0% 42%;
-  animation: landingAmbientDrift 26s ease-in-out infinite;
+    50% 50%;
 }
 
 .home-page-unified-bg > section {
@@ -507,7 +517,7 @@ df-messenger {
   background-position:
     0 0,
     0 0,
-    0% 42%;
+    50% 50%;
 }
 
 .dark .home-page-unified-effects {
@@ -559,7 +569,6 @@ df-messenger {
 }
 
 .home-page-ribbon {
-  will-change: transform, opacity;
   mix-blend-mode: screen;
 }
 
@@ -602,8 +611,7 @@ df-messenger {
 .home-page-beam {
   pointer-events: none;
   border-radius: 999px;
-  filter: blur(40px);
-  will-change: transform, opacity;
+  filter: blur(28px);
   mix-blend-mode: screen;
 }
 
@@ -640,7 +648,6 @@ df-messenger {
 }
 
 .home-page-glow {
-  will-change: transform, opacity;
   mix-blend-mode: screen;
 }
 
@@ -680,7 +687,6 @@ df-messenger {
   box-shadow: 0 0 10px currentColor;
   animation: homePageSparklePulse var(--sparkle-duration, 7s) ease-in-out infinite;
   animation-delay: var(--sparkle-delay, 0s);
-  will-change: transform, opacity;
 }
 
 .home-page-sparkle::before,
@@ -728,7 +734,6 @@ df-messenger {
   box-shadow: 0 0 14px currentColor;
   animation: homePageStarburstPulse var(--starburst-duration, 9s) ease-in-out infinite;
   animation-delay: var(--starburst-delay, 0s);
-  will-change: transform, opacity;
 }
 
 .home-page-starburst::before,
@@ -772,10 +777,9 @@ df-messenger {
 .home-page-streak {
   height: 2px;
   border-radius: 999px;
-  filter: blur(8px);
+  filter: blur(6px);
   animation: homePageStreakFloat var(--streak-duration, 15s) ease-in-out infinite;
   animation-delay: var(--streak-delay, 0s);
-  will-change: transform, opacity;
 }
 
 /* Hero: trường sao (box-shadow) + lấp lánh + trôi chậm; sao băng */

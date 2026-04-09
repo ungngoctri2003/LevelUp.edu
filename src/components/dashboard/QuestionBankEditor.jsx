@@ -1,4 +1,5 @@
 import { emptyMcqDraft } from '../../lib/mcqQuestions.js'
+import { inputAdminField, labelAdmin } from './dashboardStyles'
 
 const optLabels = ['A', 'B', 'C', 'D']
 
@@ -25,21 +26,21 @@ export default function QuestionBankEditor({ value, onChange, disabled }) {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-slate-700 dark:text-slate-400">
           Bộ câu hỏi trắc nghiệm ({list.length} câu). Chỉ câu đủ nội dung, ≥2 phương án và có đáp án trùng một phương án mới được lưu.
         </p>
         <button
           type="button"
           disabled={disabled}
           onClick={() => onChange([...list, emptyMcqDraft()])}
-          className="rounded-lg border border-cyan-500/40 px-3 py-1.5 text-xs font-medium text-cyan-300 hover:bg-cyan-500/10 disabled:opacity-40"
+          className="rounded-lg border border-cyan-500/50 px-3 py-1.5 text-xs font-medium text-cyan-700 hover:bg-cyan-500/10 disabled:opacity-40 dark:border-cyan-500/40 dark:text-cyan-300 dark:hover:bg-cyan-500/10"
         >
           + Thêm câu
         </button>
       </div>
 
       {list.length === 0 && (
-        <p className="rounded-xl border border-dashed border-white/15 bg-black/20 px-4 py-6 text-center text-sm text-slate-500">
+        <p className="rounded-xl border border-dashed border-slate-400 bg-white px-4 py-6 text-center text-sm text-slate-700 shadow-sm ring-1 ring-slate-900/5 dark:border-white/15 dark:bg-black/20 dark:text-slate-500 dark:shadow-none dark:ring-0">
           Chưa có câu nào. Nhấn &quot;Thêm câu&quot; hoặc để trống nếu chỉ tạo khung đề (học viên sẽ thấy thông báo chưa có câu hỏi).
         </p>
       )}
@@ -47,50 +48,50 @@ export default function QuestionBankEditor({ value, onChange, disabled }) {
       {list.map((q, qi) => (
         <div
           key={qi}
-          className="space-y-3 rounded-xl border border-white/10 bg-black/20 p-4"
+          className="space-y-3 rounded-xl border border-slate-300 bg-white p-4 shadow-sm ring-1 ring-slate-900/5 dark:border-white/10 dark:bg-black/20 dark:shadow-none dark:ring-0"
         >
           <div className="flex items-start justify-between gap-2">
-            <span className="text-xs font-semibold text-slate-500">Câu {qi + 1}</span>
+            <span className="text-xs font-semibold text-slate-600 dark:text-slate-500">Câu {qi + 1}</span>
             <button
               type="button"
               disabled={disabled}
               onClick={() => onChange(list.filter((_, i) => i !== qi))}
-              className="text-xs text-red-400 hover:text-red-300 disabled:opacity-40"
+              className="text-xs text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 disabled:opacity-40"
             >
               Xóa câu
             </button>
           </div>
-          <label className="block text-sm text-slate-400">
+          <label className={labelAdmin}>
             Nội dung
             <textarea
               disabled={disabled}
               value={q.text || ''}
               onChange={(e) => updateAt(qi, { text: e.target.value })}
               rows={2}
-              className="mt-1 w-full rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-slate-100 placeholder:text-slate-600"
+              className={`mt-1 rounded-lg px-3 py-2 ${inputAdminField}`}
               placeholder="Nhập nội dung câu hỏi…"
             />
           </label>
           <div className="grid gap-2 sm:grid-cols-2">
             {optLabels.map((label, oi) => (
-              <label key={oi} className="block text-sm text-slate-400">
+              <label key={oi} className={labelAdmin}>
                 Phương án {label}
                 <input
                   disabled={disabled}
                   value={(q.options && q.options[oi]) || ''}
                   onChange={(e) => updateOption(qi, oi, e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-slate-100"
+                  className={`mt-1 rounded-lg px-3 py-2 ${inputAdminField}`}
                 />
               </label>
             ))}
           </div>
-          <label className="block text-sm text-slate-400">
+          <label className={labelAdmin}>
             Đáp án đúng (trùng nội dung một trong các phương án)
             <select
               disabled={disabled}
               value={q.answer || ''}
               onChange={(e) => updateAt(qi, { answer: e.target.value })}
-              className="mt-1 w-full rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-slate-100"
+              className={`mt-1 rounded-lg px-3 py-2 ${inputAdminField}`}
             >
               <option value="">— Chọn —</option>
               {(q.options || []).map((opt, oi) =>

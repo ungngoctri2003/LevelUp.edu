@@ -2,6 +2,12 @@ import { useEffect } from 'react'
 import { toast } from 'sonner'
 import { toastActionError } from '../../lib/appToast.js'
 import { useTeacherState } from '../../hooks/useTeacherState'
+import {
+  tableShell,
+  tableHeadTeacher,
+  tableBodyTeacher,
+  tableRowHover,
+} from '../../components/dashboard/dashboardStyles'
 
 export default function TeacherGrading() {
   const { state, loading, error, gradeSubmission, reopenSubmission, deleteSubmission } = useTeacherState()
@@ -13,17 +19,17 @@ export default function TeacherGrading() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold text-white">Chấm điểm</h2>
-        <p className="text-sm text-slate-400">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Chấm điểm</h2>
+        <p className="text-sm text-slate-700 dark:text-slate-400">
           Danh sách bài học viên đã nộp từ trang học tập — bạn chấm điểm và phản hồi tại đây.
         </p>
       </div>
 
-      {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
+      {loading && <p className="text-sm text-slate-600 dark:text-slate-400">Đang tải…</p>}
 
-      <div className="overflow-x-auto rounded-2xl border border-white/10 bg-white/5">
+      <div className={tableShell}>
         <table className="w-full min-w-[880px] text-left text-sm">
-          <thead className="border-b border-white/10 text-xs uppercase text-slate-400">
+          <thead className={tableHeadTeacher}>
             <tr>
               <th className="px-4 py-3">Học sinh</th>
               <th className="px-4 py-3">Bài</th>
@@ -32,12 +38,12 @@ export default function TeacherGrading() {
               <th className="px-4 py-3">Hành động</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/5 text-slate-200">
+          <tbody className={tableBodyTeacher}>
             {state.gradingQueue.map((r) => (
-              <tr key={r.id} className="hover:bg-white/5">
+              <tr key={r.id} className={tableRowHover}>
                 <td className="px-4 py-3">{r.studentName}</td>
-                <td className="px-4 py-3 text-slate-400">{r.assignment}</td>
-                <td className="px-4 py-3 text-slate-400">{r.submittedAt}</td>
+                <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{r.assignment}</td>
+                <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{r.submittedAt}</td>
                 <td className="px-4 py-3">{r.status === 'graded' ? r.score : '—'}</td>
                 <td className="px-4 py-3">
                   {r.status === 'pending' ? (
@@ -49,7 +55,7 @@ export default function TeacherGrading() {
                         max={10}
                         step={0.25}
                         placeholder="0–10"
-                        className="w-20 rounded-lg border border-white/15 bg-black/30 px-2 py-1 text-xs text-white"
+                        className="w-20 rounded-lg border border-gray-300 bg-white px-2 py-1 text-xs text-gray-900 dark:border-white/15 dark:bg-black/30 dark:text-white"
                       />
                       <button
                         type="button"

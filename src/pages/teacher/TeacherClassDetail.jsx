@@ -3,6 +3,12 @@ import { toast } from 'sonner'
 import { toastActionError } from '../../lib/appToast.js'
 import { Link, useParams } from 'react-router-dom'
 import { useTeacherState } from '../../hooks/useTeacherState'
+import {
+  tableShell,
+  tableHeadTeacher,
+  tableBodyTeacher,
+  tableRowHover,
+} from '../../components/dashboard/dashboardStyles'
 
 const emptyRoster = { studentId: '', avgScore: 8, attendance: '90' }
 
@@ -73,8 +79,8 @@ export default function TeacherClassDetail() {
   if (!cls) {
     return (
       <div className="space-y-4">
-        <p className="text-slate-400">Không tìm thấy lớp.</p>
-        <Link to="/giao-vien/lop-hoc" className="text-emerald-400 hover:text-emerald-300">
+        <p className="text-slate-600 dark:text-slate-400">Không tìm thấy lớp.</p>
+        <Link to="/giao-vien/lop-hoc" className="text-emerald-700 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300">
           ← Quay lại danh sách
         </Link>
       </div>
@@ -84,18 +90,18 @@ export default function TeacherClassDetail() {
   return (
     <div className="space-y-8">
       <div>
-        <Link to="/giao-vien/lop-hoc" className="text-sm text-emerald-400 hover:text-emerald-300">
+        <Link to="/giao-vien/lop-hoc" className="text-sm text-emerald-700 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300">
           ← Danh sách lớp
         </Link>
-        <h2 className="mt-2 text-xl font-bold text-white">{cls.name}</h2>
-        <p className="mt-1 text-sm text-slate-400">
+        <h2 className="mt-2 text-xl font-bold text-gray-900 dark:text-white">{cls.name}</h2>
+        <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
           {cls.subject} · Khối {cls.grade} · {cls.schedule}
         </p>
       </div>
 
-      {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
+      {loading && <p className="text-sm text-slate-600 dark:text-slate-400">Đang tải…</p>}
 
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-slate-600 dark:text-slate-500">
         Thêm học viên bằng mã tài khoản nội bộ (do quản trị hoặc danh sách học viên cung cấp).
       </p>
 
@@ -106,15 +112,15 @@ export default function TeacherClassDetail() {
             setEditing('new')
             setForm(emptyRoster)
           }}
-          className="rounded-xl border border-dashed border-emerald-500/40 px-4 py-2 text-sm text-emerald-300 hover:bg-emerald-500/10"
+          className="rounded-xl border border-dashed border-emerald-500/60 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-900 hover:bg-emerald-100 dark:border-emerald-500/40 dark:bg-transparent dark:text-emerald-300 dark:hover:bg-emerald-500/10"
         >
           + Thêm học viên
         </button>
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-white/10 bg-white/5">
+      <div className={tableShell}>
         <table className="w-full min-w-[720px] text-left text-sm">
-          <thead className="border-b border-white/10 text-xs uppercase text-slate-400">
+          <thead className={tableHeadTeacher}>
             <tr>
               <th className="px-4 py-3">Học viên</th>
               <th className="px-4 py-3">Email</th>
@@ -123,18 +129,26 @@ export default function TeacherClassDetail() {
               <th className="px-4 py-3">Thao tác</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/5 text-slate-200">
+          <tbody className={tableBodyTeacher}>
             {roster.map((s) => (
-              <tr key={s.id} className="hover:bg-white/5">
+              <tr key={s.id} className={tableRowHover}>
                 <td className="px-4 py-3">{s.name}</td>
-                <td className="px-4 py-3 text-slate-400">{s.email}</td>
+                <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{s.email}</td>
                 <td className="px-4 py-3">{s.avgScore}</td>
                 <td className="px-4 py-3">{s.attendance}</td>
                 <td className="px-4 py-3">
-                  <button type="button" onClick={() => openEdit(s)} className="mr-2 text-xs text-emerald-400">
+                  <button
+                    type="button"
+                    onClick={() => openEdit(s)}
+                    className="mr-2 text-xs font-medium text-emerald-700 hover:text-emerald-800 dark:text-emerald-400"
+                  >
                     Sửa
                   </button>
-                  <button type="button" onClick={() => removeStudent(s.id)} className="text-xs text-red-400">
+                  <button
+                    type="button"
+                    onClick={() => removeStudent(s.id)}
+                    className="text-xs font-medium text-red-600 dark:text-red-400"
+                  >
                     Xóa
                   </button>
                 </td>
@@ -147,7 +161,7 @@ export default function TeacherClassDetail() {
       {editing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
           <form onSubmit={saveRoster} className="w-full max-w-md rounded-2xl border border-white/15 bg-slate-900 p-6 shadow-xl">
-            <h3 className="text-lg font-semibold text-white">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
               {editing === 'new' ? 'Thêm học viên' : 'Cập nhật điểm / chuyên cần'}
             </h3>
             {editing === 'new' ? (

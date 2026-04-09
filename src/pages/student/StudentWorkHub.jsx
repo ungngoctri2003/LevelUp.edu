@@ -3,7 +3,13 @@ import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import PageHeader from '../../components/dashboard/PageHeader'
 import Panel from '../../components/dashboard/Panel'
 import EmptyState from '../../components/dashboard/EmptyState'
-import { btnPrimaryStudent, tableHeadAdmin } from '../../components/dashboard/dashboardStyles'
+import {
+  btnPrimaryStudent,
+  tableHeadAdmin,
+  tableBodyAdmin,
+  tableRowHover,
+  tableShell,
+} from '../../components/dashboard/dashboardStyles'
 import { useAuthSession } from '../../context/AuthSessionContext'
 import {
   getMyAssignments,
@@ -265,9 +271,7 @@ export default function StudentWorkHub({
   const muted = ps ? 'text-sm text-gray-600 dark:text-slate-400' : 'text-sm text-slate-400'
   const introBorder = ps ? 'border-b border-gray-200 pb-6 dark:border-white/10' : 'border-b border-white/10 pb-6'
   const dividerBetween = ps ? 'border-t border-gray-200 pt-10 dark:border-white/10' : 'border-t border-white/10 pt-10'
-  const tableHeadEmbedded = ps
-    ? 'border-b border-gray-200 bg-gray-100 text-[11px] font-semibold uppercase tracking-wider text-gray-600 dark:border-white/10 dark:bg-black/20 dark:text-slate-400'
-    : tableHeadAdmin
+  const tableHeadEmbedded = tableHeadAdmin
   const panelVariant = ps ? 'public' : 'default'
   const asgMeta = ps ? 'text-xs font-medium uppercase tracking-wide text-sky-600 dark:text-sky-400/90' : 'text-xs font-medium uppercase tracking-wide text-sky-400/90'
   const asgTitle = ps ? 'mt-1 font-semibold text-gray-900 dark:text-white' : 'mt-1 font-semibold text-white'
@@ -275,7 +279,7 @@ export default function StudentWorkHub({
   const asgSub2 = ps ? 'mt-2 text-sm text-gray-700 dark:text-slate-300' : 'mt-2 text-sm text-slate-300'
   const asgAmber = ps ? 'mt-2 text-sm text-amber-800 dark:text-amber-200/90' : 'mt-2 text-sm text-amber-200/90'
   const mcqLabel = ps
-    ? 'flex cursor-pointer items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 hover:border-sky-400/50 dark:border-white/10 dark:bg-black/20 dark:text-slate-200 hover:dark:border-sky-500/40'
+    ? 'flex cursor-pointer items-center gap-3 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm hover:border-sky-400/60 dark:border-white/10 dark:bg-black/20 dark:text-slate-200 dark:shadow-none hover:dark:border-sky-500/40'
     : 'flex cursor-pointer items-center gap-3 rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-slate-200 hover:border-sky-500/40'
 
   const embeddedIntro =
@@ -516,7 +520,7 @@ export default function StudentWorkHub({
                 />
               ) : (
                 <Panel noDivider variant={panelVariant} padding={false} className="overflow-hidden">
-                  <div className="overflow-x-auto">
+                  <div className={ps ? tableShell : 'overflow-x-auto rounded-xl border border-white/10'}>
                     <table className="w-full min-w-[560px] text-left text-sm">
                       <thead className={tableHeadEmbedded}>
                         <tr>
@@ -526,18 +530,9 @@ export default function StudentWorkHub({
                           <th className="px-4 py-3">Thời gian</th>
                         </tr>
                       </thead>
-                      <tbody
-                        className={
-                          ps
-                            ? 'divide-y divide-gray-200 text-gray-800 dark:divide-white/5 dark:text-slate-200'
-                            : 'divide-y divide-white/5 text-slate-200'
-                        }
-                      >
+                      <tbody className={ps ? tableBodyAdmin : 'divide-y divide-white/5 text-slate-200'}>
                         {examRows.map((r) => (
-                          <tr
-                            key={r.id}
-                            className={ps ? 'hover:bg-gray-50 dark:hover:bg-white/[0.03]' : 'hover:bg-white/[0.03]'}
-                          >
+                          <tr key={r.id} className={ps ? tableRowHover : 'hover:bg-white/[0.03]'}>
                             <td className="px-4 py-3 font-medium">{r.exams?.title || '—'}</td>
                             <td
                               className={`px-4 py-3 font-semibold ${ps ? 'text-sky-700 dark:text-sky-300' : 'text-sky-300'}`}

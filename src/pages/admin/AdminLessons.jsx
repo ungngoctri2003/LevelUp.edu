@@ -2,7 +2,18 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import PageHeader from '../../components/dashboard/PageHeader'
 import Panel from '../../components/dashboard/Panel'
-import { inputAdmin, btnPrimaryAdmin, tableHeadAdmin } from '../../components/dashboard/dashboardStyles'
+import {
+  inputAdmin,
+  btnPrimaryAdmin,
+  tableHeadAdmin,
+  tableBodyAdmin,
+  tableRowHover,
+  tableShell,
+  modalBackdrop,
+  modalPanelAdmin,
+  labelAdmin,
+  btnSecondaryAdmin,
+} from '../../components/dashboard/dashboardStyles'
 import { useAuthSession } from '../../context/AuthSessionContext'
 import { toast } from 'sonner'
 import { toastActionError } from '../../lib/appToast.js'
@@ -186,8 +197,6 @@ export default function AdminLessons() {
   }
 
   const field = `${inputAdmin} mt-1 w-full`
-  const modalField =
-    'mt-1 w-full rounded-xl border border-white/15 bg-black/35 px-3 py-2 text-sm text-white focus:border-cyan-500/50 focus:outline-none focus:ring-2 focus:ring-cyan-500/15'
 
   return (
     <div className="space-y-8">
@@ -195,25 +204,25 @@ export default function AdminLessons() {
         title="Bài giảng"
         description={
           <>
-            <strong className="text-slate-300">Trực tuyến</strong> — thư viện công khai tại{' '}
-            <Link className="font-medium text-cyan-400 hover:text-cyan-300" to="/bai-giang">
+            <strong className="text-slate-700 dark:text-slate-300">Trực tuyến</strong> — thư viện công khai tại{' '}
+            <Link className="font-medium text-cyan-600 hover:text-cyan-800 dark:text-cyan-400 dark:hover:text-cyan-300" to="/bai-giang">
               /bai-giang
             </Link>
-            . <strong className="text-slate-300">Trong lớp</strong> — bài giáo viên đăng cho lớp (học viên xem tab
+            . <strong className="text-slate-700 dark:text-slate-300">Trong lớp</strong> — bài giáo viên đăng cho lớp (học viên xem tab
             &quot;Lớp của tôi&quot;).
           </>
         }
         badge="CMS"
       />
 
-      <div className="flex flex-wrap gap-2 border-b border-white/10 pb-4">
+      <div className="flex flex-wrap gap-2 border-b border-gray-200 pb-4 dark:border-white/10">
         <button
           type="button"
           onClick={() => setTab('online')}
           className={`${tabBtn} ${
             tab === 'online'
               ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-900/30'
-              : 'border border-white/15 bg-white/5 text-slate-300 hover:bg-white/10'
+              : 'border border-gray-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-white/15 dark:bg-white/5 dark:text-slate-300 dark:hover:bg-white/10'
           }`}
         >
           Trực tuyến
@@ -224,7 +233,7 @@ export default function AdminLessons() {
           className={`${tabBtn} ${
             tab === 'lop'
               ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/30'
-              : 'border border-white/15 bg-white/5 text-slate-300 hover:bg-white/10'
+              : 'border border-gray-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-white/15 dark:bg-white/5 dark:text-slate-300 dark:hover:bg-white/10'
           }`}
         >
           Trong lớp
@@ -296,7 +305,7 @@ export default function AdminLessons() {
           </Panel>
 
           <Panel title="Danh sách bài trực tuyến" noDivider padding={false} className="overflow-hidden">
-            <div className="overflow-x-auto">
+            <div className={tableShell}>
               <table className="w-full min-w-[720px] text-left text-sm">
                 <thead className={tableHeadAdmin}>
                   <tr>
@@ -307,9 +316,9 @@ export default function AdminLessons() {
                     <th className="px-4 py-3"> </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5 text-slate-200">
+                <tbody className={tableBodyAdmin}>
                   {lessons.map((r) => (
-                    <tr key={r.id} className="hover:bg-white/[0.03]">
+                    <tr key={r.id} className={tableRowHover}>
                       <td className="px-4 py-3 font-mono text-slate-500">{r.id}</td>
                       <td className="px-4 py-3 text-slate-400">{r.subjects?.name || '—'}</td>
                       <td className="px-4 py-3 font-medium">{r.title}</td>
@@ -390,7 +399,7 @@ export default function AdminLessons() {
           </Panel>
 
           <Panel title="Bài giảng trong lớp" noDivider padding={false} className="overflow-hidden">
-            <div className="overflow-x-auto">
+            <div className={tableShell}>
               <table className="w-full min-w-[1120px] text-left text-sm">
                 <thead className={tableHeadAdmin}>
                   <tr>
@@ -405,9 +414,9 @@ export default function AdminLessons() {
                     <th className="px-4 py-3" />
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5 text-slate-200">
+                <tbody className={tableBodyAdmin}>
                   {posts.map((r) => (
-                    <tr key={r.id} className="hover:bg-white/[0.03]">
+                    <tr key={r.id} className={tableRowHover}>
                       <td className="px-4 py-3 font-mono text-slate-500">{r.id}</td>
                       <td className="max-w-[200px] px-4 py-3 font-medium">{r.title}</td>
                       <td className="max-w-[180px] px-4 py-3 text-xs leading-snug text-slate-500">
@@ -467,18 +476,15 @@ export default function AdminLessons() {
           </Panel>
 
           {editing && (
-            <div className="fixed inset-0 z-50 flex max-h-[100dvh] items-center justify-center overflow-y-auto bg-black/70 p-4 backdrop-blur-sm">
-              <form
-                onSubmit={saveEditLop}
-                className="my-auto w-full max-w-lg rounded-2xl border border-white/15 bg-slate-900 p-6 shadow-xl"
-              >
-                <h3 className="text-lg font-semibold text-white">Sửa bài giảng lớp</h3>
-                <label className="mt-4 block text-sm text-slate-400">
+            <div className={`${modalBackdrop} max-h-[100dvh] overflow-y-auto`}>
+              <form onSubmit={saveEditLop} className={`${modalPanelAdmin} my-auto max-w-lg`}>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Sửa bài giảng lớp</h3>
+                <label className={`mt-4 ${labelAdmin}`}>
                   Lớp
                   <select
                     value={editing.class_id}
                     onChange={(e) => setEditing((x) => (x ? { ...x, class_id: e.target.value } : x))}
-                    className={modalField}
+                    className={field}
                   >
                     {classes.map((c) => (
                       <option key={c.id} value={String(c.id)}>
@@ -487,31 +493,27 @@ export default function AdminLessons() {
                     ))}
                   </select>
                 </label>
-                <label className="mt-3 block text-sm text-slate-400">
+                <label className={`mt-3 ${labelAdmin}`}>
                   Tiêu đề
                   <input
                     value={editing.title}
                     onChange={(e) => setEditing((x) => (x ? { ...x, title: e.target.value } : x))}
-                    className={modalField}
+                    className={field}
                   />
                 </label>
-                <label className="mt-3 block text-sm text-slate-400">
+                <label className={`mt-3 ${labelAdmin}`}>
                   Thời lượng hiển thị
                   <input
                     value={editing.duration_display}
                     onChange={(e) => setEditing((x) => (x ? { ...x, duration_display: e.target.value } : x))}
-                    className={modalField}
+                    className={field}
                   />
                 </label>
                 <div className="mt-6 flex justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setEditing(null)}
-                    className="rounded-xl border border-white/20 px-4 py-2 text-sm text-slate-300"
-                  >
+                  <button type="button" onClick={() => setEditing(null)} className={btnSecondaryAdmin}>
                     Hủy
                   </button>
-                  <button type="submit" className="rounded-xl bg-cyan-600 px-4 py-2 text-sm font-semibold text-white">
+                  <button type="submit" className={btnPrimaryAdmin}>
                     Lưu
                   </button>
                 </div>

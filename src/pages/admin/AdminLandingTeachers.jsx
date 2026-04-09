@@ -2,7 +2,19 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import PageHeader from '../../components/dashboard/PageHeader'
 import Panel from '../../components/dashboard/Panel'
-import { inputAdmin, btnPrimaryAdmin, tableHeadAdmin } from '../../components/dashboard/dashboardStyles'
+import {
+  inputAdmin,
+  btnPrimaryAdmin,
+  tableHeadAdmin,
+  tableBodyAdmin,
+  tableRowHover,
+  tableShell,
+  modalBackdrop,
+  modalPanelAdmin,
+  modalTitle,
+  labelAdmin,
+  btnSecondaryAdmin,
+} from '../../components/dashboard/dashboardStyles'
 import { useAuthSession } from '../../context/AuthSessionContext'
 import { toast } from 'sonner'
 import * as srv from '../../services/adminServerApi.js'
@@ -134,7 +146,7 @@ export default function AdminLandingTeachers() {
         description={
           <>
             Thẻ hiển thị tại{' '}
-            <Link className="font-medium text-cyan-400 hover:text-cyan-300" to="/">
+            <Link className="font-medium text-cyan-600 hover:text-cyan-800 dark:text-cyan-400 dark:hover:text-cyan-300" to="/">
               trang chủ
             </Link>
             .
@@ -189,7 +201,7 @@ export default function AdminLandingTeachers() {
       </Panel>
 
       <Panel title="Danh sách" noDivider padding={false} className="overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className={tableShell}>
           <table className="w-full min-w-[720px] text-left text-sm">
             <thead className={tableHeadAdmin}>
               <tr>
@@ -199,9 +211,9 @@ export default function AdminLandingTeachers() {
                 <th className="px-4 py-3"> </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5 text-slate-200">
+            <tbody className={tableBodyAdmin}>
               {rows.map((r) => (
-                <tr key={r.id} className="hover:bg-white/[0.03]">
+                <tr key={r.id} className={tableRowHover}>
                   <td className="px-4 py-3 font-mono text-slate-500">{r.id}</td>
                   <td className="px-4 py-3 font-medium">{r.name}</td>
                   <td className="px-4 py-3">{r.sort_order}</td>
@@ -221,11 +233,11 @@ export default function AdminLandingTeachers() {
       </Panel>
 
       {editId != null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/70 p-4" role="dialog">
-          <form onSubmit={saveEdit} className="my-8 w-full max-w-lg space-y-3 rounded-2xl border border-white/10 bg-slate-900 p-6 shadow-xl">
-            <h3 className="text-lg font-semibold text-white">Sửa thẻ giáo viên</h3>
+        <div className={`${modalBackdrop} overflow-y-auto`} role="dialog">
+          <form onSubmit={saveEdit} className={`${modalPanelAdmin} my-8 max-w-lg space-y-3`}>
+            <h3 className={modalTitle}>Sửa thẻ giáo viên</h3>
             {['name', 'bio', 'initial', 'color_token', 'avatar_url', 'user_id'].map((k) => (
-              <label key={k} className="block text-sm text-slate-400">
+              <label key={k} className={labelAdmin}>
                 {LANDING_TEACHER_LABELS[k]}
                 <input
                   value={editForm[k]}
@@ -234,7 +246,7 @@ export default function AdminLandingTeachers() {
                 />
               </label>
             ))}
-            <label className="block text-sm text-slate-400">
+            <label className={labelAdmin}>
               {LANDING_TEACHER_LABELS.sort_order}
               <input
                 type="number"
@@ -244,7 +256,7 @@ export default function AdminLandingTeachers() {
               />
             </label>
             <div className="flex justify-end gap-2 pt-2">
-              <button type="button" onClick={() => setEditId(null)} className="rounded-xl border border-white/15 px-4 py-2 text-sm text-slate-300">
+              <button type="button" onClick={() => setEditId(null)} className={btnSecondaryAdmin}>
                 Huỷ
               </button>
               <button type="submit" className={btnPrimaryAdmin}>

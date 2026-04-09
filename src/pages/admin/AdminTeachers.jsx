@@ -10,6 +10,9 @@ import {
   modalPanelAdmin,
   btnPrimaryAdmin,
   tableHeadAdmin,
+  tableBodyAdmin,
+  tableRowHover,
+  tableShell,
 } from '../../components/dashboard/dashboardStyles'
 import { useAdminState } from '../../hooks/useAdminState'
 
@@ -212,7 +215,7 @@ export default function AdminTeachers() {
       </Panel>
 
       <Panel noDivider padding={false} className="overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className={tableShell}>
           <table className="w-full min-w-[960px] text-left text-sm">
             <thead className={tableHeadAdmin}>
               <tr>
@@ -225,7 +228,7 @@ export default function AdminTeachers() {
                 <th className="px-4 py-3">Thao tác</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5 text-slate-200">
+            <tbody className={tableBodyAdmin}>
               {!loading && filtered.length === 0 && (
                 <tr>
                   <td colSpan={7} className="px-4 py-14 text-center align-top">
@@ -254,7 +257,7 @@ export default function AdminTeachers() {
                 </tr>
               )}
               {filtered.map((r) => (
-                <tr key={r.id} className="hover:bg-white/5">
+                <tr key={r.id} className={tableRowHover}>
                   <td className="max-w-[100px] truncate px-4 py-3 font-mono text-[10px] text-fuchsia-300" title={r.id}>
                     {r.id.slice(0, 8)}…
                   </td>
@@ -315,7 +318,7 @@ export default function AdminTeachers() {
       {modal === 'edit' && (
         <div className={modalBackdrop}>
           <form onSubmit={save} className={`${modalPanelAdmin} max-w-md`}>
-            <h3 className="text-lg font-semibold text-white">Sửa giáo viên</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Sửa giáo viên</h3>
             <p className="mt-1 text-xs text-slate-500">Mã tài khoản: {form.id}</p>
             <p className="mt-2 text-sm text-slate-400">
               Số lớp đang phụ trách:{' '}
@@ -363,7 +366,7 @@ export default function AdminTeachers() {
               <button
                 type="button"
                 onClick={() => setModal(null)}
-                className="rounded-xl border border-white/20 px-4 py-2 text-sm text-slate-300 hover:bg-white/5"
+                className="rounded-xl border border-gray-200 px-4 py-2 text-sm text-slate-700 transition hover:bg-slate-50 dark:border-white/20 dark:text-slate-300 dark:hover:bg-white/5"
               >
                 Hủy
               </button>

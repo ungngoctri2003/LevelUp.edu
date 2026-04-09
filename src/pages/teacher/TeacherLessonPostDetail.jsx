@@ -13,9 +13,9 @@ import {
   normalizeLessonSections,
   stringArrayToLines,
 } from '../../components/admin/StructuredContentEditors.jsx'
+import { inputTeacher } from '../../components/dashboard/dashboardStyles'
 
-const field =
-  'mt-1 w-full rounded-xl border border-white/15 bg-black/35 px-3 py-2 text-sm text-white focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/15'
+const field = `${inputTeacher} mt-1 w-full`
 
 export default function TeacherLessonPostDetail() {
   const { postId } = useParams()
@@ -201,14 +201,14 @@ export default function TeacherLessonPostDetail() {
               rows={6}
               inputClassName={field}
             />
-            <div className="border-t border-white/10 pt-4">
+            <div className="border-t border-gray-200 dark:border-white/10 pt-4">
               <LessonSectionBlocksEditor
                 blocks={detailForm.sectionBlocks}
                 onChange={(sectionBlocks) => setDetailForm((f) => ({ ...f, sectionBlocks }))}
                 fieldClass={field}
               />
             </div>
-            <div className="border-t border-white/10 pt-4">
+            <div className="border-t border-gray-200 dark:border-white/10 pt-4">
               <LinesTextarea
                 label="Gợi ý luyện tập"
                 hint="Mỗi dòng là một câu hỏi / bài tập gợi ý."

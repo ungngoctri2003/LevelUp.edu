@@ -10,6 +10,9 @@ import {
   modalPanelAdmin,
   btnPrimaryAdmin,
   tableHeadAdmin,
+  tableBodyAdmin,
+  tableRowHover,
+  tableShell,
 } from '../../components/dashboard/dashboardStyles'
 import { useAdminState } from '../../hooks/useAdminState'
 import QuestionBankEditor from '../../components/dashboard/QuestionBankEditor.jsx'
@@ -172,7 +175,7 @@ export default function AdminExams() {
                 name="createMode"
                 checked={form.contentMode === 'mcq'}
                 onChange={() => setForm((f) => ({ ...f, contentMode: 'mcq' }))}
-                className="border-white/30 bg-black/40 text-cyan-500"
+                className="border border-gray-300 bg-white text-cyan-700 dark:border-white/30 dark:bg-black/40 dark:text-cyan-500"
               />
               Trắc nghiệm (mã đề, chọn đáp án)
             </label>
@@ -182,7 +185,7 @@ export default function AdminExams() {
                 name="createMode"
                 checked={form.contentMode === 'embed'}
                 onChange={() => setForm((f) => ({ ...f, contentMode: 'embed' }))}
-                className="border-white/30 bg-black/40 text-cyan-500"
+                className="border border-gray-300 bg-white text-cyan-700 dark:border-white/30 dark:bg-black/40 dark:text-cyan-500"
               />
               Nhúng nội dung web (Genially, …)
             </label>
@@ -265,7 +268,7 @@ export default function AdminExams() {
                 type="checkbox"
                 checked={form.assigned}
                 onChange={(e) => setForm((f) => ({ ...f, assigned: e.target.checked }))}
-                className="rounded border-white/30 bg-black/40 text-cyan-500"
+                className="rounded border border-gray-300 bg-white text-cyan-700 dark:border-white/30 dark:bg-black/40 dark:text-cyan-500"
               />
               Đã giao cho lớp
             </label>
@@ -274,7 +277,7 @@ export default function AdminExams() {
                 type="checkbox"
                 checked={form.published !== false}
                 onChange={(e) => setForm((f) => ({ ...f, published: e.target.checked }))}
-                className="rounded border-white/30 bg-black/40 text-cyan-500"
+                className="rounded border border-gray-300 bg-white text-cyan-700 dark:border-white/30 dark:bg-black/40 dark:text-cyan-500"
               />
               Hiển thị công khai
             </label>
@@ -286,7 +289,7 @@ export default function AdminExams() {
       </Panel>
 
       <Panel noDivider padding={false} className="overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className={tableShell}>
           <table className="w-full min-w-[900px] text-left text-sm">
             <thead className={tableHeadAdmin}>
               <tr>
@@ -300,9 +303,9 @@ export default function AdminExams() {
                 <th className="px-4 py-3">Thao tác</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5 text-slate-200">
+            <tbody className={tableBodyAdmin}>
               {state.exams.map((e) => (
-                <tr key={e.id} className="hover:bg-white/5">
+                <tr key={e.id} className={tableRowHover}>
                   <td className="px-4 py-3 font-medium">{e.title}</td>
                   <td className="px-4 py-3 text-slate-400">{e.subject}</td>
                   <td className="px-4 py-3">{e.duration} phút</td>
@@ -361,7 +364,7 @@ export default function AdminExams() {
           onSubmit={saveEdit}
           className={`${modalPanelAdmin} max-h-[90vh] max-w-3xl overflow-y-auto`}
         >
-            <h3 className="text-lg font-semibold text-white">Sửa đề thi &amp; bộ câu hỏi</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Sửa đề thi &amp; bộ câu hỏi</h3>
             <p className="mt-1 text-sm text-slate-400">Thay đổi nội dung câu hỏi, đáp án hoặc link nhúng — nhấn Lưu để cập nhật.</p>
             <div className="mt-4 flex flex-wrap gap-4 text-sm text-slate-300">
               <span className="text-slate-400">Hình thức:</span>
@@ -371,7 +374,7 @@ export default function AdminExams() {
                   name="editMode"
                   checked={editForm.contentMode === 'mcq'}
                   onChange={() => setEditForm((f) => ({ ...f, contentMode: 'mcq' }))}
-                  className="border-white/30 bg-black/40 text-cyan-500"
+                  className="border border-gray-300 bg-white text-cyan-700 dark:border-white/30 dark:bg-black/40 dark:text-cyan-500"
                 />
                 Trắc nghiệm
               </label>
@@ -381,7 +384,7 @@ export default function AdminExams() {
                   name="editMode"
                   checked={editForm.contentMode === 'embed'}
                   onChange={() => setEditForm((f) => ({ ...f, contentMode: 'embed' }))}
-                  className="border-white/30 bg-black/40 text-cyan-500"
+                  className="border border-gray-300 bg-white text-cyan-700 dark:border-white/30 dark:bg-black/40 dark:text-cyan-500"
                 />
                 Nhúng web
               </label>
@@ -432,7 +435,7 @@ export default function AdminExams() {
                 <p className="flex items-end text-sm text-slate-500 sm:col-span-2">Nội dung nhúng từ URL đã lưu</p>
               )}
             </div>
-            <div className="mt-4 border-t border-white/10 pt-4">
+            <div className="mt-4 border-t border-gray-200 dark:border-white/10 pt-4">
               {editForm.contentMode === 'embed' ? (
                 <label className="block text-sm text-slate-400">
                   URL hoặc mã nhúng iframe
@@ -458,7 +461,7 @@ export default function AdminExams() {
                   type="checkbox"
                   checked={editForm.assigned}
                   onChange={(e) => setEditForm((f) => ({ ...f, assigned: e.target.checked }))}
-                  className="rounded border-white/30 bg-black/40 text-cyan-500"
+                  className="rounded border border-gray-300 bg-white text-cyan-700 dark:border-white/30 dark:bg-black/40 dark:text-cyan-500"
                 />
                 Đã giao
               </label>
@@ -467,7 +470,7 @@ export default function AdminExams() {
                   type="checkbox"
                   checked={editForm.published !== false}
                   onChange={(e) => setEditForm((f) => ({ ...f, published: e.target.checked }))}
-                  className="rounded border-white/30 bg-black/40 text-cyan-500"
+                  className="rounded border border-gray-300 bg-white text-cyan-700 dark:border-white/30 dark:bg-black/40 dark:text-cyan-500"
                 />
                 Công khai
               </label>
@@ -476,7 +479,7 @@ export default function AdminExams() {
               <button
                 type="button"
                 onClick={() => setEditId(null)}
-                className="rounded-xl border border-white/20 px-4 py-2 text-sm text-slate-300 hover:bg-white/5"
+                className="rounded-xl border border-gray-200 px-4 py-2 text-sm text-slate-700 transition hover:bg-slate-50 dark:border-white/20 dark:text-slate-300 dark:hover:bg-white/5"
               >
                 Hủy
               </button>

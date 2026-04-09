@@ -2,7 +2,14 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import PageHeader from '../../components/dashboard/PageHeader'
 import Panel from '../../components/dashboard/Panel'
-import { inputAdmin, btnPrimaryAdmin, tableHeadAdmin } from '../../components/dashboard/dashboardStyles'
+import {
+  inputAdmin,
+  btnPrimaryAdmin,
+  tableHeadAdmin,
+  tableBodyAdmin,
+  tableRowHover,
+  tableShell,
+} from '../../components/dashboard/dashboardStyles'
 import { toast } from 'sonner'
 import { toastActionError } from '../../lib/appToast.js'
 import { useAdminState } from '../../hooks/useAdminState'
@@ -170,7 +177,7 @@ export default function AdminTeacherClasses() {
       <div className="flex flex-wrap items-center gap-3 text-sm">
         <Link
           to="/admin/giao-vien"
-          className="rounded-xl border border-white/15 px-3 py-2 text-slate-300 transition-colors hover:bg-white/10 hover:text-white"
+          className="rounded-xl border border-gray-200 px-3 py-2 text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900 dark:border-white/15 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
         >
           ← Quản lý giáo viên
         </Link>
@@ -243,7 +250,7 @@ export default function AdminTeacherClasses() {
                   placeholder="Mã lớp (tuỳ chọn, unique)"
                   className={`${inputAdmin} w-full`}
                 />
-                <label className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300">
+                <label className="flex items-center gap-3 rounded-xl border border-gray-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
                   <input
                     type="checkbox"
                     checked={newClass.sales_enabled}
@@ -300,7 +307,7 @@ export default function AdminTeacherClasses() {
           </div>
 
           <Panel title={`Lớp đang phụ trách (${myClasses.length})`}>
-            <div className="overflow-x-auto rounded-xl border border-white/10">
+            <div className={tableShell}>
               <table className="w-full min-w-[640px] text-left text-sm">
                 <thead className={tableHeadAdmin}>
                   <tr>
@@ -313,7 +320,7 @@ export default function AdminTeacherClasses() {
                     <th className="px-4 py-3">Thao tác</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5 text-slate-200">
+                <tbody className={tableBodyAdmin}>
                   {myClasses.length === 0 && (
                     <tr>
                       <td colSpan={7} className="px-4 py-10 text-center text-slate-500">
@@ -322,7 +329,7 @@ export default function AdminTeacherClasses() {
                     </tr>
                   )}
                   {myClasses.map((c) => (
-                    <tr key={c.id} className="hover:bg-white/5">
+                    <tr key={c.id} className={tableRowHover}>
                       <td className="px-4 py-3 font-mono text-xs text-fuchsia-300/90">{c.id}</td>
                       <td className="px-4 py-3">{c.name}</td>
                       <td className="px-4 py-3 text-slate-400">{c.subject}</td>
@@ -429,7 +436,7 @@ export default function AdminTeacherClasses() {
                     className={field}
                   />
                 </label>
-                <label className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300">
+                <label className="flex items-center gap-3 rounded-xl border border-gray-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
                   <input
                     type="checkbox"
                     checked={editClassRow.sales_enabled === true}
@@ -471,7 +478,7 @@ export default function AdminTeacherClasses() {
                   </select>
                 </label>
                 <div className="flex flex-wrap gap-2 pt-2">
-                  <button type="button" onClick={() => setEditClassRow(null)} className="rounded-xl border border-white/20 px-4 py-2 text-sm text-slate-300 hover:bg-white/5">
+                  <button type="button" onClick={() => setEditClassRow(null)} className="rounded-xl border border-gray-200 px-4 py-2 text-sm text-slate-700 transition hover:bg-slate-50 dark:border-white/20 dark:text-slate-300 dark:hover:bg-white/5">
                     Hủy sửa lớp
                   </button>
                   <button type="submit" className={btnPrimaryAdmin}>

@@ -201,14 +201,14 @@ export default function AdminTeacherLessonPostDetail() {
               rows={6}
               inputClassName={field}
             />
-            <div className="border-t border-white/10 pt-4">
+            <div className="border-t border-gray-200 dark:border-white/10 pt-4">
               <LessonSectionBlocksEditor
                 blocks={detailForm.sectionBlocks}
                 onChange={(sectionBlocks) => setDetailForm((f) => ({ ...f, sectionBlocks }))}
                 fieldClass={field}
               />
             </div>
-            <div className="border-t border-white/10 pt-4">
+            <div className="border-t border-gray-200 dark:border-white/10 pt-4">
               <LinesTextarea
                 label="Gợi ý luyện tập"
                 hint="Mỗi dòng là một câu hỏi / bài tập gợi ý."
@@ -221,7 +221,7 @@ export default function AdminTeacherLessonPostDetail() {
             <div className="flex flex-wrap justify-end gap-2">
               <Link
                 to="/admin/bai-giang-noi-dung?tab=lop"
-                className="rounded-xl border border-white/15 px-4 py-2 text-sm text-slate-300"
+                className="rounded-xl border border-gray-200 px-4 py-2 text-sm text-slate-700 transition hover:bg-slate-50 dark:border-white/15 dark:text-slate-300 dark:hover:bg-white/5"
               >
                 Hủy
               </Link>

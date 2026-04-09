@@ -11,6 +11,7 @@ export const teacherNavItems = [
   { to: '/giao-vien/bai-tap', label: 'Bài tập & kiểm tra', icon: 'assignment' },
   { to: '/giao-vien/cham-diem', label: 'Chấm điểm', icon: 'grading' },
   { to: '/giao-vien/hoc-sinh', label: 'Học sinh', icon: 'users' },
+  { to: '/giao-vien/ho-so', label: 'Hồ sơ', icon: 'profile' },
 ]
 
 export default function TeacherLayout() {
@@ -18,7 +19,12 @@ export default function TeacherLayout() {
     <ProtectedRoute allowedRoles={['teacher']}>
       <TeacherApprovalGate>
         <TeacherDataProvider>
-          <DashboardShell navItems={teacherNavItems} title="Khu vực giáo viên" accent="teacher" />
+          <DashboardShell
+            navItems={teacherNavItems}
+            title="Khu vực giáo viên"
+            accent="teacher"
+            profileTo="/giao-vien/ho-so"
+          />
         </TeacherDataProvider>
       </TeacherApprovalGate>
     </ProtectedRoute>
