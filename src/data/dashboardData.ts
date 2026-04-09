@@ -5,7 +5,6 @@ export const adminStats = {
   totalTeachers: 24,
   activeCourses: 18,
   monthlyRevenue: 245000000,
-  pendingAdmissions: 42,
   openTickets: 7,
 }
 
@@ -48,21 +47,6 @@ export const initialTeachersAdmin: TeacherRow[] = [
   { id: 'GV001', name: 'Thầy Minh Tuấn', email: 'tuan@levelup.edu', subjects: 'Toán', classes: 5, status: 'approved' },
   { id: 'GV002', name: 'Cô Thanh Hà', email: 'ha@levelup.edu', subjects: 'Vật lý, Hóa học', classes: 4, status: 'approved' },
   { id: 'GV003', name: 'Thầy Đức Anh', email: 'anh@levelup.edu', subjects: 'Tiếng Anh', classes: 3, status: 'pending' },
-]
-
-export type AdmissionApplication = {
-  id: string
-  studentName: string
-  parentPhone: string
-  grade: string
-  status: 'new' | 'reviewing' | 'accepted' | 'rejected'
-  submitted: string
-}
-
-export const initialAdmissions: AdmissionApplication[] = [
-  { id: 'TS001', studentName: 'Vũ Khánh', parentPhone: '0901112233', grade: 'Lớp 10', status: 'new', submitted: '18/03/2025' },
-  { id: 'TS002', studentName: 'Đặng Linh', parentPhone: '0912223344', grade: 'Lớp 12', status: 'reviewing', submitted: '17/03/2025' },
-  { id: 'TS003', studentName: 'Bùi Nam', parentPhone: '0933334455', grade: 'Lớp 11', status: 'accepted', submitted: '10/03/2025' },
 ]
 
 /** Giáo viên — dữ liệu riêng */

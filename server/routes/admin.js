@@ -87,6 +87,17 @@ router.delete(
   }),
 )
 
+router.get('/payments', jsonData(async (req) => adminApi.fetchPaymentsAdmin(req.sbAdmin)))
+
+router.patch(
+  '/payments/:id',
+  handle(async (req) => {
+    const raw = req.params.id
+    if (raw == null || String(raw).trim() === '') throw new Error('ID thanh toán không hợp lệ')
+    await adminApi.adminUpdatePayment(req.sbAdmin, raw, req.body || {}, actor(req))
+  }),
+)
+
 router.post('/users/student', async (req, res) => {
   try {
     const data = await adminApi.adminProvisionStudent(req.sbAdmin, req.body || {}, actor(req))

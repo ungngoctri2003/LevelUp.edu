@@ -10,16 +10,12 @@ import { computeDashboardStats } from '../../utils/adminStorage'
 const quickLinks = [
   { to: '/admin/hoc-vien', label: 'Học viên', desc: 'Tìm kiếm, trạng thái tài khoản' },
   { to: '/admin/giao-vien', label: 'Giáo viên', desc: 'Duyệt hồ sơ, phân lớp' },
+  { to: '/admin/thanh-toan', label: 'Thanh toán', desc: 'Xác nhận giao dịch và ghi danh lớp' },
   { to: '/admin/khoa-hoc', label: 'Khóa học & môn', desc: 'Danh mục môn, khóa hiển thị web' },
   { to: '/admin/bai-giang-noi-dung', label: 'Bài giảng', desc: 'Trực tuyến + bài trong lớp' },
   { to: '/admin/doi-ngu-trang-chu', label: 'Đội ngũ landing', desc: 'Thẻ giáo viên trang chủ' },
   { to: '/admin/tin-tuc', label: 'Tin tức', desc: 'Đăng bài, thông báo' },
   { to: '/admin/bai-kiem-tra', label: 'Bài kiểm tra', desc: 'Đề, giao bài, hiển thị công khai' },
-  {
-    to: '/admin/tuyen-sinh',
-    label: 'Tuyển sinh & lead',
-    desc: 'Hồ sơ xét duyệt + lead form trang chủ',
-  },
 ]
 
 function formatMoney(n) {
@@ -66,12 +62,6 @@ export default function AdminDashboard() {
         <StatCard accent="admin" label="Giáo viên đã duyệt" value={String(stats.totalTeachers)} />
         <StatCard accent="admin" label="Khóa hiển thị web" value={String(stats.activeCourses)} />
         <StatCard accent="admin" label="Doanh thu tháng (ước)" value={formatMoney(stats.monthlyRevenue)} />
-        <StatCard
-          accent="admin"
-          label="Hồ sơ tuyển sinh chờ"
-          value={String(stats.pendingAdmissions)}
-          hint="Trạng thái mới hoặc đang xét"
-        />
         <StatCard accent="admin" label="Ticket hỗ trợ mở" value={String(stats.openTickets)} />
       </div>
 

@@ -12,7 +12,9 @@ describe('safePostAuthPath', () => {
 
   it('allows internal paths for matching role', () => {
     expect(safePostAuthPath('/giao-vien/lop/1', 'teacher')).toBe('/giao-vien/lop/1')
-    expect(safePostAuthPath('/hoc-vien/bai-tap', 'user')).toBe('/hoc-vien/bai-tap')
+    expect(safePostAuthPath('/hoc-vien/khoa-hoc#student-section-bai-tap', 'user')).toBe(
+      '/hoc-vien/khoa-hoc#student-section-bai-tap',
+    )
     expect(safePostAuthPath('/admin/hoc-vien', 'admin')).toBe('/admin/hoc-vien')
     expect(safePostAuthPath('/bai-giang', 'user')).toBe('/bai-giang')
   })

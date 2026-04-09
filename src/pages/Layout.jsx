@@ -2,9 +2,6 @@ import { Outlet, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion, MotionConfig } from 'framer-motion'
 import Navbar from '../components/sections/Navbar'
 import Footer from '../components/sections/Footer'
-import AuthModal from '../components/AuthModal'
-import AuthSearchParamsSync from '../components/AuthSearchParamsSync'
-import { AuthModalProvider } from '../context/AuthModalContext'
 import { useTheme } from '../context/ThemeContext'
 
 const ease = [0.22, 1, 0.36, 1]
@@ -18,10 +15,8 @@ export default function Layout() {
     : { duration: 0.42, ease }
 
   return (
-    <AuthModalProvider>
-      <AuthSearchParamsSync />
-      <MotionConfig reducedMotion={reduceMotion ? 'always' : 'user'}>
-        <div className="app-shell flex min-h-screen flex-col bg-white transition-[background-color] duration-300 dark:bg-slate-950">
+    <MotionConfig reducedMotion={reduceMotion ? 'always' : 'user'}>
+      <div className="app-shell flex min-h-screen flex-col bg-white transition-[background-color] duration-300 dark:bg-slate-950">
           <a
             href="#main-content"
             className="sr-only rounded-xl border border-cyan-500/50 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-lg outline-none ring-2 ring-cyan-500/30 transition-transform focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[300] dark:bg-slate-900 dark:text-white dark:ring-cyan-400/40"
@@ -44,9 +39,7 @@ export default function Layout() {
             </AnimatePresence>
           </main>
           <Footer />
-          <AuthModal />
         </div>
-      </MotionConfig>
-    </AuthModalProvider>
+    </MotionConfig>
   )
 }

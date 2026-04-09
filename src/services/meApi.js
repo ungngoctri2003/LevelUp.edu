@@ -19,14 +19,46 @@ export async function postMyExamAttempt(accessToken, body) {
   })
 }
 
-/** Đề được giao — chỉ học viên đã ghi danh lớp (kèm meta.needsEnrollment nếu chưa có lớp) */
-export async function getMyAssignedExams(accessToken) {
-  return meFetch(accessToken, '/api/me/exams')
+/** Đề được giao — chỉ học viên đã ghi danh lớp (kèm meta.needsEnrollment nếu chưa có lớp).
+ *  @param {{ classId?: number|string }} [opts] — khi có `classId`, chỉ đề gán cho lớp đó (exam_class_assignments).
+ */
+export async function getMyAssignedExams(accessToken, opts = {}) {
+  const q = new URLSearchParams()
+  const cid = opts.classId != null ? Number(opts.classId) : NaN
+  if (Number.isFinite(cid)) q.set('class_id', String(cid))
+  const qs = q.toString()
+  return meFetch(accessToken, `/api/me/exams${qs ? `?${qs}` : ''}`)
 }
 
 /** Chi tiết đề để làm bài (cùng điều kiện truy cập) */
 export async function getMyAssignedExamById(accessToken, examId) {
   return meFetch(accessToken, `/api/me/exams/${Number(examId)}`)
+}
+
+export async function getMyClasses(accessToken) {
+  return meFetch(accessToken, '/api/me/classes')
+}
+
+export async function getMyPayments(accessToken) {
+  return meFetch(accessToken, '/api/me/payments')
+}
+
+export async function postMyPayment(accessToken, body) {
+  return meFetch(accessToken, '/api/me/payments', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
+}
+
+export async function getMyCoursePayments(accessToken) {
+  return meFetch(accessToken, '/api/me/course-payments')
+}
+
+export async function postMyCoursePayment(accessToken, body) {
+  return meFetch(accessToken, '/api/me/course-payments', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
 }
 
 export async function getMyCourseProgress(accessToken) {

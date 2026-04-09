@@ -7,13 +7,11 @@ export function computeDashboardStats(s) {
   ).length
   const approvedTeachers = s.teachers.filter((t) => t.status === 'approved').length
   const activeCourses = s.courses.filter((c) => c.visible !== false).length
-  const pendingAdmissions = s.admissions.filter((a) => a.status === 'new' || a.status === 'reviewing').length
   return {
     totalStudents: activeStudents,
     totalTeachers: approvedTeachers,
     activeCourses,
     monthlyRevenue: s.settings?.monthlyRevenue ?? 0,
-    pendingAdmissions,
     openTickets: s.settings?.openTickets ?? 0,
   }
 }

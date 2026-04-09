@@ -262,23 +262,6 @@ export const news = [
   },
 ]
 
-// Admissions - for Tuyển sinh page
-export const admissionsInfo = {
-  title: 'Thông tin tuyển sinh 2025',
-  deadline: '31/08/2025',
-  requirements: [
-    'Học sinh từ lớp 6 đến lớp 12',
-    'Có thiết bị kết nối internet',
-    'Đăng ký qua form trực tuyến',
-  ],
-  steps: [
-    { step: 1, title: 'Đăng ký tài khoản', desc: 'Tạo tài khoản trên website LevelUp.edu' },
-    { step: 2, title: 'Chọn khóa học', desc: 'Xem và chọn khóa học phù hợp với trình độ' },
-    { step: 3, title: 'Thanh toán học phí', desc: 'Thanh toán qua chuyển khoản hoặc ví điện tử' },
-    { step: 4, title: 'Bắt đầu học', desc: 'Truy cập bài giảng và bắt đầu học ngay' },
-  ],
-}
-
 /** Ba số liệu dưới hero — cố định trong mã nguồn */
 export const landingHeroStats = {
   items: [

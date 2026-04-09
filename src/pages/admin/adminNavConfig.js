@@ -4,10 +4,10 @@ export const adminNavItems = [
   { to: '/admin/hoc-vien', label: 'Học viên', icon: 'users' },
   { to: '/admin/giao-vien', label: 'Giáo viên', icon: 'teacher' },
   { to: '/admin/lop-hoc', label: 'Lớp & học viên', icon: 'class' },
+  { to: '/admin/thanh-toan', label: 'Thanh toán', icon: 'dashboard' },
   { to: '/admin/khoa-hoc', label: 'Khóa học & môn', icon: 'book' },
   { to: '/admin/bai-giang-noi-dung', label: 'Bài giảng', icon: 'lesson' },
   { to: '/admin/doi-ngu-trang-chu', label: 'Đội ngũ (landing)', icon: 'teacher' },
   { to: '/admin/tin-tuc', label: 'Tin tức', icon: 'news' },
   { to: '/admin/bai-kiem-tra', label: 'Bài kiểm tra', icon: 'exam' },
-  { to: '/admin/tuyen-sinh', label: 'Tuyển sinh & lead', icon: 'admission' },
 ]

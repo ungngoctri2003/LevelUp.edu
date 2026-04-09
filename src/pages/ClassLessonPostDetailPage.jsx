@@ -74,8 +74,8 @@ export default function ClassLessonPostDetailPage() {
     return (
       <div className="py-24 text-center text-slate-500">
         <p>Đường dẫn không hợp lệ.</p>
-        <Link to="/bai-giang" className="mt-4 inline-block text-cyan-600 hover:text-cyan-500 dark:text-cyan-400">
-          ← Quay lại Bài giảng
+        <Link to="/lop-hoc" className="mt-4 inline-block text-cyan-600 hover:text-cyan-500 dark:text-cyan-400">
+          ← Lớp học
         </Link>
       </div>
     )
@@ -105,8 +105,8 @@ export default function ClassLessonPostDetailPage() {
         <p className="text-slate-600 dark:text-slate-400">
           {err === 'load-failed' ? 'Không tải được bài giảng.' : 'Không tìm thấy bài giảng hoặc bạn chưa được ghi danh lớp.'}
         </p>
-        <Link to="/bai-giang" className="mt-4 inline-block font-semibold text-emerald-600 hover:text-emerald-500 dark:text-emerald-400">
-          ← Bài giảng · Lớp của tôi
+        <Link to="/lop-hoc" className="mt-4 inline-block font-semibold text-emerald-600 hover:text-emerald-500 dark:text-emerald-400">
+          ← Lớp học
         </Link>
       </div>
     )
@@ -130,8 +130,8 @@ export default function ClassLessonPostDetailPage() {
             Trang chủ
           </Link>
           <span className="mx-2">/</span>
-          <Link to="/bai-giang" className="hover:text-emerald-600 dark:hover:text-emerald-400">
-            Bài giảng
+          <Link to="/lop-hoc" className="hover:text-emerald-600 dark:hover:text-emerald-400">
+            Lớp học
           </Link>
           <span className="mx-2">/</span>
           <span className="text-gray-900 dark:text-slate-200">Lớp học</span>
@@ -241,10 +241,10 @@ export default function ClassLessonPostDetailPage() {
 
         <p className="mt-12 text-center">
           <Link
-            to="/bai-giang"
+            to={row.class_id != null ? `/lop-hoc/${encodeURIComponent(String(row.class_id))}` : '/lop-hoc'}
             className="text-sm font-semibold text-emerald-600 hover:text-emerald-500 dark:text-emerald-400"
           >
-            ← Quay lại danh sách bài giảng lớp
+            ← Quay lại lớp
           </Link>
         </p>
       </div>

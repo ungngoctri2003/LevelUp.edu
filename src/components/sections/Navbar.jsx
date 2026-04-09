@@ -8,9 +8,9 @@ import { useAuthSession } from '../../context/AuthSessionContext'
 
 const menuItems = [
   { label: 'Trang chủ', path: '/' },
-  { label: 'Bài giảng', path: '/bai-giang' },
+  { label: 'Khóa học', path: '/bai-giang' },
+  { label: 'Lớp học', path: '/lop-hoc' },
   { label: 'Bài kiểm tra', path: '/bai-kiem-tra' },
-  { label: 'Tuyển sinh', path: '/tuyen-sinh' },
   { label: 'Tin tức', path: '/tin-tuc' },
 ]
 

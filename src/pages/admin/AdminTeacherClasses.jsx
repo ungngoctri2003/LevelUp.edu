@@ -13,6 +13,9 @@ const emptyNewClass = {
   grade_label: '',
   schedule_summary: '',
   code: '',
+  sales_enabled: false,
+  tuition_fee: '',
+  sales_note: '',
 }
 
 export default function AdminTeacherClasses() {
@@ -99,6 +102,9 @@ export default function AdminTeacherClasses() {
         grade_label: newClass.grade_label.trim(),
         schedule_summary: newClass.schedule_summary.trim(),
         code: newClass.code.trim() || null,
+        sales_enabled: newClass.sales_enabled,
+        tuition_fee: newClass.tuition_fee === '' ? null : Number(newClass.tuition_fee),
+        sales_note: newClass.sales_note.trim() || null,
       })
       setNewClass(emptyNewClass)
     } catch (err) {
@@ -116,6 +122,9 @@ export default function AdminTeacherClasses() {
         grade_label: editClassRow.grade_label.trim(),
         schedule_summary: editClassRow.schedule_summary?.trim() || null,
         code: editClassRow.code?.trim() || null,
+        sales_enabled: editClassRow.sales_enabled === true,
+        tuition_fee: editClassRow.tuition_fee === '' ? null : Number(editClassRow.tuition_fee),
+        sales_note: editClassRow.sales_note?.trim() || null,
         teacher_id: editClassRow.teacher_id,
       })
       setEditClassRow(null)
@@ -234,6 +243,29 @@ export default function AdminTeacherClasses() {
                   placeholder="Mã lớp (tuỳ chọn, unique)"
                   className={`${inputAdmin} w-full`}
                 />
+                <label className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300">
+                  <input
+                    type="checkbox"
+                    checked={newClass.sales_enabled}
+                    onChange={(e) => setNewClass((n) => ({ ...n, sales_enabled: e.target.checked }))}
+                  />
+                  Mở bán công khai lớp này
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={newClass.tuition_fee}
+                  onChange={(e) => setNewClass((n) => ({ ...n, tuition_fee: e.target.value }))}
+                  placeholder="Học phí (tuỳ chọn)"
+                  className={`${inputAdmin} w-full`}
+                />
+                <textarea
+                  rows={3}
+                  value={newClass.sales_note}
+                  onChange={(e) => setNewClass((n) => ({ ...n, sales_note: e.target.value }))}
+                  placeholder="Ghi chú bán hàng / hướng dẫn thanh toán"
+                  className={`${inputAdmin} w-full`}
+                />
                 <button type="submit" className={btnPrimaryAdmin} disabled={loading}>
                   Thêm lớp
                 </button>
@@ -276,6 +308,7 @@ export default function AdminTeacherClasses() {
                     <th className="px-4 py-3">Tên lớp</th>
                     <th className="px-4 py-3">Môn</th>
                     <th className="px-4 py-3">Khối</th>
+                    <th className="px-4 py-3">Mở bán</th>
                     <th className="px-4 py-3">HS</th>
                     <th className="px-4 py-3">Thao tác</th>
                   </tr>
@@ -283,7 +316,7 @@ export default function AdminTeacherClasses() {
                 <tbody className="divide-y divide-white/5 text-slate-200">
                   {myClasses.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="px-4 py-10 text-center text-slate-500">
+                      <td colSpan={7} className="px-4 py-10 text-center text-slate-500">
                         Chưa có lớp. Tạo mới hoặc chuyển lớp từ giáo viên khác.
                       </td>
                     </tr>
@@ -294,6 +327,15 @@ export default function AdminTeacherClasses() {
                       <td className="px-4 py-3">{c.name}</td>
                       <td className="px-4 py-3 text-slate-400">{c.subject}</td>
                       <td className="px-4 py-3 text-slate-400">{c.grade_label}</td>
+                      <td className="px-4 py-3 text-xs">
+                        {c.sales_enabled ? (
+                          <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-emerald-200">
+                            Có · {c.tuition_fee != null ? `${Number(c.tuition_fee).toLocaleString('vi-VN')}đ` : 'chưa nhập giá'}
+                          </span>
+                        ) : (
+                          <span className="text-slate-500">Không</span>
+                        )}
+                      </td>
                       <td className="px-4 py-3">{c.student_count}</td>
                       <td className="px-4 py-3 text-xs">
                         <div className="flex flex-wrap gap-2">
@@ -308,6 +350,9 @@ export default function AdminTeacherClasses() {
                                 grade_label: c.grade_label,
                                 schedule_summary: c.schedule_summary || '',
                                 code: c.code || '',
+                                sales_enabled: c.sales_enabled === true,
+                                tuition_fee: c.tuition_fee ?? '',
+                                sales_note: c.sales_note || '',
                                 teacher_id: c.teacher_id,
                               })
                             }
@@ -381,6 +426,33 @@ export default function AdminTeacherClasses() {
                   <input
                     value={editClassRow.code}
                     onChange={(e) => setEditClassRow((r) => ({ ...r, code: e.target.value }))}
+                    className={field}
+                  />
+                </label>
+                <label className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300">
+                  <input
+                    type="checkbox"
+                    checked={editClassRow.sales_enabled === true}
+                    onChange={(e) => setEditClassRow((r) => ({ ...r, sales_enabled: e.target.checked }))}
+                  />
+                  Mở bán công khai lớp này
+                </label>
+                <label className="block text-sm text-slate-400">
+                  Học phí
+                  <input
+                    type="number"
+                    min="0"
+                    value={editClassRow.tuition_fee}
+                    onChange={(e) => setEditClassRow((r) => ({ ...r, tuition_fee: e.target.value }))}
+                    className={field}
+                  />
+                </label>
+                <label className="block text-sm text-slate-400">
+                  Ghi chú bán hàng
+                  <textarea
+                    rows={3}
+                    value={editClassRow.sales_note}
+                    onChange={(e) => setEditClassRow((r) => ({ ...r, sales_note: e.target.value }))}
                     className={field}
                   />
                 </label>

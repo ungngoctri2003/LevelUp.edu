@@ -12,6 +12,33 @@ function viDate(d) {
   }
 }
 
+function trimOrNull(v) {
+  if (v == null) return null
+  const s = String(v).trim()
+  return s ? s : null
+}
+
+function normalizeMoney(v) {
+  if (v == null || v === '') return null
+  const n = Number(v)
+  if (!Number.isFinite(n) || n < 0) throw new Error('Số tiền không hợp lệ')
+  return Math.round(n * 100) / 100
+}
+
+function normalizePaymentSource(v) {
+  const allowed = new Set(['cash', 'bank_transfer', 'momo', 'vnpay', 'other'])
+  const src = String(v || '').trim() || 'bank_transfer'
+  if (!allowed.has(src)) throw new Error('Nguồn tiền không hợp lệ')
+  return src
+}
+
+function normalizePaymentStatus(v) {
+  const allowed = new Set(['pending', 'paid', 'cancelled'])
+  const status = String(v || '').trim() || 'pending'
+  if (!allowed.has(status)) throw new Error('Trạng thái thanh toán không hợp lệ')
+  return status
+}
+
 export async function logAdminActivity(sb, action, type = 'admin', actorEmail = null, actorUserId = null) {
   const { error } = await sb.from('admin_activity_logs').insert({
     action,
@@ -42,6 +69,7 @@ export async function fetchCoursesAdmin(sb) {
     description: c.description || '',
     subject: c.subjects?.name || '—',
     subject_id: c.subject_id,
+    list_price: c.list_price != null ? Number(c.list_price) : null,
     visible: c.visible !== false,
     sort_order: c.sort_order,
   }))
@@ -219,6 +247,9 @@ export async function fetchClassesAdmin(sb) {
     subject: c.subject,
     grade_label: c.grade_label,
     schedule_summary: c.schedule_summary || '',
+    sales_enabled: c.sales_enabled === true,
+    tuition_fee: c.tuition_fee != null ? Number(c.tuition_fee) : null,
+    sales_note: c.sales_note || '',
     teacher_id: c.teacher_id,
     teacher_name: nameById[c.teacher_id] || '—',
     student_count: enrollCount[c.id] || 0,
@@ -257,7 +288,7 @@ export async function fetchClassEnrollmentsAdmin(sb, classId) {
 
 export async function adminInsertClass(
   sb,
-  { teacher_id, name, subject, grade_label, schedule_summary, code },
+  { teacher_id, name, subject, grade_label, schedule_summary, code, sales_enabled, tuition_fee, sales_note },
   user,
 ) {
   const tid = String(teacher_id || '').trim()
@@ -273,6 +304,9 @@ export async function adminInsertClass(
     grade_label: String(grade_label || '').trim() || '—',
     schedule_summary: schedule_summary != null && String(schedule_summary).trim() ? String(schedule_summary).trim() : null,
     code: code != null && String(code).trim() ? String(code).trim() : null,
+    sales_enabled: sales_enabled === true,
+    tuition_fee: normalizeMoney(tuition_fee),
+    sales_note: trimOrNull(sales_note),
   }
   const { error } = await sb.from('classes').insert(row)
   if (error) throw new Error(error.message)
@@ -298,6 +332,15 @@ export async function adminUpdateClass(sb, classId, patch, user) {
   }
   if (patch.code !== undefined) {
     body.code = patch.code != null && String(patch.code).trim() ? String(patch.code).trim() : null
+  }
+  if (patch.sales_enabled !== undefined) {
+    body.sales_enabled = patch.sales_enabled === true
+  }
+  if (patch.tuition_fee !== undefined) {
+    body.tuition_fee = normalizeMoney(patch.tuition_fee)
+  }
+  if (patch.sales_note !== undefined) {
+    body.sales_note = trimOrNull(patch.sales_note)
   }
   let newTeacherId = null
   if (patch.teacher_id != null) {
@@ -336,6 +379,14 @@ export async function adminAddClassEnrollment(sb, classId, studentId, user) {
   const { data: st, error: se } = await sb.from('profiles').select('id, role').eq('id', sid).maybeSingle()
   if (se) throw new Error(se.message)
   if (!st || st.role !== 'student') throw new Error('Chỉ thêm học viên (role student)')
+  const { data: existing, error: ge } = await sb
+    .from('class_enrollments')
+    .select('class_id')
+    .eq('class_id', cid)
+    .eq('student_id', sid)
+    .maybeSingle()
+  if (ge) throw new Error(ge.message)
+  if (existing) return
   const { error } = await sb.from('class_enrollments').insert({ class_id: cid, student_id: sid })
   if (error) throw new Error(error.message)
   await logAdminActivity(sb, `Thêm học viên vào lớp #${cid}`, 'user', user?.email, user?.id)
@@ -348,6 +399,265 @@ export async function adminRemoveClassEnrollment(sb, classId, studentId, user) {
   const { error } = await sb.from('class_enrollments').delete().eq('class_id', cid).eq('student_id', sid)
   if (error) throw new Error(error.message)
   await logAdminActivity(sb, `Gỡ học viên khỏi lớp #${cid}`, 'user', user?.email, user?.id)
+}
+
+function isPaymentUuid(id) {
+  const s = String(id ?? '').trim()
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(s)
+}
+
+export async function fetchPaymentsAdmin(sb) {
+  const { data: rows, error } = await sb
+    .from('student_class_payments')
+    .select('*')
+    .order('submitted_at', { ascending: false })
+  if (error) throw new Error(error.message)
+  const payments = rows || []
+
+  const { data: coursePayRows, error: cpErr } = await sb
+    .from('student_course_payments')
+    .select('*')
+    .order('submitted_at', { ascending: false })
+  if (cpErr) throw new Error(cpErr.message)
+  const coursePayments = coursePayRows || []
+
+  const classIds = [...new Set(payments.map((p) => Number(p.class_id)).filter((n) => Number.isFinite(n)))]
+  const courseIds = [...new Set(coursePayments.map((p) => Number(p.course_id)).filter((n) => Number.isFinite(n)))]
+  const studentIds = [
+    ...new Set([
+      ...payments.map((p) => p.student_id).filter(Boolean),
+      ...coursePayments.map((p) => p.student_id).filter(Boolean),
+    ]),
+  ]
+  const confirmIds = [
+    ...new Set([
+      ...payments.map((p) => p.confirmed_by).filter(Boolean),
+      ...coursePayments.map((p) => p.confirmed_by).filter(Boolean),
+    ]),
+  ]
+
+  const [classesRes, coursesRes, studentsRes, confirmsRes, enrollmentsRes] = await Promise.all([
+    classIds.length
+      ? sb.from('classes').select('id, name, subject, grade_label, code, tuition_fee').in('id', classIds)
+      : Promise.resolve({ data: [], error: null }),
+    courseIds.length ? sb.from('courses').select('id, title, list_price').in('id', courseIds) : Promise.resolve({ data: [], error: null }),
+    studentIds.length
+      ? sb.from('profiles').select('id, full_name, email').in('id', studentIds)
+      : Promise.resolve({ data: [], error: null }),
+    confirmIds.length
+      ? sb.from('profiles').select('id, full_name, email').in('id', confirmIds)
+      : Promise.resolve({ data: [], error: null }),
+    classIds.length
+      ? sb.from('class_enrollments').select('class_id, student_id').in('class_id', classIds)
+      : Promise.resolve({ data: [], error: null }),
+  ])
+
+  if (classesRes.error) throw new Error(classesRes.error.message)
+  if (coursesRes.error) throw new Error(coursesRes.error.message)
+  if (studentsRes.error) throw new Error(studentsRes.error.message)
+  if (confirmsRes.error) throw new Error(confirmsRes.error.message)
+  if (enrollmentsRes.error) throw new Error(enrollmentsRes.error.message)
+
+  const classById = Object.fromEntries((classesRes.data || []).map((row) => [row.id, row]))
+  const courseById = Object.fromEntries((coursesRes.data || []).map((row) => [row.id, row]))
+  const studentById = Object.fromEntries((studentsRes.data || []).map((row) => [row.id, row]))
+  const confirmedById = Object.fromEntries((confirmsRes.data || []).map((row) => [row.id, row]))
+  const enrollmentSet = new Set((enrollmentsRes.data || []).map((row) => `${row.class_id}:${row.student_id}`))
+
+  const classMapped = payments.map((row) => {
+    const cls = classById[row.class_id]
+    const student = row.student_id ? studentById[row.student_id] : null
+    const confirmer = row.confirmed_by ? confirmedById[row.confirmed_by] : null
+    return {
+      payment_kind: 'class',
+      id: row.id,
+      class_id: row.class_id,
+      course_id: null,
+      class_name: cls?.name || `Lớp #${row.class_id}`,
+      class_subject: cls?.subject || '—',
+      class_grade_label: cls?.grade_label || '—',
+      class_code: cls?.code || '',
+      student_id: row.student_id || null,
+      student_name: row.student_name || student?.full_name || '—',
+      student_email: row.student_email || student?.email || '',
+      student_phone: row.student_phone || '',
+      payment_source: row.payment_source,
+      payment_status: row.payment_status,
+      amount: row.amount != null ? Number(row.amount) : cls?.tuition_fee != null ? Number(cls.tuition_fee) : null,
+      note: row.note || '',
+      admin_note: row.admin_note || '',
+      submitted_at: row.submitted_at,
+      confirmed_at: row.confirmed_at,
+      confirmed_by: row.confirmed_by,
+      confirmed_by_name: confirmer?.full_name || confirmer?.email || '',
+      enrolled_at: row.enrolled_at,
+      already_enrolled: !!row.student_id && enrollmentSet.has(`${row.class_id}:${row.student_id}`),
+    }
+  })
+
+  const courseMapped = coursePayments.map((row) => {
+    const crs = courseById[row.course_id]
+    const student = row.student_id ? studentById[row.student_id] : null
+    const confirmer = row.confirmed_by ? confirmedById[row.confirmed_by] : null
+    const title = crs?.title || `Khóa #${row.course_id}`
+    return {
+      payment_kind: 'course',
+      id: row.id,
+      class_id: null,
+      course_id: row.course_id,
+      class_name: `Khóa học: ${title}`,
+      class_subject: '—',
+      class_grade_label: '—',
+      class_code: '',
+      student_id: row.student_id || null,
+      student_name: row.student_name || student?.full_name || '—',
+      student_email: row.student_email || student?.email || '',
+      student_phone: row.student_phone || '',
+      payment_source: row.payment_source,
+      payment_status: row.payment_status,
+      amount: row.amount != null ? Number(row.amount) : crs?.list_price != null ? Number(crs.list_price) : null,
+      note: row.note || '',
+      admin_note: row.admin_note || '',
+      submitted_at: row.submitted_at,
+      confirmed_at: row.confirmed_at,
+      confirmed_by: row.confirmed_by,
+      confirmed_by_name: confirmer?.full_name || confirmer?.email || '',
+      enrolled_at: null,
+      already_enrolled: false,
+    }
+  })
+
+  return [...classMapped, ...courseMapped].sort(
+    (a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime(),
+  )
+}
+
+async function adminUpdateCoursePayment(sb, paymentUuid, patch, user) {
+  const { data: cur, error: gErr } = await sb
+    .from('student_course_payments')
+    .select('*')
+    .eq('id', paymentUuid)
+    .maybeSingle()
+  if (gErr) throw new Error(gErr.message)
+  if (!cur) throw new Error('Không tìm thấy yêu cầu thanh toán khóa học')
+
+  const body = {}
+  if (patch.student_id !== undefined) {
+    const sid = trimOrNull(patch.student_id)
+    if (sid) {
+      const { data: prof, error: pe } = await sb.from('profiles').select('id, role').eq('id', sid).maybeSingle()
+      if (pe) throw new Error(pe.message)
+      if (!prof || prof.role !== 'student') throw new Error('Tài khoản gắn thanh toán phải là học viên')
+      body.student_id = sid
+    } else {
+      body.student_id = null
+    }
+  }
+  if (patch.student_name !== undefined) body.student_name = String(patch.student_name || '').trim() || cur.student_name
+  if (patch.student_email !== undefined) body.student_email = trimOrNull(patch.student_email)
+  if (patch.student_phone !== undefined) body.student_phone = trimOrNull(patch.student_phone)
+  if (patch.payment_source !== undefined) body.payment_source = normalizePaymentSource(patch.payment_source)
+  if (patch.payment_status !== undefined) body.payment_status = normalizePaymentStatus(patch.payment_status)
+  if (patch.amount !== undefined) body.amount = normalizeMoney(patch.amount)
+  if (patch.note !== undefined) body.note = trimOrNull(patch.note)
+  if (patch.admin_note !== undefined) body.admin_note = trimOrNull(patch.admin_note)
+
+  const nextStatus = body.payment_status || cur.payment_status
+  const shouldConfirm = nextStatus === 'paid'
+
+  if (shouldConfirm) {
+    body.confirmed_at = cur.confirmed_at || new Date().toISOString()
+    body.confirmed_by = user?.id || null
+  } else if (body.payment_status && body.payment_status !== 'paid') {
+    body.confirmed_at = null
+    body.confirmed_by = null
+  }
+
+  if (Object.keys(body).length === 0) throw new Error('Không có trường cập nhật')
+
+  const { error } = await sb.from('student_course_payments').update(body).eq('id', paymentUuid)
+  if (error) throw new Error(error.message)
+
+  await logAdminActivity(
+    sb,
+    `Cập nhật thanh toán khóa học #${cur.course_id} -> ${nextStatus}`,
+    'course',
+    user?.email,
+    user?.id,
+  )
+}
+
+export async function adminUpdatePayment(sb, paymentId, patch, user) {
+  if (isPaymentUuid(paymentId)) {
+    return adminUpdateCoursePayment(sb, String(paymentId).trim(), patch, user)
+  }
+
+  const id = Number(paymentId)
+  if (!Number.isFinite(id)) throw new Error('ID thanh toán không hợp lệ')
+
+  const { data: cur, error: gErr } = await sb
+    .from('student_class_payments')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle()
+  if (gErr) throw new Error(gErr.message)
+  if (!cur) throw new Error('Không tìm thấy yêu cầu thanh toán')
+
+  const body = {}
+  if (patch.student_id !== undefined) {
+    const sid = trimOrNull(patch.student_id)
+    if (sid) {
+      const { data: prof, error: pe } = await sb.from('profiles').select('id, role').eq('id', sid).maybeSingle()
+      if (pe) throw new Error(pe.message)
+      if (!prof || prof.role !== 'student') throw new Error('Tài khoản gắn thanh toán phải là học viên')
+      body.student_id = sid
+    } else {
+      body.student_id = null
+    }
+  }
+  if (patch.student_name !== undefined) body.student_name = String(patch.student_name || '').trim() || cur.student_name
+  if (patch.student_email !== undefined) body.student_email = trimOrNull(patch.student_email)
+  if (patch.student_phone !== undefined) body.student_phone = trimOrNull(patch.student_phone)
+  if (patch.payment_source !== undefined) body.payment_source = normalizePaymentSource(patch.payment_source)
+  if (patch.payment_status !== undefined) body.payment_status = normalizePaymentStatus(patch.payment_status)
+  if (patch.amount !== undefined) body.amount = normalizeMoney(patch.amount)
+  if (patch.note !== undefined) body.note = trimOrNull(patch.note)
+  if (patch.admin_note !== undefined) body.admin_note = trimOrNull(patch.admin_note)
+
+  const nextStatus = body.payment_status || cur.payment_status
+  const nextStudentId = body.student_id !== undefined ? body.student_id : cur.student_id
+  const shouldConfirm = nextStatus === 'paid'
+
+  if (shouldConfirm) {
+    body.confirmed_at = cur.confirmed_at || new Date().toISOString()
+    body.confirmed_by = user?.id || null
+  } else if (body.payment_status && body.payment_status !== 'paid') {
+    body.confirmed_at = null
+    body.confirmed_by = null
+    body.enrolled_at = null
+  }
+
+  if (Object.keys(body).length === 0) throw new Error('Không có trường cập nhật')
+
+  const { error } = await sb.from('student_class_payments').update(body).eq('id', id)
+  if (error) throw new Error(error.message)
+
+  if (shouldConfirm && nextStudentId) {
+    await adminAddClassEnrollment(sb, cur.class_id, nextStudentId, user)
+    const { error: pErr } = await sb
+      .from('student_class_payments')
+      .update({ enrolled_at: new Date().toISOString() })
+      .eq('id', id)
+    if (pErr) throw new Error(pErr.message)
+  }
+
+  await logAdminActivity(
+    sb,
+    `Cập nhật thanh toán lớp #${cur.class_id} -> ${nextStatus}`,
+    'course',
+    user?.email,
+    user?.id,
+  )
 }
 
 export async function fetchAdminSettings(sb) {
@@ -379,13 +689,14 @@ function slugify(s) {
     .slice(0, 48)
 }
 
-export async function adminInsertCourse(sb, { title, description, subject_id, user }) {
+export async function adminInsertCourse(sb, { title, description, subject_id, list_price, user }) {
   const { data, error } = await sb
     .from('courses')
     .insert({
       title: title.trim(),
       description: description?.trim() || '',
       subject_id,
+      list_price: list_price != null && list_price !== '' ? normalizeMoney(list_price) : null,
       visible: true,
       sort_order: 0,
     })
@@ -402,6 +713,9 @@ export async function adminUpdateCourse(sb, id, patch, user) {
   if (patch.description != null) body.description = String(patch.description).trim()
   if (patch.subject_id != null) body.subject_id = patch.subject_id
   if (patch.visible != null) body.visible = patch.visible
+  if (patch.list_price !== undefined) {
+    body.list_price = patch.list_price === null || patch.list_price === '' ? null : normalizeMoney(patch.list_price)
+  }
   const { error } = await sb.from('courses').update(body).eq('id', id)
   if (error) throw new Error(error.message)
   await logAdminActivity(sb, `Cập nhật khóa học #${id}`, 'course', user?.email, user?.id)

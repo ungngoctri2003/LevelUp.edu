@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { requireAuth } from '../middleware/auth.js'
+import { createServiceClient } from '../lib/supabase.js'
 import {
   allMcqSourceIndicesAnswered,
   gradeMcqAttempt,
@@ -16,6 +17,14 @@ router.use(requireAuth)
 function nid(v) {
   const n = Number(v)
   return Number.isFinite(n) ? n : NaN
+}
+
+function normalizePaymentSource(v) {
+  const src = String(v || '').trim() || 'bank_transfer'
+  if (!['cash', 'bank_transfer', 'momo', 'vnpay', 'other'].includes(src)) {
+    throw new Error('payment_source không hợp lệ')
+  }
+  return src
 }
 
 /** GET /api/me/profile */
@@ -168,6 +177,332 @@ router.get('/class-schedule', async (req, res) => {
   res.json({ data: mapped })
 })
 
+/** GET /api/me/classes — lớp đã ghi danh + số liệu nhanh cho khu học viên */
+router.get('/classes', async (req, res) => {
+  const svc = createServiceClient()
+  if (!svc) return res.status(503).json({ error: 'Máy chủ chưa cấu hình đủ để tải dữ liệu lớp học.' })
+  const uid = req.authUser.id
+  const { data: profile, error: pErr } = await svc.from('profiles').select('role').eq('id', uid).maybeSingle()
+  if (pErr) return res.status(500).json({ error: pErr.message })
+  if (profile?.role !== 'student') {
+    return res.status(403).json({ error: 'Chỉ học viên xem được lớp học của mình.' })
+  }
+
+  const { data: rows, error } = await svc
+    .from('class_enrollments')
+    .select(
+      `
+      class_id, enrolled_at, avg_score, attendance_pct,
+      classes ( id, code, name, subject, grade_label, schedule_summary, teacher_id )
+    `,
+    )
+    .eq('student_id', uid)
+    .order('enrolled_at', { ascending: true })
+  if (error) return res.status(500).json({ error: error.message })
+
+  const enrollments = rows || []
+  const classIds = enrollments.map((row) => row.class_id).filter((v) => Number.isFinite(Number(v)))
+  const teacherIds = [...new Set(enrollments.map((row) => row.classes?.teacher_id).filter(Boolean))]
+
+  const [teachersRes, lessonsRes, schedulesRes, assignmentsRes, examsRes] = await Promise.all([
+    teacherIds.length
+      ? svc.from('profiles').select('id, full_name').in('id', teacherIds)
+      : Promise.resolve({ data: [], error: null }),
+    classIds.length
+      ? svc.from('teacher_lesson_posts').select('class_id').in('class_id', classIds)
+      : Promise.resolve({ data: [], error: null }),
+    classIds.length
+      ? svc.from('schedule_slots').select('class_id').in('class_id', classIds)
+      : Promise.resolve({ data: [], error: null }),
+    classIds.length
+      ? svc.from('assignments').select('class_id').in('class_id', classIds)
+      : Promise.resolve({ data: [], error: null }),
+    classIds.length
+      ? svc.from('exam_class_assignments').select('class_id').in('class_id', classIds)
+      : Promise.resolve({ data: [], error: null }),
+  ])
+
+  if (teachersRes.error) return res.status(500).json({ error: teachersRes.error.message })
+  if (lessonsRes.error) return res.status(500).json({ error: lessonsRes.error.message })
+  if (schedulesRes.error) return res.status(500).json({ error: schedulesRes.error.message })
+  if (assignmentsRes.error) return res.status(500).json({ error: assignmentsRes.error.message })
+  if (examsRes.error) return res.status(500).json({ error: examsRes.error.message })
+
+  const teacherById = Object.fromEntries((teachersRes.data || []).map((row) => [row.id, row.full_name]))
+  const lessonCount = {}
+  const scheduleCount = {}
+  const assignmentCount = {}
+  const examCount = {}
+  for (const row of lessonsRes.data || []) lessonCount[row.class_id] = (lessonCount[row.class_id] || 0) + 1
+  for (const row of schedulesRes.data || []) scheduleCount[row.class_id] = (scheduleCount[row.class_id] || 0) + 1
+  for (const row of assignmentsRes.data || []) assignmentCount[row.class_id] = (assignmentCount[row.class_id] || 0) + 1
+  for (const row of examsRes.data || []) examCount[row.class_id] = (examCount[row.class_id] || 0) + 1
+
+  res.json({
+    data: enrollments.map((row) => ({
+      class_id: row.class_id,
+      enrolled_at: row.enrolled_at,
+      avg_score: row.avg_score != null ? Number(row.avg_score) : null,
+      attendance_pct: row.attendance_pct != null ? Number(row.attendance_pct) : null,
+      class_name: row.classes?.name || `Lớp #${row.class_id}`,
+      class_code: row.classes?.code || '',
+      subject: row.classes?.subject || '—',
+      grade_label: row.classes?.grade_label || '—',
+      schedule_summary: row.classes?.schedule_summary || '',
+      teacher_name: teacherById[row.classes?.teacher_id] || '—',
+      lesson_count: lessonCount[row.class_id] || 0,
+      schedule_count: scheduleCount[row.class_id] || 0,
+      assignment_count: assignmentCount[row.class_id] || 0,
+      exam_count: examCount[row.class_id] || 0,
+    })),
+  })
+})
+
+/** GET /api/me/payments — yêu cầu thanh toán của học viên hiện tại */
+router.get('/payments', async (req, res) => {
+  const svc = createServiceClient()
+  if (!svc) return res.status(503).json({ error: 'Máy chủ chưa cấu hình đủ để tải thanh toán.' })
+  const uid = req.authUser.id
+  const { data: profile, error: pErr } = await svc.from('profiles').select('role').eq('id', uid).maybeSingle()
+  if (pErr) return res.status(500).json({ error: pErr.message })
+  if (profile?.role !== 'student') {
+    return res.status(403).json({ error: 'Chỉ học viên xem được yêu cầu thanh toán của mình.' })
+  }
+
+  const { data: rows, error } = await svc
+    .from('student_class_payments')
+    .select('*')
+    .eq('student_id', uid)
+    .order('submitted_at', { ascending: false })
+  if (error) return res.status(500).json({ error: error.message })
+
+  const classIds = [...new Set((rows || []).map((row) => row.class_id).filter((v) => Number.isFinite(Number(v))))]
+  let classById = {}
+  if (classIds.length) {
+    const { data: clsRows, error: cErr } = await svc
+      .from('classes')
+      .select('id, name, code, subject, grade_label, schedule_summary, tuition_fee')
+      .in('id', classIds)
+    if (cErr) return res.status(500).json({ error: cErr.message })
+    classById = Object.fromEntries((clsRows || []).map((row) => [row.id, row]))
+  }
+
+  res.json({
+    data: (rows || []).map((row) => {
+      const cls = classById[row.class_id]
+      return {
+        id: row.id,
+        class_id: row.class_id,
+        class_name: cls?.name || `Lớp #${row.class_id}`,
+        class_code: cls?.code || '',
+        class_subject: cls?.subject || '—',
+        class_grade_label: cls?.grade_label || '—',
+        schedule_summary: cls?.schedule_summary || '',
+        payment_source: row.payment_source,
+        payment_status: row.payment_status,
+        amount: row.amount != null ? Number(row.amount) : cls?.tuition_fee != null ? Number(cls.tuition_fee) : null,
+        note: row.note || '',
+        admin_note: row.admin_note || '',
+        submitted_at: row.submitted_at,
+        confirmed_at: row.confirmed_at,
+        enrolled_at: row.enrolled_at,
+      }
+    }),
+  })
+})
+
+/** POST /api/me/payments — học viên tạo yêu cầu mua lớp bằng chính tài khoản đang đăng nhập */
+router.post('/payments', async (req, res) => {
+  const svc = createServiceClient()
+  if (!svc) return res.status(503).json({ error: 'Máy chủ chưa cấu hình đủ để tạo yêu cầu thanh toán.' })
+  const uid = req.authUser.id
+  const { class_id, payment_source, note, student_phone } = req.body || {}
+  const classId = Number(class_id)
+  if (!Number.isFinite(classId)) {
+    return res.status(400).json({ error: 'class_id không hợp lệ' })
+  }
+
+  const { data: profile, error: pErr } = await svc
+    .from('profiles')
+    .select('id, role, full_name, email, phone')
+    .eq('id', uid)
+    .maybeSingle()
+  if (pErr) return res.status(500).json({ error: pErr.message })
+  if (profile?.role !== 'student') {
+    return res.status(403).json({ error: 'Chỉ học viên được tạo yêu cầu thanh toán.' })
+  }
+
+  const { data: cls, error: cErr } = await svc
+    .from('classes')
+    .select('id, sales_enabled, tuition_fee')
+    .eq('id', classId)
+    .maybeSingle()
+  if (cErr) return res.status(500).json({ error: cErr.message })
+  if (!cls || cls.sales_enabled !== true) {
+    return res.status(404).json({ error: 'Lớp này hiện không mở thanh toán công khai' })
+  }
+
+  const { data: existing, error: eErr } = await svc
+    .from('student_class_payments')
+    .select('id, payment_status')
+    .eq('student_id', uid)
+    .eq('class_id', classId)
+    .in('payment_status', ['pending', 'paid'])
+    .maybeSingle()
+  if (eErr) return res.status(500).json({ error: eErr.message })
+  if (existing) {
+    return res.status(409).json({ error: 'Bạn đã có yêu cầu thanh toán đang xử lý hoặc đã được xác nhận cho lớp này.' })
+  }
+
+  let source = 'bank_transfer'
+  try {
+    source = normalizePaymentSource(payment_source)
+  } catch (err) {
+    return res.status(400).json({ error: err.message })
+  }
+
+  const row = {
+    student_id: uid,
+    class_id: classId,
+    student_name: profile.full_name,
+    student_email: profile.email || null,
+    student_phone:
+      (typeof student_phone === 'string' && student_phone.trim()) || profile.phone || null,
+    payment_source: source,
+    payment_status: 'pending',
+    amount: cls.tuition_fee != null ? Number(cls.tuition_fee) : null,
+    note: typeof note === 'string' && note.trim() ? note.trim() : null,
+  }
+  const { data, error } = await svc
+    .from('student_class_payments')
+    .insert(row)
+    .select('id, class_id, payment_status, payment_source, submitted_at')
+    .single()
+  if (error) return res.status(500).json({ error: error.message })
+  res.status(201).json({ data })
+})
+
+/** GET /api/me/course-payments — thanh toán mua khóa học (catalog) */
+router.get('/course-payments', async (req, res) => {
+  const svc = createServiceClient()
+  if (!svc) return res.status(503).json({ error: 'Máy chủ chưa cấu hình đủ để tải thanh toán khóa học.' })
+  const uid = req.authUser.id
+  const { data: profile, error: pErr } = await svc.from('profiles').select('role').eq('id', uid).maybeSingle()
+  if (pErr) return res.status(500).json({ error: pErr.message })
+  if (profile?.role !== 'student') {
+    return res.status(403).json({ error: 'Chỉ học viên xem được yêu cầu thanh toán khóa học của mình.' })
+  }
+
+  const { data: rows, error } = await svc
+    .from('student_course_payments')
+    .select('*')
+    .eq('student_id', uid)
+    .order('submitted_at', { ascending: false })
+  if (error) return res.status(500).json({ error: error.message })
+
+  const courseIds = [...new Set((rows || []).map((row) => row.course_id).filter((v) => Number.isFinite(Number(v))))]
+  let courseById = {}
+  if (courseIds.length) {
+    const { data: crsRows, error: cErr } = await svc
+      .from('courses')
+      .select('id, title, list_price')
+      .in('id', courseIds)
+    if (cErr) return res.status(500).json({ error: cErr.message })
+    courseById = Object.fromEntries((crsRows || []).map((row) => [row.id, row]))
+  }
+
+  res.json({
+    data: (rows || []).map((row) => {
+      const crs = courseById[row.course_id]
+      return {
+        id: row.id,
+        course_id: row.course_id,
+        course_title: crs?.title || `Khóa #${row.course_id}`,
+        payment_source: row.payment_source,
+        payment_status: row.payment_status,
+        amount: row.amount != null ? Number(row.amount) : crs?.list_price != null ? Number(crs.list_price) : null,
+        note: row.note || '',
+        admin_note: row.admin_note || '',
+        submitted_at: row.submitted_at,
+        confirmed_at: row.confirmed_at,
+      }
+    }),
+  })
+})
+
+/** POST /api/me/course-payments — học viên mua khóa học (theo giá niêm yết) */
+router.post('/course-payments', async (req, res) => {
+  const svc = createServiceClient()
+  if (!svc) return res.status(503).json({ error: 'Máy chủ chưa cấu hình đủ để tạo thanh toán khóa học.' })
+  const uid = req.authUser.id
+  const { course_id, payment_source, note, student_phone } = req.body || {}
+  const courseId = Number(course_id)
+  if (!Number.isFinite(courseId)) {
+    return res.status(400).json({ error: 'course_id không hợp lệ' })
+  }
+
+  const { data: profile, error: pErr } = await svc
+    .from('profiles')
+    .select('id, role, full_name, email, phone')
+    .eq('id', uid)
+    .maybeSingle()
+  if (pErr) return res.status(500).json({ error: pErr.message })
+  if (profile?.role !== 'student') {
+    return res.status(403).json({ error: 'Chỉ học viên được mua khóa học qua tài khoản này.' })
+  }
+
+  const { data: crs, error: crsErr } = await svc
+    .from('courses')
+    .select('id, title, list_price, visible')
+    .eq('id', courseId)
+    .maybeSingle()
+  if (crsErr) return res.status(500).json({ error: crsErr.message })
+  if (!crs || crs.visible !== true) {
+    return res.status(404).json({ error: 'Không tìm thấy khóa học hoặc khóa không hiển thị công khai' })
+  }
+  if (crs.list_price == null || !Number.isFinite(Number(crs.list_price))) {
+    return res.status(400).json({ error: 'Khóa học này chưa có giá niêm yết. Vui lòng liên hệ trung tâm.' })
+  }
+
+  const { data: existing, error: eErr } = await svc
+    .from('student_course_payments')
+    .select('id, payment_status')
+    .eq('student_id', uid)
+    .eq('course_id', courseId)
+    .in('payment_status', ['pending', 'paid'])
+    .maybeSingle()
+  if (eErr) return res.status(500).json({ error: eErr.message })
+  if (existing) {
+    return res.status(409).json({ error: 'Bạn đã có yêu cầu hoặc đã thanh toán khóa học này.' })
+  }
+
+  let source = 'bank_transfer'
+  try {
+    source = normalizePaymentSource(payment_source)
+  } catch (err) {
+    return res.status(400).json({ error: err.message })
+  }
+
+  const row = {
+    student_id: uid,
+    course_id: courseId,
+    student_name: profile.full_name,
+    student_email: profile.email || null,
+    student_phone: (typeof student_phone === 'string' && student_phone.trim()) || profile.phone || null,
+    payment_source: source,
+    payment_status: 'pending',
+    amount: Number(crs.list_price),
+    note: typeof note === 'string' && note.trim() ? note.trim() : null,
+  }
+  const { data, error } = await svc
+    .from('student_course_payments')
+    .insert(row)
+    .select('id, course_id, payment_status, payment_source, submitted_at')
+    .single()
+  if (error) return res.status(500).json({ error: error.message })
+  res.status(201).json({ data })
+})
+
 /** GET /api/me/exam-attempts */
 router.get('/exam-attempts', async (req, res) => {
   const sb = req.supabaseUser
@@ -268,7 +603,9 @@ router.post('/exam-attempts', async (req, res) => {
   res.status(201).json({ data })
 })
 
-/** GET /api/me/exams — đề published; theo lớp (exam_class_assignments) hoặc kho assigned không gắn lớp */
+/** GET /api/me/exams — đề published; theo lớp (exam_class_assignments) hoặc kho assigned không gắn lớp.
+ *  Query `class_id`: chỉ đề được gán cho lớp đó (học viên phải đã ghi danh lớp).
+ */
 router.get('/exams', async (req, res) => {
   const sb = req.supabaseUser
   const uid = req.authUser.id
@@ -276,12 +613,19 @@ router.get('/exams', async (req, res) => {
   if (profile?.role !== 'student') {
     return res.status(403).json({ error: 'Chỉ học viên được xem đề kiểm tra được giao.' })
   }
+  const filterClassId =
+    req.query.class_id != null && String(req.query.class_id).trim() !== ''
+      ? nid(req.query.class_id)
+      : null
   const { data: enr, error: eErr } = await sb.from('class_enrollments').select('class_id').eq('student_id', uid)
   if (eErr) return res.status(500).json({ error: eErr.message })
   if (!enr?.length) {
     return res.json({ data: [], meta: { needsEnrollment: true } })
   }
   const classIds = new Set(enr.map((r) => nid(r.class_id)).filter((n) => Number.isFinite(n)))
+  if (Number.isFinite(filterClassId) && !classIds.has(filterClassId)) {
+    return res.json({ data: [], meta: { needsEnrollment: false } })
+  }
   const { data: allLinks, error: linkErr } = await sb.from('exam_class_assignments').select('exam_id, class_id')
   if (linkErr) return res.status(500).json({ error: linkErr.message })
   const examsWithLinks = new Set((allLinks || []).map((r) => nid(r.exam_id)).filter((n) => Number.isFinite(n)))
@@ -291,6 +635,15 @@ router.get('/exams', async (req, res) => {
       .map((r) => nid(r.exam_id))
       .filter((n) => Number.isFinite(n)),
   )
+  const reachableExamIdsForClass =
+    Number.isFinite(filterClassId)
+      ? new Set(
+          (allLinks || [])
+            .filter((r) => nid(r.class_id) === filterClassId)
+            .map((r) => nid(r.exam_id))
+            .filter((n) => Number.isFinite(n)),
+        )
+      : null
   const { data: examsRaw, error } = await sb
     .from('exams')
     .select('*')
@@ -300,6 +653,10 @@ router.get('/exams', async (req, res) => {
   const data = (examsRaw || []).filter((e) => {
     const eid = nid(e.id)
     if (!Number.isFinite(eid)) return false
+    if (reachableExamIdsForClass) {
+      if (!examsWithLinks.has(eid)) return false
+      return reachableExamIdsForClass.has(eid)
+    }
     if (examsWithLinks.has(eid)) return reachableExamIds.has(eid)
     return e.assigned === true
   })

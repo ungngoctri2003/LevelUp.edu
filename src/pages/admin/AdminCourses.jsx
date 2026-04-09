@@ -20,8 +20,8 @@ export default function AdminCourses() {
   const token = session?.access_token
   const { state, loading, error, addCourse, updateCourse, deleteCourse, refresh } = useAdminState()
   const [editing, setEditing] = useState(null)
-  const [form, setForm] = useState({ title: '', description: '', subject_id: '' })
-  const [createDraft, setCreateDraft] = useState({ title: '', description: '', subject_id: '' })
+  const [form, setForm] = useState({ title: '', description: '', subject_id: '', list_price: '' })
+  const [createDraft, setCreateDraft] = useState({ title: '', description: '', subject_id: '', list_price: '' })
 
   const [subjectDraft, setSubjectDraft] = useState({ name: '', slug: '', icon_label: '📘', sort_order: 0 })
   const [subjectEditId, setSubjectEditId] = useState(null)
@@ -36,6 +36,7 @@ export default function AdminCourses() {
       title: c.title,
       description: c.description,
       subject_id: String(c.subject_id ?? ''),
+      list_price: c.list_price != null && c.list_price !== '' ? String(c.list_price) : '',
     })
   }
 
@@ -49,6 +50,7 @@ export default function AdminCourses() {
         title: form.title.trim(),
         description: form.description.trim(),
         subject_id: sid,
+        list_price: form.list_price?.trim() ? form.list_price.trim() : null,
       })
       setEditing(null)
     } catch (err) {
@@ -69,8 +71,9 @@ export default function AdminCourses() {
         title: createDraft.title.trim(),
         description: createDraft.description.trim() || 'Mô tả đang cập nhật.',
         subject_id: sid,
+        list_price: createDraft.list_price?.trim() ? createDraft.list_price.trim() : null,
       })
-      setCreateDraft({ title: '', description: '', subject_id: '' })
+      setCreateDraft({ title: '', description: '', subject_id: '', list_price: '' })
     } catch (err) {
       toastActionError(err, 'Không thêm được khóa học.')
     }
@@ -92,6 +95,7 @@ export default function AdminCourses() {
         title: c.title,
         description: c.description,
         subject_id: c.subject_id,
+        list_price: c.list_price,
       })
     } catch (err) {
       toastActionError(err, 'Không cập nhật được trạng thái hiển thị.')
@@ -286,6 +290,18 @@ export default function AdminCourses() {
             rows={2}
             className={`${inputAdmin} w-full`}
           />
+          <label className="block text-sm text-slate-400">
+            Giá niêm yết (VNĐ, để trống nếu chưa bán online)
+            <input
+              type="number"
+              min={0}
+              step={1000}
+              value={createDraft.list_price}
+              onChange={(e) => setCreateDraft((d) => ({ ...d, list_price: e.target.value }))}
+              placeholder="vd. 500000"
+              className={`${inputAdmin} mt-1 w-full max-w-xs`}
+            />
+          </label>
           <button type="submit" className={btnPrimaryAdmin} disabled={loading}>
             Tạo khóa
           </button>
@@ -309,6 +325,13 @@ export default function AdminCourses() {
                     </span>
                   )}
                   <h3 className="font-semibold text-white">{c.title}</h3>
+                  {c.list_price != null && Number.isFinite(Number(c.list_price)) ? (
+                    <p className="mt-1 text-xs text-slate-400">
+                      Giá niêm yết: {Number(c.list_price).toLocaleString('vi-VN')}đ
+                    </p>
+                  ) : (
+                    <p className="mt-1 text-xs text-amber-400/90">Chưa có giá niêm yết (không bán online qua form)</p>
+                  )}
                 </div>
                 {c.visible === false && (
                   <span className="shrink-0 rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] text-amber-200">
@@ -377,6 +400,18 @@ export default function AdminCourses() {
                 value={form.description}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                 rows={5}
+                className={field}
+              />
+            </label>
+            <label className="mt-3 block text-sm text-slate-400">
+              Giá niêm yết (VNĐ, để trống nếu chưa bán online)
+              <input
+                type="number"
+                min={0}
+                step={1000}
+                value={form.list_price}
+                onChange={(e) => setForm((f) => ({ ...f, list_price: e.target.value }))}
+                placeholder="vd. 500000"
                 className={field}
               />
             </label>

@@ -18,6 +18,8 @@ create type public.teacher_approval_status as enum ('approved', 'pending', 'susp
 create type public.admission_status as enum ('new', 'reviewing', 'accepted', 'rejected');
 create type public.admin_activity_type as enum ('admin', 'course', 'system', 'user', 'support');
 create type public.grading_status as enum ('pending', 'graded');
+create type public.payment_source as enum ('cash', 'bank_transfer', 'momo', 'vnpay', 'other');
+create type public.payment_status as enum ('pending', 'paid', 'cancelled');
 
 -- ---------------------------------------------------------------------------
 -- Security definer helpers (RLS: avoid per-row re-eval where possible; indexed columns)
@@ -142,6 +144,7 @@ create table public.courses (
   subject_id   bigint references public.subjects (id) on delete set null,
   title        text not null,
   description  text,
+  list_price   numeric(12, 2),
   visible      boolean not null default true,
   sort_order   integer not null default 0,
   created_at   timestamptz not null default now(),
@@ -296,12 +299,16 @@ create table public.classes (
   subject          text not null,
   grade_label      text not null,
   schedule_summary text,
+  sales_enabled    boolean not null default false,
+  tuition_fee      numeric(12, 2),
+  sales_note       text,
   teacher_id       uuid not null references public.profiles (id) on delete cascade,
   created_at       timestamptz not null default now(),
   updated_at       timestamptz not null default now()
 );
 
 create index classes_teacher_id_idx on public.classes (teacher_id);
+create index classes_sales_enabled_idx on public.classes (sales_enabled, id) where sales_enabled = true;
 
 create table public.class_enrollments (
   class_id       bigint not null references public.classes (id) on delete cascade,
@@ -406,6 +413,78 @@ create table public.student_course_progress (
   )
 );
 
+create table public.student_class_payments (
+  id             bigint generated always as identity primary key,
+  student_id     uuid references public.profiles (id) on delete set null,
+  class_id       bigint not null references public.classes (id) on delete cascade,
+  student_name   text not null,
+  student_email  text,
+  student_phone  text,
+  payment_source public.payment_source not null default 'bank_transfer',
+  payment_status public.payment_status not null default 'pending',
+  amount         numeric(12, 2),
+  note           text,
+  admin_note     text,
+  submitted_at   timestamptz not null default now(),
+  confirmed_at   timestamptz,
+  confirmed_by   uuid references public.profiles (id) on delete set null,
+  enrolled_at    timestamptz,
+  updated_at     timestamptz not null default now()
+);
+
+create index student_class_payments_class_id_idx on public.student_class_payments (class_id);
+create index student_class_payments_student_id_idx on public.student_class_payments (student_id);
+create index student_class_payments_status_idx on public.student_class_payments (payment_status, submitted_at desc);
+create unique index student_class_payments_active_unique_idx
+  on public.student_class_payments (student_id, class_id)
+  where student_id is not null and payment_status in ('pending', 'paid');
+
+create table public.student_course_payments (
+  id             uuid primary key default gen_random_uuid(),
+  student_id     uuid references public.profiles (id) on delete set null,
+  course_id      bigint not null references public.courses (id) on delete cascade,
+  student_name   text not null,
+  student_email  text,
+  student_phone  text,
+  payment_source public.payment_source not null default 'bank_transfer',
+  payment_status public.payment_status not null default 'pending',
+  amount         numeric(12, 2),
+  note           text,
+  admin_note     text,
+  submitted_at   timestamptz not null default now(),
+  confirmed_at   timestamptz,
+  confirmed_by   uuid references public.profiles (id) on delete set null,
+  updated_at     timestamptz not null default now()
+);
+
+create index student_course_payments_course_id_idx on public.student_course_payments (course_id);
+create index student_course_payments_student_id_idx on public.student_course_payments (student_id);
+create index student_course_payments_status_idx
+  on public.student_course_payments (payment_status, submitted_at desc);
+create unique index student_course_payments_active_unique_idx
+  on public.student_course_payments (student_id, course_id)
+  where student_id is not null and payment_status in ('pending', 'paid');
+
+create trigger student_course_payments_set_updated_at
+  before update on public.student_course_payments
+  for each row execute function public.set_updated_at();
+
+alter table public.student_course_payments enable row level security;
+
+create policy student_course_payments_select on public.student_course_payments
+  for select using (
+    student_id = (select auth.uid()) or (select public.is_admin())
+  );
+
+create policy student_course_payments_insert_own_or_admin on public.student_course_payments
+  for insert with check (
+    student_id = (select auth.uid()) or (select public.is_admin())
+  );
+
+create policy student_course_payments_update_admin on public.student_course_payments
+  for update using ((select public.is_admin()))
+  with check ((select public.is_admin()));
+
 create table public.public_teacher_profiles (
   id           bigint generated always as identity primary key,
   user_id      uuid unique references public.profiles (id) on delete set null,
@@ -480,6 +559,10 @@ create trigger trg_teacher_lesson_posts_ensure_details
 
 create trigger student_course_progress_set_updated_at
   before update on public.student_course_progress
+  for each row execute function public.set_updated_at();
+
+create trigger student_class_payments_set_updated_at
+  before update on public.student_class_payments
   for each row execute function public.set_updated_at();
 
 -- ---------------------------------------------------------------------------
@@ -567,6 +650,7 @@ alter table public.schedule_slots enable row level security;
 alter table public.assignments enable row level security;
 alter table public.assignment_submissions enable row level security;
 alter table public.student_course_progress enable row level security;
+alter table public.student_class_payments enable row level security;
 alter table public.public_teacher_profiles enable row level security;
 
 -- profiles
@@ -921,6 +1005,18 @@ create policy student_course_progress_modify_own_or_admin on public.student_cour
   with check (
     student_id = (select auth.uid()) or (select public.is_admin())
   );
+
+create policy student_class_payments_select on public.student_class_payments
+  for select using (
+    student_id = (select auth.uid()) or (select public.is_admin())
+  );
+create policy student_class_payments_insert_own_or_admin on public.student_class_payments
+  for insert with check (
+    student_id = (select auth.uid()) or (select public.is_admin())
+  );
+create policy student_class_payments_update_admin on public.student_class_payments
+  for update using ((select public.is_admin()))
+  with check ((select public.is_admin()));
 
 create policy public_teacher_profiles_select on public.public_teacher_profiles for select using (true);
 create policy public_teacher_profiles_write_admin on public.public_teacher_profiles

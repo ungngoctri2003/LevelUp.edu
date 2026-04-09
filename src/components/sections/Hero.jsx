@@ -187,7 +187,7 @@ export default function Hero() {
               to="/bai-giang"
               className="inline-block w-full rounded-2xl border-2 border-cyan-400/60 bg-cyan-500/10 px-12 py-5 text-center text-lg font-bold text-cyan-100 backdrop-blur-sm transition-colors duration-300 hover:border-cyan-300 hover:bg-cyan-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-4 focus-visible:ring-offset-[#0f172a] sm:w-auto"
             >
-              Xem bài giảng
+              Xem khóa học
             </Link>
           </motion.div>
         </motion.div>

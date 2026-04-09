@@ -21,6 +21,7 @@ export function PublicContentProvider({ children }) {
   const [teachers, setTeachers] = useState([])
   const [subjects, setSubjects] = useState([])
   const [lessons, setLessons] = useState([])
+  const [saleClasses, setSaleClasses] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -35,6 +36,7 @@ export function PublicContentProvider({ children }) {
       setTeachers(cat.teachers)
       setSubjects(cat.subjects)
       setLessons(cat.lessons)
+      setSaleClasses(cat.saleClasses || [])
     } catch (e) {
       if (import.meta.env.DEV) console.error('[PublicContent]', e)
       setError(PUBLIC_LOAD_ERROR)
@@ -55,11 +57,12 @@ export function PublicContentProvider({ children }) {
       teachers,
       subjects,
       lessons,
+      saleClasses,
       loading,
       error,
       refresh: load,
     }),
-    [courses, exams, news, teachers, subjects, lessons, loading, error, load],
+    [courses, exams, news, teachers, subjects, lessons, saleClasses, loading, error, load],
   )
 
   return <PublicContentContext.Provider value={value}>{children}</PublicContentContext.Provider>

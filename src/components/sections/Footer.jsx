@@ -72,7 +72,7 @@ export default function Footer() {
                   to="/bai-giang"
                   className="rounded transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900"
                 >
-                  Bài giảng
+                  Khóa học
                 </Link>
               </li>
               <li>
@@ -81,14 +81,6 @@ export default function Footer() {
                   className="rounded transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900"
                 >
                   Bài kiểm tra
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/tuyen-sinh"
-                  className="rounded transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900"
-                >
-                  Tuyển sinh
                 </Link>
               </li>
               <li>

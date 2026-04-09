@@ -55,6 +55,17 @@ export function adminDeleteClassEnrollment(accessToken, classId, studentId) {
   })
 }
 
+export function adminListPayments(accessToken) {
+  return adminFetch(accessToken, '/api/admin/payments')
+}
+
+export function adminPatchPayment(accessToken, id, patch) {
+  return adminFetch(accessToken, `/api/admin/payments/${encodeURIComponent(String(id))}`, {
+    method: 'PATCH',
+    body: JSON.stringify(patch),
+  })
+}
+
 function adminFetch(accessToken, path, init = {}) {
   if (!accessToken) {
     throw new Error('Phiên đăng nhập không hợp lệ. Vui lòng đăng xuất và đăng nhập lại.')

@@ -11,13 +11,11 @@ function computeDashboardStats(s) {
   ).length
   const approvedTeachers = s.teachers.filter((t) => t.status === 'approved').length
   const activeCourses = s.courses.filter((c) => c.visible !== false).length
-  const pendingAdmissions = s.admissions.filter((a) => a.status === 'new' || a.status === 'reviewing').length
   return {
     totalStudents: activeStudents,
     totalTeachers: approvedTeachers,
     activeCourses,
     monthlyRevenue: s.settings?.monthlyRevenue ?? 0,
-    pendingAdmissions,
     openTickets: s.settings?.openTickets ?? 0,
   }
 }
@@ -31,7 +29,7 @@ export function AdminDataProvider({ children }) {
     courses: [],
     exams: [],
     news: [],
-    admissions: [],
+    payments: [],
     activity: [],
     students: [],
     teachers: [],
@@ -83,12 +81,24 @@ export function AdminDataProvider({ children }) {
         return { students, teachers, counts, classes }
       }
 
+      const loadPayments = async () => {
+        if (accessToken) {
+          try {
+            const res = await srv.adminListPayments(accessToken)
+            return res.data
+          } catch {
+            return api.fetchPaymentsAdmin(supabase)
+          }
+        }
+        return api.fetchPaymentsAdmin(supabase)
+      }
+
       const [
         subjects,
         courses,
         exams,
         news,
-        admissions,
+        payments,
         activity,
         roster,
         settings,
@@ -97,7 +107,7 @@ export function AdminDataProvider({ children }) {
         api.fetchCoursesAdmin(supabase),
         api.fetchExamsAdmin(supabase),
         api.fetchNewsAdmin(supabase),
-        api.fetchAdmissionsAdmin(supabase),
+        loadPayments(),
         api.fetchActivityAdmin(supabase),
         loadRoster(),
         api.fetchAdminSettings(supabase),
@@ -109,7 +119,7 @@ export function AdminDataProvider({ children }) {
         courses,
         exams,
         news,
-        admissions,
+        payments,
         activity,
         students,
         teachers,
@@ -176,19 +186,6 @@ export function AdminDataProvider({ children }) {
       },
       async deleteNews(id, title) {
         await srv.adminDeleteNewsApi(t, id, title)
-        await refresh()
-      },
-
-      async addAdmission(row) {
-        await srv.adminCreateAdmission(t, row)
-        await refresh()
-      },
-      async setAdmissionStatus(id, status) {
-        await srv.adminPatchAdmissionStatus(t, id, status)
-        await refresh()
-      },
-      async deleteAdmission(id) {
-        await srv.adminDeleteAdmissionApi(t, id)
         await refresh()
       },
 
@@ -262,6 +259,11 @@ export function AdminDataProvider({ children }) {
       },
       async removeClassEnrollment(classId, studentId) {
         await srv.adminDeleteClassEnrollment(t, classId, studentId)
+        await refresh()
+      },
+
+      async updatePayment(id, patch) {
+        await srv.adminPatchPayment(t, id, patch)
         await refresh()
       },
 

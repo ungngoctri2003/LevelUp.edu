@@ -23,15 +23,16 @@ function mapNewsRow(n) {
   }
 }
 
-/** @returns {Promise<{ courses: object[], exams: object[], news: object[], teachers: object[], subjects: object[], lessons: object[] }>} */
+/** @returns {Promise<{ courses: object[], exams: object[], news: object[], teachers: object[], subjects: object[], lessons: object[], saleClasses: object[] }>} */
 export async function fetchPublicCatalog() {
-  const [coursesRes, examsRes, newsRes, teachersRes, subjectsRes, lessonsRes] = await Promise.all([
+  const [coursesRes, examsRes, newsRes, teachersRes, subjectsRes, lessonsRes, saleClassesRes] = await Promise.all([
     apiFetch('/api/public/courses'),
     apiFetch('/api/public/exams'),
     apiFetch('/api/public/news'),
     apiFetch('/api/public/teachers'),
     apiFetch('/api/public/subjects'),
     apiFetch('/api/public/lessons'),
+    apiFetch('/api/public/sale-classes'),
   ])
 
   const courses = (coursesRes.data || [])
@@ -42,6 +43,7 @@ export async function fetchPublicCatalog() {
       subject_id: c.subject_id,
       title: c.title,
       description: c.description || '',
+      list_price: c.list_price != null ? Number(c.list_price) : null,
       visible: c.visible !== false,
       sort_order: c.sort_order,
     }))
@@ -80,6 +82,17 @@ export async function fetchPublicCatalog() {
     teachers,
     subjects: subjectsRes.data || [],
     lessons: lessonsRes.data || [],
+    saleClasses: (saleClassesRes.data || []).map((row) => ({
+      id: row.id,
+      code: row.code || '',
+      name: row.name,
+      subject: row.subject || '—',
+      grade_label: row.grade_label || '—',
+      schedule_summary: row.schedule_summary || '',
+      tuition_fee: row.tuition_fee != null ? Number(row.tuition_fee) : null,
+      sales_note: row.sales_note || '',
+      teacher_name: row.teacher_name || '—',
+    })),
   }
 }
 
@@ -131,8 +144,15 @@ export async function postMarketingLead(body) {
   })
 }
 
-export async function postAdmissionApplication(body) {
-  return apiFetch('/api/public/admission-applications', {
+export async function postPublicClassPaymentRequest(body) {
+  return apiFetch('/api/public/class-payment-requests', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
+}
+
+export async function postPublicCoursePaymentRequest(body) {
+  return apiFetch('/api/public/course-payment-requests', {
     method: 'POST',
     body: JSON.stringify(body),
   })
@@ -192,6 +212,7 @@ export function buildLessonsByCourse(courses, lessons, subjects) {
         courseId: c.id,
         courseTitle: c.title,
         courseDescription: typeof c.description === 'string' ? c.description : '',
+        listPrice: c.list_price != null && Number.isFinite(Number(c.list_price)) ? Number(c.list_price) : null,
         subjectName: sub?.name || c.subject || '—',
         subjectSlug: sub?.slug || '',
         icon: sub?.icon_label || '📘',
