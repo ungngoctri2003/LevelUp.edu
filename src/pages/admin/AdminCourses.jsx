@@ -350,6 +350,12 @@ export default function AdminCourses() {
               </div>
               <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">{c.description}</p>
               <div className="mt-4 flex flex-wrap gap-2">
+                <Link
+                  to={`/admin/bai-giang-noi-dung?khoa=${encodeURIComponent(String(c.id))}`}
+                  className="rounded-lg border border-emerald-600/35 bg-emerald-50/80 px-3 py-1.5 text-xs font-medium text-emerald-900 transition hover:bg-emerald-100 dark:border-emerald-500/40 dark:bg-transparent dark:text-emerald-200 dark:hover:bg-emerald-500/10"
+                >
+                  Bài giảng →
+                </Link>
                 <button
                   type="button"
                   onClick={() => openEdit(c)}

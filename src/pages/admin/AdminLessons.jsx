@@ -33,10 +33,15 @@ export default function AdminLessons() {
   const { state: adminState } = useAdminState()
   const [searchParams, setSearchParams] = useSearchParams()
   const tab = searchParams.get('tab') === 'lop' ? 'lop' : 'online'
+  const khoaParam = searchParams.get('khoa')
+  const khoaIdNum = khoaParam != null && khoaParam !== '' ? Number(khoaParam) : NaN
 
   const setTab = (next) => {
-    if (next === 'lop') setSearchParams({ tab: 'lop' }, { replace: true })
-    else setSearchParams({}, { replace: true })
+    const nextParams = new URLSearchParams()
+    const khoaKeep = searchParams.get('khoa')
+    if (khoaKeep) nextParams.set('khoa', khoaKeep)
+    if (next === 'lop') nextParams.set('tab', 'lop')
+    setSearchParams(nextParams, { replace: true })
   }
 
   // --- Trực tuyến (lessons) ---
@@ -58,6 +63,17 @@ export default function AdminLessons() {
     return String(a.title || '').localeCompare(String(b.title || ''), 'vi')
   })
   const firstCourseId = sortedCatalogCourses[0]?.id
+  const filterCourseId =
+    Number.isFinite(khoaIdNum) && sortedCatalogCourses.some((c) => c.id === khoaIdNum) ? khoaIdNum : null
+  const filterCourseTitle = filterCourseId != null ? sortedCatalogCourses.find((c) => c.id === filterCourseId)?.title : null
+
+  const onlineLessonsDisplayed =
+    filterCourseId != null ? lessons.filter((r) => Number(r.course_id) === filterCourseId) : lessons
+
+  useEffect(() => {
+    if (filterCourseId == null) return
+    setDraft((d) => ({ ...d, course_id: String(filterCourseId) }))
+  }, [filterCourseId])
 
   const loadOnline = useCallback(async () => {
     if (!token) {
@@ -212,7 +228,7 @@ export default function AdminLessons() {
           <>
             <strong className="text-slate-700 dark:text-slate-300">Trực tuyến</strong> — thư viện công khai tại{' '}
             <Link className="font-medium text-cyan-600 hover:text-cyan-800 dark:text-cyan-400 dark:hover:text-cyan-300" to="/bai-giang">
-              /bai-giang
+              Bài giảng
             </Link>
             . <strong className="text-slate-700 dark:text-slate-300">Trong lớp</strong> — bài giáo viên đăng cho lớp (học viên xem tab
             &quot;Lớp của tôi&quot;).
@@ -249,6 +265,22 @@ export default function AdminLessons() {
       {tab === 'online' && (
         <>
           {onlineLoading && <PageLoading variant="inline" />}
+
+          {filterCourseId != null && (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-emerald-500/30 bg-emerald-50/90 px-4 py-3 text-sm text-emerald-950 dark:border-emerald-500/25 dark:bg-emerald-500/10 dark:text-emerald-100">
+              <p>
+                Đang lọc bài giảng theo khóa:{' '}
+                <span className="font-semibold">{filterCourseTitle || `#${filterCourseId}`}</span>
+              </p>
+              <Link
+                to="/admin/bai-giang-noi-dung"
+                replace
+                className="shrink-0 rounded-lg border border-emerald-600/40 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-900 transition hover:bg-emerald-50 dark:border-emerald-400/40 dark:bg-emerald-950/40 dark:text-emerald-100 dark:hover:bg-emerald-500/20"
+              >
+                Xem tất cả khóa
+              </Link>
+            </div>
+          )}
 
           <Panel title="Thêm bài giảng trực tuyến" subtitle="Gắn bài với một khóa học (môn học theo khóa). Nội dung chi tiết chỉnh sau.">
             <form onSubmit={addOnline} className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -319,7 +351,17 @@ export default function AdminLessons() {
             </form>
           </Panel>
 
-          <Panel title="Danh sách bài trực tuyến" noDivider padding={false} className="overflow-hidden p-4">
+          <Panel
+            title="Danh sách bài trực tuyến"
+            subtitle={
+              filterCourseId != null
+                ? `Chỉ hiển thị bài thuộc khóa đã chọn (${onlineLessonsDisplayed.length} bài).`
+                : undefined
+            }
+            noDivider
+            padding={false}
+            className="overflow-hidden p-4"
+          >
             <div className={tableShell}>
               <table className="w-full min-w-[880px] text-left text-sm">
                 <thead className={tableHeadAdmin}>
@@ -333,7 +375,7 @@ export default function AdminLessons() {
                   </tr>
                 </thead>
                 <tbody className={tableBodyAdmin}>
-                  {lessons.map((r) => (
+                  {onlineLessonsDisplayed.map((r) => (
                     <tr key={r.id} className={tableRowHover}>
                       <td className="px-4 py-3 font-mono text-slate-600 dark:text-slate-500">{r.id}</td>
                       <td className="px-4 py-3 text-slate-800 dark:text-slate-400">

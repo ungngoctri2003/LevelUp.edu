@@ -1,0 +1,97 @@
+/* Bọc ngoài — full width trong grid form */
+.app-time-picker-root {
+  width: 100%;
+}
+
+.app-time-picker-root .react-time-picker {
+  display: flex;
+  width: 100%;
+}
+
+.app-time-picker-root .react-time-picker__wrapper {
+  flex: 1;
+  width: 100%;
+  min-height: 2.5rem;
+  align-items: center;
+  border-radius: 0.75rem;
+  padding: 0.125rem 0.375rem;
+}
+
+.app-time-picker-root .react-time-picker__inputGroup {
+  padding: 0 4px;
+  flex: 1;
+}
+
+.app-time-picker-root .react-time-picker__inputGroup__input {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.app-time-picker-root .react-time-picker__button:enabled:hover .react-time-picker__button__icon,
+.app-time-picker-root .react-time-picker__button:enabled:focus .react-time-picker__button__icon {
+  stroke: rgb(34 211 238);
+}
+
+/* Đồng hồ popup — nổi trên modal */
+.app-time-picker-root .react-time-picker__clock {
+  position: fixed;
+  z-index: 200;
+  box-shadow:
+    0 10px 15px -3px rgb(0 0 0 / 0.25),
+    0 4px 6px -4px rgb(0 0 0 / 0.2);
+}
+
+/* —— Dark (teacher / slate modal) —— */
+.app-time-picker-root--dark .react-time-picker__wrapper {
+  border: 1px solid rgb(255 255 255 / 0.15);
+  background-color: rgb(0 0 0 / 0.4);
+  color: rgb(248 250 252);
+}
+
+.app-time-picker-root--dark .react-time-picker__inputGroup__input {
+  color: rgb(248 250 252);
+}
+
+.app-time-picker-root--dark .react-time-picker__inputGroup__divider {
+  color: rgb(148 163 184);
+}
+
+.app-time-picker-root--dark.react-time-picker--disabled .react-time-picker__wrapper,
+.app-time-picker-root--dark .react-time-picker--disabled .react-time-picker__wrapper {
+  opacity: 0.55;
+}
+
+.app-time-picker-root--dark .react-time-picker__clock {
+  background-color: rgb(15 23 42);
+  border-color: rgb(255 255 255 / 0.12);
+  color: rgb(248 250 252);
+}
+
+.app-time-picker-root--dark .react-clock__face {
+  border-color: rgb(255 255 255 / 0.25);
+}
+
+.app-time-picker-root--dark .react-clock__hand__body,
+.app-time-picker-root--dark .react-clock__mark__body {
+  background-color: rgb(34 211 238);
+}
+
+.app-time-picker-root--dark .react-clock__mark__number {
+  color: rgb(226 232 240);
+}
+
+/* —— Light (admin / nền sáng) —— */
+.app-time-picker-root--light .react-time-picker__wrapper {
+  border: 1px solid rgb(148 163 184);
+  background-color: rgb(255 255 255);
+  color: rgb(17 24 39);
+}
+
+.app-time-picker-root--light .react-time-picker__inputGroup__input {
+  color: rgb(17 24 39);
+}
+
+.app-time-picker-root--light .react-time-picker__clock {
+  background-color: rgb(255 255 255);
+  border-color: rgb(203 213 225);
+}

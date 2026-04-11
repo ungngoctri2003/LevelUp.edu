@@ -5,6 +5,7 @@ import { useTeacherState } from '../../hooks/useTeacherState'
 import QuestionBankEditor from '../../components/dashboard/QuestionBankEditor.jsx'
 import { mergeDateTimeForDeadline, splitDatetimeLocalParts } from '../../lib/datetimeParts.js'
 import AppDatePicker from '../../components/ui/AppDatePicker.jsx'
+import AppTimePicker from '../../components/ui/AppTimePicker.jsx'
 import {
   tableShell,
   tableHeadTeacher,
@@ -321,12 +322,9 @@ export default function TeacherAssignments() {
                 </label>
                 <label className="block text-sm text-slate-400">
                   Giờ
-                  <input
-                    type="time"
-                    value={form.dueTime}
-                    onChange={(e) => setForm((f) => ({ ...f, dueTime: e.target.value }))}
-                    className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white scheme-dark"
-                  />
+                  <div className="mt-1">
+                    <AppTimePicker value={form.dueTime} onChange={(v) => setForm((f) => ({ ...f, dueTime: v }))} />
+                  </div>
                 </label>
               </div>
             </div>

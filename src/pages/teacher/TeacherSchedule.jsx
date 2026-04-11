@@ -18,6 +18,7 @@ import {
   tableRowHover,
 } from '../../components/dashboard/dashboardStyles'
 import AppDatePicker from '../../components/ui/AppDatePicker.jsx'
+import AppTimePicker from '../../components/ui/AppTimePicker.jsx'
 import PageLoading from '../../components/ui/PageLoading.jsx'
 import AppDateRangePicker from '../../components/ui/AppDateRangePicker.jsx'
 import {
@@ -619,13 +620,13 @@ export default function TeacherSchedule() {
                 </label>
                 <label className="block text-xs text-slate-500">
                   Giờ
-                  <input
-                    type="time"
-                    required
-                    value={form.startTime}
-                    onChange={(e) => setForm((f) => ({ ...f, startTime: e.target.value }))}
-                    className={inputCls}
-                  />
+                  <div className="mt-1">
+                    <AppTimePicker
+                      value={form.startTime}
+                      onChange={(v) => setForm((f) => ({ ...f, startTime: v }))}
+                      required
+                    />
+                  </div>
                 </label>
               </div>
             </div>
@@ -645,13 +646,13 @@ export default function TeacherSchedule() {
                 </label>
                 <label className="block text-xs text-slate-500">
                   Giờ
-                  <input
-                    type="time"
-                    required
-                    value={form.endTime}
-                    onChange={(e) => setForm((f) => ({ ...f, endTime: e.target.value }))}
-                    className={inputCls}
-                  />
+                  <div className="mt-1">
+                    <AppTimePicker
+                      value={form.endTime}
+                      onChange={(v) => setForm((f) => ({ ...f, endTime: v }))}
+                      required
+                    />
+                  </div>
                 </label>
               </div>
             </div>
