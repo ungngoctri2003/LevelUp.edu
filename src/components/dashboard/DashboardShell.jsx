@@ -5,7 +5,9 @@ import Logo from '../Logo'
 import ThemeSettings from '../ThemeSettings'
 import { useAuthSession } from '../../context/AuthSessionContext'
 import { useTheme } from '../../context/ThemeContext'
+import { usePersistedSidebarOpen } from '../../hooks/usePersistedSidebarOpen'
 import { NavIcon } from './DashboardNavIcons'
+import SidebarToggleIcon from './SidebarToggleIcon'
 
 const shellGrad = {
   admin:
@@ -31,24 +33,33 @@ const activeLink = {
 const inactiveLink =
   'border-transparent text-slate-600 hover:border-slate-300 hover:bg-slate-200/70 hover:text-slate-900 dark:text-slate-400 dark:hover:border-white/10 dark:hover:bg-white/[0.06] dark:hover:text-white'
 
-const roleBadge = {
+/** Nhãn vai trò trên header — nền tint mỏng, không viền đậm */
+const headerRoleChip = {
   admin:
-    'border-fuchsia-200 bg-fuchsia-50 text-fuchsia-900 dark:border-fuchsia-500/30 dark:bg-fuchsia-500/15 dark:text-fuchsia-100',
+    'rounded-lg bg-fuchsia-500/10 px-2.5 py-1 text-[11px] font-semibold tracking-wide text-fuchsia-900 dark:bg-fuchsia-400/12 dark:text-fuchsia-200',
   teacher:
-    'border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-500/15 dark:text-emerald-100',
+    'rounded-lg bg-emerald-500/10 px-2.5 py-1 text-[11px] font-semibold tracking-wide text-emerald-900 dark:bg-emerald-400/12 dark:text-emerald-200',
 }
+
+const headerLinkBtn =
+  'inline-flex h-9 max-w-[10rem] items-center rounded-lg px-2.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-200/70 hover:text-slate-900 sm:max-w-none sm:px-3 sm:text-sm dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white'
+
+const headerLogoutBtn =
+  'inline-flex h-9 items-center rounded-lg px-2.5 text-xs font-medium text-slate-600 transition-colors hover:bg-red-500/[0.08] hover:text-red-700 sm:px-3 sm:text-sm dark:text-slate-300 dark:hover:bg-red-500/15 dark:hover:text-red-300'
 
 export default function DashboardShell({ navItems, accent = 'admin', title, profileTo }) {
   const { user, logout } = useAuthSession()
   const navigate = useNavigate()
   const { reduceMotion, resolvedMode } = useTheme()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [desktopSidebarOpen, , toggleDesktopSidebar] = usePersistedSidebarOpen(`levelup:sidebar:${accent}`, true)
 
   const closeMobile = () => setMobileOpen(false)
   const drawerTransition = reduceMotion ? { duration: 0.15, ease: 'linear' } : { type: 'spring', damping: 28, stiffness: 320 }
   const mainTransition = reduceMotion
     ? { duration: 0.01, ease: 'linear' }
     : { duration: 0.28, ease: [0.22, 1, 0.36, 1] }
+  const desktopSidebarWidthClass = reduceMotion ? 'duration-150 ease-linear' : 'duration-[480ms] ease-in-out'
 
   const SidebarContent = () => (
     <>
@@ -115,24 +126,6 @@ export default function DashboardShell({ navItems, accent = 'admin', title, prof
                 <p className="truncate text-slate-500 dark:text-slate-500">{user?.email}</p>
               </div>
             </div>
-            <NavLink
-              to="/"
-              onClick={closeMobile}
-              className="mt-3 flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-white/15 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-white/10"
-            >
-              ← Về trang chủ
-            </NavLink>
-            <button
-              type="button"
-              onClick={() => {
-                logout()
-                navigate('/')
-                closeMobile()
-              }}
-              className="mt-2 w-full rounded-xl border border-slate-300 bg-white py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-white/15 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-white/10"
-            >
-              Đăng xuất
-            </button>
           </div>
         </div>
       </div>
@@ -144,9 +137,15 @@ export default function DashboardShell({ navItems, accent = 'admin', title, prof
       <div className={`dashboard-app-bg min-h-screen bg-gradient-to-br ${shellGrad[accent]}`}>
         <div className="relative z-[1] flex min-h-screen">
           <aside
-            className={`hidden min-h-0 w-[272px] shrink-0 flex-col backdrop-blur-xl lg:flex ${sidebarAccent[accent]}`}
+            id="dashboard-sidebar"
+            style={{ pointerEvents: desktopSidebarOpen ? 'auto' : 'none' }}
+            className={`min-h-0 min-w-0 shrink-0 flex-col overflow-hidden backdrop-blur-xl transition-[width] hidden lg:flex ${desktopSidebarWidthClass} ${
+              desktopSidebarOpen ? 'w-[272px]' : 'w-0 border-transparent shadow-none'
+            } ${sidebarAccent[accent]}`}
           >
-            <SidebarContent />
+            <div className="flex h-full min-h-screen w-[272px] flex-col">
+              <SidebarContent />
+            </div>
           </aside>
 
           <AnimatePresence>
@@ -177,7 +176,7 @@ export default function DashboardShell({ navItems, accent = 'admin', title, prof
 
           <div className="flex min-w-0 flex-1 flex-col">
             <header className="sticky top-0 z-40 border-b border-slate-300 bg-white/90 px-4 py-3 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/75 lg:px-8">
-              <div className="dashboard-main-inner flex items-center justify-between gap-3">
+              <div className="dashboard-main-inner flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
                 <div className="flex min-w-0 items-center gap-3">
                   <button
                     type="button"
@@ -189,6 +188,27 @@ export default function DashboardShell({ navItems, accent = 'admin', title, prof
                       <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
                     </svg>
                   </button>
+                  <motion.button
+                    type="button"
+                    className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-800 transition-colors hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 lg:flex"
+                    onClick={toggleDesktopSidebar}
+                    aria-expanded={desktopSidebarOpen}
+                    aria-controls="dashboard-sidebar"
+                    aria-label={desktopSidebarOpen ? 'Thu gọn menu bên trái' : 'Mở menu bên trái'}
+                    whileHover={reduceMotion ? undefined : { scale: 1.06 }}
+                    whileTap={reduceMotion ? undefined : { scale: 0.93 }}
+                    transition={{ type: 'spring', stiffness: 520, damping: 28 }}
+                  >
+                    <motion.span
+                      key={desktopSidebarOpen ? 'open' : 'shut'}
+                      initial={reduceMotion ? false : { opacity: 0, rotate: -90, scale: 0.85 }}
+                      animate={{ opacity: 1, rotate: 0, scale: 1 }}
+                      transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 380, damping: 24 }}
+                      className="flex items-center justify-center"
+                    >
+                      <SidebarToggleIcon expanded={desktopSidebarOpen} />
+                    </motion.span>
+                  </motion.button>
                   <div className="min-w-0">
                     <h1 className="truncate text-base font-semibold text-slate-900 dark:text-white lg:hidden">{title}</h1>
                     <p className="hidden text-sm text-slate-600 dark:text-slate-400 lg:block">
@@ -197,11 +217,32 @@ export default function DashboardShell({ navItems, accent = 'admin', title, prof
                     <p className="truncate text-xs text-slate-500 dark:text-slate-500 lg:hidden">{user?.email}</p>
                   </div>
                 </div>
-                <div className="flex shrink-0 items-center gap-2">
+                <div className="flex shrink-0 flex-wrap items-center justify-end gap-x-2 gap-y-2 sm:gap-x-3">
                   <ThemeSettings compact />
-                  <span className={`rounded-full border px-3 py-1 text-xs font-semibold tracking-wide ${roleBadge[accent]}`}>
+                  <span
+                    className="hidden h-6 w-px shrink-0 bg-slate-200 sm:block dark:bg-white/10"
+                    aria-hidden
+                  />
+                  <span className={`shrink-0 ${headerRoleChip[accent]}`}>
                     {accent === 'admin' ? 'Quản trị' : 'Giáo viên'}
                   </span>
+                  <div className="flex items-center gap-0.5 rounded-xl border border-slate-200/90 bg-slate-50/90 p-0.5 dark:border-white/10 dark:bg-white/[0.04]">
+                    <NavLink to="/" className={headerLinkBtn}>
+                      <span className="hidden sm:inline">← </span>
+                      <span className="truncate">Trang chủ</span>
+                    </NavLink>
+                    <span className="hidden h-5 w-px shrink-0 bg-slate-200 sm:block dark:bg-white/10" aria-hidden />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        logout()
+                        navigate('/')
+                      }}
+                      className={headerLogoutBtn}
+                    >
+                      Đăng xuất
+                    </button>
+                  </div>
                 </div>
               </div>
             </header>

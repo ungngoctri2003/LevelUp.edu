@@ -146,7 +146,7 @@ export default function AdminStudents() {
       <PageHeader
         title="Quản lý học viên"
         description="Tạo tài khoản mới hoặc quản lý học viên đã có: thông tin, trạng thái học tập và tài khoản."
-        badge="CRUD"
+        badge="Student"
       />
 
       {loading && <p className="text-sm text-slate-400">Đang tải…</p>}

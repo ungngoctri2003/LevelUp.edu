@@ -15,6 +15,11 @@ import {
 import { useAdminState } from '../../hooks/useAdminState'
 import { toast } from 'sonner'
 import { toastActionError } from '../../lib/appToast.js'
+import AppDateRangePicker from '../../components/ui/AppDateRangePicker.jsx'
+import {
+  filterPaymentsBySubmittedDateRange,
+  partitionPayments,
+} from '../../utils/adminPaymentHelpers.js'
 
 const SOURCE_OPTIONS = [
   { value: 'cash', label: 'Tiền mặt' },
@@ -58,13 +63,6 @@ function formatCurrency(amount) {
   )
 }
 
-function partitionPayments(all) {
-  const rows = all || []
-  const classRows = rows.filter((r) => r.payment_kind === 'class' || (r.class_id != null && r.payment_kind !== 'course'))
-  const courseRows = rows.filter((r) => r.payment_kind === 'course' || r.course_id != null)
-  return { classRows, courseRows }
-}
-
 function summarize(rows) {
   const base = rows || []
   return {
@@ -89,6 +87,8 @@ export default function AdminPayments() {
   const [courseStatusFilter, setCourseStatusFilter] = useState('all')
   const [courseCourseFilter, setCourseCourseFilter] = useState('all')
   const [courseSourceFilter, setCourseSourceFilter] = useState('all')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
   const [editingId, setEditingId] = useState(null)
   const [draft, setDraft] = useState(null)
 
@@ -102,9 +102,14 @@ export default function AdminPayments() {
     [state.students],
   )
 
+  const paymentsFilteredByDate = useMemo(
+    () => filterPaymentsBySubmittedDateRange(state.payments, dateFrom, dateTo),
+    [state.payments, dateFrom, dateTo],
+  )
+
   const { classRows: classPaymentsBase, courseRows: coursePaymentsBase } = useMemo(
-    () => partitionPayments(state.payments),
-    [state.payments],
+    () => partitionPayments(paymentsFilteredByDate),
+    [paymentsFilteredByDate],
   )
 
   const classOptions = useMemo(() => {
@@ -143,7 +148,7 @@ export default function AdminPayments() {
     })
   }, [coursePaymentsBase, courseStatusFilter, courseCourseFilter, courseSourceFilter])
 
-  const summaryAll = useMemo(() => summarize(state.payments || []), [state.payments])
+  const summaryAll = useMemo(() => summarize(paymentsFilteredByDate), [paymentsFilteredByDate])
   const summaryClass = useMemo(() => summarize(classPaymentsBase), [classPaymentsBase])
   const summaryCourse = useMemo(() => summarize(coursePaymentsBase), [coursePaymentsBase])
 
@@ -281,7 +286,7 @@ export default function AdminPayments() {
     <div className="space-y-8">
       <PageHeader
         title="Thanh toán — lớp học & khóa học"
-        description="Hai luồng riêng: đăng ký lớp (ghi danh) và mua khóa học online (catalog). Gắn đúng tài khoản học viên trước khi xác nhận đã thanh toán."
+        description="Hai luồng riêng: đăng ký lớp (ghi danh) và mua khóa học online. Gắn đúng tài khoản học viên trước khi xác nhận đã thanh toán."
         badge="Quản trị"
       />
 
@@ -298,6 +303,26 @@ export default function AdminPayments() {
           <p className="text-xs uppercase tracking-wide text-slate-500">Đã xác nhận (cả hai)</p>
           <p className="text-2xl font-semibold text-emerald-200">{summaryAll.paid}</p>
         </Panel>
+      </div>
+
+      <div className="rounded-2xl border border-gray-200 bg-white/80 p-4 dark:border-white/10 dark:bg-white/3">
+        <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          Lọc theo thời gian gửi yêu cầu
+        </p>
+        <p className="mt-1 text-xs text-slate-500 dark:text-slate-500">
+          Áp dụng cho cả lớp và khóa.
+        </p>
+        <div className="mt-3 max-w-xl">
+          <AppDateRangePicker
+            from={dateFrom}
+            to={dateTo}
+            onChange={({ from, to }) => {
+              setDateFrom(from)
+              setDateTo(to)
+            }}
+            placeholder="Chọn từ ngày — đến ngày"
+          />
+        </div>
       </div>
 
       <Panel
@@ -348,7 +373,7 @@ export default function AdminPayments() {
           <p className="text-xs text-slate-500">
             {paymentTab === 'class'
               ? 'Đang xem yêu cầu đăng ký / học phí lớp.'
-              : 'Đang xem yêu cầu mua khóa học online (catalog).'}
+              : 'Đang xem yêu cầu mua khóa học online.'}
           </p>
         </div>
 

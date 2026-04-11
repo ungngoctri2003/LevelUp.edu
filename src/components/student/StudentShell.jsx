@@ -5,7 +5,9 @@ import Logo from '../Logo'
 import ThemeSettings from '../ThemeSettings'
 import { useAuthSession } from '../../context/AuthSessionContext'
 import { useTheme } from '../../context/ThemeContext'
+import { usePersistedSidebarOpen } from '../../hooks/usePersistedSidebarOpen'
 import { NavIcon } from '../dashboard/DashboardNavIcons'
+import SidebarToggleIcon from '../dashboard/SidebarToggleIcon'
 
 export const studentNavItems = [
   { to: '/hoc-vien', label: 'Tổng quan', end: true, icon: 'dashboard' },
@@ -20,6 +22,15 @@ const activeStudent =
 const inactiveStudent =
   'border-transparent text-slate-600 hover:border-slate-300 hover:bg-slate-200/70 hover:text-slate-900 dark:text-slate-400 dark:hover:border-white/10 dark:hover:bg-white/[0.06] dark:hover:text-white'
 
+const studentHeaderRoleChip =
+  'shrink-0 rounded-lg bg-sky-500/10 px-2.5 py-1 text-[11px] font-semibold tracking-wide text-sky-900 dark:bg-sky-400/12 dark:text-sky-200'
+
+const studentHeaderLinkBtn =
+  'inline-flex h-9 max-w-[10rem] items-center rounded-lg px-2.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-200/70 hover:text-slate-900 sm:max-w-none sm:px-3 sm:text-sm dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white'
+
+const studentHeaderLogoutBtn =
+  'inline-flex h-9 items-center rounded-lg px-2.5 text-xs font-medium text-slate-600 transition-colors hover:bg-red-500/[0.08] hover:text-red-700 sm:px-3 sm:text-sm dark:text-slate-300 dark:hover:bg-red-500/15 dark:hover:text-red-300'
+
 const sidebarStudent =
   'border-r border-slate-300 bg-gradient-to-b from-sky-50/90 via-white to-slate-100/95 shadow-sm dark:border-white/10 dark:from-sky-950/35 dark:via-black/25 dark:to-slate-950/80 dark:shadow-[inset_-1px_0_0_rgba(255,255,255,0.06)]'
 
@@ -28,12 +39,14 @@ export default function StudentShell() {
   const navigate = useNavigate()
   const { reduceMotion, resolvedMode } = useTheme()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [desktopSidebarOpen, , toggleDesktopSidebar] = usePersistedSidebarOpen('levelup:sidebar:student', true)
   const closeMobile = () => setMobileOpen(false)
 
   const drawerTransition = reduceMotion ? { duration: 0.15, ease: 'linear' } : { type: 'spring', damping: 28, stiffness: 320 }
   const mainTransition = reduceMotion
     ? { duration: 0.01, ease: 'linear' }
     : { duration: 0.28, ease: [0.22, 1, 0.36, 1] }
+  const desktopSidebarWidthClass = reduceMotion ? 'duration-150 ease-linear' : 'duration-[480ms] ease-in-out'
 
   const SidebarContent = () => (
     <>
@@ -88,24 +101,6 @@ export default function StudentShell() {
                 <p className="truncate text-slate-500 dark:text-slate-500">{user?.email}</p>
               </div>
             </div>
-            <NavLink
-              to="/"
-              onClick={closeMobile}
-              className="mt-3 flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-white/15 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-white/10"
-            >
-              ← Về trang chủ
-            </NavLink>
-            <button
-              type="button"
-              onClick={() => {
-                logout()
-                navigate('/')
-                closeMobile()
-              }}
-              className="mt-2 w-full rounded-xl border border-slate-300 bg-white py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-white/15 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-white/10"
-            >
-              Đăng xuất
-            </button>
           </div>
         </div>
       </div>
@@ -116,8 +111,16 @@ export default function StudentShell() {
     <MotionConfig reducedMotion={reduceMotion ? 'always' : 'user'}>
       <div className="dashboard-app-bg min-h-screen bg-slate-100 bg-gradient-to-br from-sky-50 via-slate-100 to-slate-100 text-slate-900 dark:from-sky-950/95 dark:via-slate-950 dark:to-slate-950 dark:text-slate-100">
         <div className="relative z-[1] flex min-h-screen">
-          <aside className={`hidden min-h-0 w-[272px] shrink-0 flex-col backdrop-blur-xl lg:flex ${sidebarStudent}`}>
-            <SidebarContent />
+          <aside
+            id="student-sidebar"
+            style={{ pointerEvents: desktopSidebarOpen ? 'auto' : 'none' }}
+            className={`min-h-0 min-w-0 shrink-0 flex-col overflow-hidden backdrop-blur-xl transition-[width] hidden lg:flex ${desktopSidebarWidthClass} ${
+              desktopSidebarOpen ? 'w-[272px]' : 'w-0 border-transparent shadow-none'
+            } ${sidebarStudent}`}
+          >
+            <div className="flex h-full min-h-screen w-[272px] flex-col">
+              <SidebarContent />
+            </div>
           </aside>
 
           <AnimatePresence>
@@ -148,7 +151,7 @@ export default function StudentShell() {
 
           <div className="flex min-w-0 flex-1 flex-col">
             <header className="sticky top-0 z-40 border-b border-slate-300 bg-white/90 px-4 py-3 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/75 lg:px-8">
-              <div className="dashboard-main-inner flex items-center justify-between gap-3">
+              <div className="dashboard-main-inner flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
                 <div className="flex min-w-0 items-center gap-3">
                   <button
                     type="button"
@@ -160,6 +163,27 @@ export default function StudentShell() {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
                     </svg>
                   </button>
+                  <motion.button
+                    type="button"
+                    className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-800 transition-colors hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 lg:flex"
+                    onClick={toggleDesktopSidebar}
+                    aria-expanded={desktopSidebarOpen}
+                    aria-controls="student-sidebar"
+                    aria-label={desktopSidebarOpen ? 'Thu gọn menu bên trái' : 'Mở menu bên trái'}
+                    whileHover={reduceMotion ? undefined : { scale: 1.06 }}
+                    whileTap={reduceMotion ? undefined : { scale: 0.93 }}
+                    transition={{ type: 'spring', stiffness: 520, damping: 28 }}
+                  >
+                    <motion.span
+                      key={desktopSidebarOpen ? 'open' : 'shut'}
+                      initial={reduceMotion ? false : { opacity: 0, rotate: -90, scale: 0.85 }}
+                      animate={{ opacity: 1, rotate: 0, scale: 1 }}
+                      transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 380, damping: 24 }}
+                      className="flex items-center justify-center"
+                    >
+                      <SidebarToggleIcon expanded={desktopSidebarOpen} />
+                    </motion.span>
+                  </motion.button>
                   <div className="min-w-0">
                     <h1 className="truncate text-base font-semibold text-slate-900 dark:text-white lg:hidden">Học viên</h1>
                     <p className="hidden text-sm text-slate-600 dark:text-slate-400 lg:block">
@@ -168,11 +192,30 @@ export default function StudentShell() {
                     <p className="truncate text-xs text-slate-500 dark:text-slate-500 lg:hidden">{user?.email}</p>
                   </div>
                 </div>
-                <div className="flex shrink-0 items-center gap-2">
+                <div className="flex shrink-0 flex-wrap items-center justify-end gap-x-2 gap-y-2 sm:gap-x-3">
                   <ThemeSettings compact />
-                  <span className="shrink-0 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold tracking-wide text-sky-900 dark:border-sky-500/30 dark:bg-sky-500/15 dark:text-sky-100">
-                    Học viên
-                  </span>
+                  <span
+                    className="hidden h-6 w-px shrink-0 bg-slate-200 sm:block dark:bg-white/10"
+                    aria-hidden
+                  />
+                  <span className={studentHeaderRoleChip}>Học viên</span>
+                  <div className="flex items-center gap-0.5 rounded-xl border border-slate-200/90 bg-slate-50/90 p-0.5 dark:border-white/10 dark:bg-white/[0.04]">
+                    <NavLink to="/" className={studentHeaderLinkBtn}>
+                      <span className="hidden sm:inline">← </span>
+                      <span className="truncate">Trang chủ</span>
+                    </NavLink>
+                    <span className="hidden h-5 w-px shrink-0 bg-slate-200 sm:block dark:bg-white/10" aria-hidden />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        logout()
+                        navigate('/')
+                      }}
+                      className={studentHeaderLogoutBtn}
+                    >
+                      Đăng xuất
+                    </button>
+                  </div>
                 </div>
               </div>
             </header>

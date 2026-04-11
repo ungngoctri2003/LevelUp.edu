@@ -259,7 +259,7 @@ export default function StudentLearningHub() {
               <section id={H.BAI_GIANG} className="space-y-4">
                 <h2 className="text-sm font-semibold uppercase tracking-wider text-sky-600 dark:text-sky-400/90">Bài giảng theo lớp</h2>
                 <p className="text-sm text-slate-600 dark:text-slate-400">
-                  Nội dung do giáo viên đăng trong từng lớp bạn đã ghi danh. Khóa học trực tuyến (catalog) xem tại{' '}
+                  Nội dung do giáo viên đăng trong từng lớp bạn đã ghi danh. Khóa học trực tuyến xem tại{' '}
                   <Link to="/bai-giang" className="font-semibold text-sky-600 hover:text-sky-800 dark:text-sky-400 dark:hover:text-sky-300">
                     trang Bài giảng
                   </Link>

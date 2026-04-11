@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import StatCard from '../../components/dashboard/StatCard'
 import PageHeader from '../../components/dashboard/PageHeader'
 import Panel from '../../components/dashboard/Panel'
+import AdminRevenueChart from '../../components/admin/AdminRevenueChart'
 import { useAdminState } from '../../hooks/useAdminState'
 import { computeDashboardStats } from '../../utils/adminStorage'
 
@@ -17,14 +18,6 @@ const quickLinks = [
   { to: '/admin/tin-tuc', label: 'Tin tức', desc: 'Đăng bài, thông báo' },
   { to: '/admin/bai-kiem-tra', label: 'Bài kiểm tra', desc: 'Đề, giao bài, hiển thị công khai' },
 ]
-
-function formatMoney(n) {
-  return new Intl.NumberFormat('vi-VN', {
-    style: 'currency',
-    currency: 'VND',
-    maximumFractionDigits: 0,
-  }).format(n)
-}
 
 export default function AdminDashboard() {
   const { state, loading, error, refresh } = useAdminState()
@@ -41,12 +34,6 @@ export default function AdminDashboard() {
         title="Tổng quan hệ thống"
         description="Tổng hợp nhanh số liệu vận hành và lối tắt tới các mục quản trị."
       >
-        <Link
-          to="/admin/ho-so"
-          className="rounded-lg bg-cyan-500/15 px-3 py-1.5 text-xs font-semibold text-cyan-800 hover:bg-cyan-500/25 dark:text-cyan-300 dark:hover:bg-cyan-500/25"
-        >
-          Hồ sơ
-        </Link>
         <button
           type="button"
           onClick={() => refresh()}
@@ -66,10 +53,10 @@ export default function AdminDashboard() {
           hint="Đếm theo trạng thái học tập"
         />
         <StatCard accent="admin" label="Giáo viên đã duyệt" value={String(stats.totalTeachers)} />
-        <StatCard accent="admin" label="Khóa hiển thị web" value={String(stats.activeCourses)} />
-        <StatCard accent="admin" label="Doanh thu tháng (ước)" value={formatMoney(stats.monthlyRevenue)} />
-        <StatCard accent="admin" label="Ticket hỗ trợ mở" value={String(stats.openTickets)} />
+        <StatCard accent="admin" label="Khóa học hiển thị web" value={String(stats.activeCourses)} />
       </div>
+
+      {!loading && <AdminRevenueChart payments={state.payments || []} />}
 
       <Panel title="Hoạt động gần đây" subtitle="Nhật ký thao tác gần nhất">
         <ul className="divide-y divide-gray-200 text-sm text-slate-700 dark:divide-white/5 dark:text-slate-300">

@@ -17,6 +17,8 @@ import {
   tableBodyTeacher,
   tableRowHover,
 } from '../../components/dashboard/dashboardStyles'
+import AppDatePicker from '../../components/ui/AppDatePicker.jsx'
+import AppDateRangePicker from '../../components/ui/AppDateRangePicker.jsx'
 import {
   WEEK_DAYS,
   defaultNewSlotFormValues,
@@ -320,35 +322,18 @@ export default function TeacherSchedule() {
               ))}
             </select>
           </label>
-          <div className="flex flex-wrap items-end gap-3">
-            <label className="block text-sm text-slate-400">
-              Từ ngày (mốc bắt đầu buổi)
-              <input
-                type="date"
-                value={filterTuNgay}
-                onChange={(e) => patchNgayParams(e.target.value, filterDenNgay)}
-                className={`${inputCls} sm:mt-1 sm:w-[11rem]`}
+          <label className="block text-sm text-slate-400">
+            Khoảng ngày (mốc bắt đầu buổi)
+            <div className="sm:mt-1">
+              <AppDateRangePicker
+                from={filterTuNgay}
+                to={filterDenNgay}
+                onChange={({ from, to }) => patchNgayParams(from, to)}
+                placeholder="Từ — đến ngày"
+                triggerClassName="w-full min-w-[12rem] border-white/15 bg-black/40 text-white hover:border-cyan-500/40 focus:border-cyan-500/50 focus:ring-cyan-500/20 sm:w-[min(100%,22rem)]"
               />
-            </label>
-            <label className="block text-sm text-slate-400">
-              Đến ngày
-              <input
-                type="date"
-                value={filterDenNgay}
-                onChange={(e) => patchNgayParams(filterTuNgay, e.target.value)}
-                className={`${inputCls} sm:mt-1 sm:w-[11rem]`}
-              />
-            </label>
-            {dateRangeFilter.active && (
-              <button
-                type="button"
-                onClick={() => patchNgayParams('', '')}
-                className="rounded-xl border border-white/20 px-3 py-2 text-sm text-slate-300 hover:bg-white/10"
-              >
-                Bỏ lọc ngày
-              </button>
-            )}
-          </div>
+            </div>
+          </label>
           <div className="flex rounded-xl border border-white/15 p-1">
             <button
               type="button"
@@ -622,13 +607,14 @@ export default function TeacherSchedule() {
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <label className="block text-xs text-slate-500">
                   Ngày
-                  <input
-                    type="date"
-                    required
-                    value={form.startDate}
-                    onChange={(e) => setForm((f) => ({ ...f, startDate: e.target.value }))}
-                    className={inputCls}
-                  />
+                  <div className="mt-1">
+                    <AppDatePicker
+                      value={form.startDate}
+                      onChange={(v) => setForm((f) => ({ ...f, startDate: v }))}
+                      placeholder="Chọn ngày"
+                      triggerClassName={`${inputTeacher} w-full border-white/15 bg-black/40 text-white hover:border-cyan-500/40 focus:border-cyan-500/50 focus:ring-cyan-500/20`}
+                    />
+                  </div>
                 </label>
                 <label className="block text-xs text-slate-500">
                   Giờ
@@ -647,13 +633,14 @@ export default function TeacherSchedule() {
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <label className="block text-xs text-slate-500">
                   Ngày
-                  <input
-                    type="date"
-                    required
-                    value={form.endDate}
-                    onChange={(e) => setForm((f) => ({ ...f, endDate: e.target.value }))}
-                    className={inputCls}
-                  />
+                  <div className="mt-1">
+                    <AppDatePicker
+                      value={form.endDate}
+                      onChange={(v) => setForm((f) => ({ ...f, endDate: v }))}
+                      placeholder="Chọn ngày"
+                      triggerClassName={`${inputTeacher} w-full border-white/15 bg-black/40 text-white hover:border-cyan-500/40 focus:border-cyan-500/50 focus:ring-cyan-500/20`}
+                    />
+                  </div>
                 </label>
                 <label className="block text-xs text-slate-500">
                   Giờ

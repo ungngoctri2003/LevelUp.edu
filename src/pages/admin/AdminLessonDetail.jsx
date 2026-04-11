@@ -194,7 +194,7 @@ export default function AdminLessonDetail() {
         <Panel title={`Bài #${lessonRow.id} — ${lessonRow.title}`} subtitle="Tóm tắt, video và dàn ý trên trang bài giảng">
           <div className="mt-4 flex flex-wrap items-end gap-3 border-b border-gray-200 pb-5 dark:border-white/10">
             <label className="block min-w-[min(100%,280px)] flex-1 text-sm text-slate-400">
-              Khóa học (catalog)
+              Khóa học
               <select
                 value={courseSelectId}
                 onChange={(e) => setCourseSelectId(e.target.value)}

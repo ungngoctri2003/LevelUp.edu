@@ -47,6 +47,21 @@ body {
   color: #e2e8f0;
 }
 
+/* react-day-picker — accent đồng bộ theme */
+.rdp-root {
+  --rdp-accent-color: #0891b2;
+  --rdp-accent-background-color: rgba(8, 145, 178, 0.14);
+  --rdp-day-width: 2.25rem;
+  --rdp-day-height: 2.25rem;
+  --rdp-day_button-width: 2.25rem;
+  --rdp-day_button-height: 2.25rem;
+}
+
+.dark .rdp-root {
+  --rdp-accent-color: #22d3ee;
+  --rdp-accent-background-color: rgba(34, 211, 238, 0.14);
+}
+
 /* Giảm chuyển động – CSS + Framer Motion (MotionConfig trong Layout) */
 html.motion-reduce *,
 html.motion-reduce *::before,

@@ -4,6 +4,7 @@ import { toastActionError } from '../../lib/appToast.js'
 import { useTeacherState } from '../../hooks/useTeacherState'
 import QuestionBankEditor from '../../components/dashboard/QuestionBankEditor.jsx'
 import { mergeDateTimeForDeadline, splitDatetimeLocalParts } from '../../lib/datetimeParts.js'
+import AppDatePicker from '../../components/ui/AppDatePicker.jsx'
 import {
   tableShell,
   tableHeadTeacher,
@@ -308,12 +309,14 @@ export default function TeacherAssignments() {
               <div className="mt-2 grid gap-3 sm:grid-cols-2">
                 <label className="block text-sm text-slate-400">
                   Ngày
-                  <input
-                    type="date"
-                    value={form.dueDate}
-                    onChange={(e) => setForm((f) => ({ ...f, dueDate: e.target.value }))}
-                    className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white scheme-dark"
-                  />
+                  <div className="mt-1">
+                    <AppDatePicker
+                      value={form.dueDate}
+                      onChange={(v) => setForm((f) => ({ ...f, dueDate: v }))}
+                      placeholder="Chọn ngày"
+                      triggerClassName="w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2.5 text-white hover:border-cyan-500/40 focus:border-cyan-500/50 focus:ring-cyan-500/20"
+                    />
+                  </div>
                 </label>
                 <label className="block text-sm text-slate-400">
                   Giờ

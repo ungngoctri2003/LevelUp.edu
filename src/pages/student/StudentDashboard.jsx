@@ -78,7 +78,7 @@ export default function StudentDashboard() {
       <Panel title="Việc cần làm" subtitle="Gợi ý bước tiếp theo.">
         <ul className="space-y-0 text-sm">
           <li className="flex items-center justify-between gap-2 border-b border-gray-200 py-3 first:pt-0 dark:border-white/5">
-            <span className="text-slate-700 dark:text-slate-300">Khóa học đã đăng ký (catalog)</span>
+            <span className="text-slate-700 dark:text-slate-300">Khóa học đã đăng ký</span>
             <Link
               to="/hoc-vien/khoa-hoc-da-dang-ky"
               className="rounded-lg bg-sky-500/15 px-3 py-1 text-xs font-semibold text-sky-300 hover:bg-sky-500/25"

@@ -199,7 +199,7 @@ export default function StudentRegisteredCoursesPage() {
       <PageHeader
         eyebrow="Học viên"
         title="Khóa học đã đăng ký"
-        description="Các khóa học online bạn đã gửi yêu cầu thanh toán (catalog). Trạng thái thanh toán lớp học tại mục Thanh toán lớp trong Lớp học của tôi."
+        description="Các khóa học online bạn đã gửi yêu cầu thanh toán. Trạng thái thanh toán lớp học tại mục Thanh toán lớp trong Lớp học của tôi."
       />
 
       <p className="text-sm text-slate-400">

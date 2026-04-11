@@ -12,6 +12,7 @@ import {
 import { PUBLIC_ACTION_ERROR } from '../../lib/publicUserMessages.js'
 import { toast } from 'sonner'
 import { tableShell, tableHeadAdmin, tableBodyAdmin } from '../../components/dashboard/dashboardStyles'
+import AppDateRangePicker from '../../components/ui/AppDateRangePicker.jsx'
 
 function daySortKeyFromRow(row) {
   const i = WEEK_DAYS.indexOf(row.day)
@@ -207,6 +208,10 @@ export default function StudentClassSchedule({ embedded = false, lockedClassId =
     ? 'mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-500 dark:border-white/15 dark:bg-black/40 dark:text-white dark:placeholder:text-slate-500 [color-scheme:light] dark:[color-scheme:dark]'
     : 'mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white placeholder:text-slate-500 [color-scheme:dark]'
 
+  const dateRangeTriggerClass = ps
+    ? 'w-full min-w-[12rem] border-gray-300 bg-white text-gray-900 shadow-sm hover:border-sky-500/50 focus:border-sky-500/60 focus:ring-sky-500/20 dark:border-white/15 dark:bg-black/40 dark:text-white dark:hover:border-sky-500/40 sm:w-[min(100%,22rem)]'
+    : 'w-full min-w-[12rem] border-white/15 bg-black/40 text-white hover:border-sky-500/40 focus:border-sky-500/50 focus:ring-sky-500/20 sm:w-[min(100%,22rem)]'
+
   const secH2 = ps
     ? 'text-sm font-semibold uppercase tracking-wider text-sky-700 dark:text-sky-400/90'
     : 'text-sm font-semibold uppercase tracking-wider text-sky-400/90'
@@ -328,39 +333,18 @@ export default function StudentClassSchedule({ embedded = false, lockedClassId =
                   </select>
                 )}
               </label>
-              <div className="flex flex-wrap items-end gap-3">
-                <label className={labelCls}>
-                  Từ ngày (mốc bắt đầu)
-                  <input
-                    type="date"
-                    value={filterTuNgay}
-                    onChange={(e) => patchNgayParams(e.target.value, filterDenNgay)}
-                    className={`${inputCls} sm:mt-1 sm:w-[11rem]`}
+              <label className={labelCls}>
+                Khoảng ngày (mốc bắt đầu)
+                <div className="sm:mt-1">
+                  <AppDateRangePicker
+                    from={filterTuNgay}
+                    to={filterDenNgay}
+                    onChange={({ from, to }) => patchNgayParams(from, to)}
+                    placeholder="Từ — đến ngày"
+                    triggerClassName={dateRangeTriggerClass}
                   />
-                </label>
-                <label className={labelCls}>
-                  Đến ngày
-                  <input
-                    type="date"
-                    value={filterDenNgay}
-                    onChange={(e) => patchNgayParams(filterTuNgay, e.target.value)}
-                    className={`${inputCls} sm:mt-1 sm:w-[11rem]`}
-                  />
-                </label>
-                {dateRangeFilter.active && (
-                  <button
-                    type="button"
-                    onClick={() => patchNgayParams('', '')}
-                    className={
-                      ps
-                        ? 'rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:border-white/20 dark:text-slate-300 dark:hover:bg-white/10'
-                        : 'rounded-xl border border-white/20 px-3 py-2 text-sm text-slate-300 hover:bg-white/10'
-                    }
-                  >
-                    Bỏ lọc ngày
-                  </button>
-                )}
-              </div>
+                </div>
+              </label>
               <div className={tabWrap}>
                 <button
                   type="button"

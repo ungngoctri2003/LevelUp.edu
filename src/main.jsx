@@ -5,6 +5,7 @@ import AppToaster from './components/AppToaster.jsx'
 import { AuthSessionProvider } from './context/AuthSessionContext.jsx'
 import { ThemeProvider } from './context/ThemeContext.jsx'
 import { PublicContentProvider } from './hooks/usePublicContent.js'
+import 'react-day-picker/style.css'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
