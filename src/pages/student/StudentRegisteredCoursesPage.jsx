@@ -9,6 +9,7 @@ import { PUBLIC_LOAD_ERROR } from '../../lib/publicUserMessages.js'
 import { buildLessonsByCourse } from '../../services/publicApi.js'
 import { getMyClasses, getMyCoursePayments, getMyPayments } from '../../services/meApi.js'
 import { normSubject, userHasCourseAccess } from '../../utils/courseAccess.js'
+import PageLoading from '../../components/ui/PageLoading.jsx'
 
 /**
  * Trạng thái hiển thị — luôn dựa trên bản ghi thanh toán khóa mới nhất (`cpRow`),
@@ -220,12 +221,8 @@ export default function StudentRegisteredCoursesPage() {
       )}
 
       {dataLoading && (
-        <div className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-slate-50 px-4 py-6 sm:px-6 dark:border-white/10 dark:bg-black/20">
-          <span
-            className="inline-block h-5 w-5 shrink-0 animate-spin rounded-full border-2 border-sky-400/30 border-t-sky-400"
-            aria-hidden
-          />
-          <p className="text-sm text-slate-600 dark:text-slate-300">Đang tải dữ liệu khóa học và thanh toán…</p>
+        <div className="rounded-2xl border border-gray-200 bg-slate-50 px-4 py-6 sm:px-6 dark:border-white/10 dark:bg-black/20">
+          <PageLoading variant="inline" />
         </div>
       )}
 

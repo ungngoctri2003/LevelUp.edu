@@ -5,6 +5,7 @@ import StatCard from '../../components/dashboard/StatCard'
 import PageHeader from '../../components/dashboard/PageHeader'
 import Panel from '../../components/dashboard/Panel'
 import AdminRevenueChart from '../../components/admin/AdminRevenueChart'
+import PageLoading from '../../components/ui/PageLoading.jsx'
 import { useAdminState } from '../../hooks/useAdminState'
 import { computeDashboardStats } from '../../utils/adminStorage'
 
@@ -43,7 +44,7 @@ export default function AdminDashboard() {
         </button>
       </PageHeader>
 
-      {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
+      {loading && <PageLoading variant="inline" />}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <StatCard

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Reveal } from '../components/motion/Reveal'
+import PageLoading from '../components/ui/PageLoading.jsx'
 import { useAuthSession } from '../context/AuthSessionContext'
 import { getMyClassLessonPost } from '../services/meApi.js'
 import { toYouTubeEmbedUrl } from '../lib/youtubeEmbed.js'
@@ -96,7 +97,7 @@ export default function ClassLessonPostDetailPage() {
   }
 
   if (loading) {
-    return <div className="py-24 text-center text-slate-500">Đang tải…</div>
+    return <PageLoading variant="page" />
   }
 
   if (err || !row) {

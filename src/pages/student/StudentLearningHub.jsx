@@ -7,11 +7,19 @@ import { btnPrimaryStudent } from '../../components/dashboard/dashboardStyles'
 import { useAuthSession } from '../../context/AuthSessionContext'
 import { usePublicContent } from '../../hooks/usePublicContent'
 import ClassPaymentModal from '../../components/ClassPaymentModal.jsx'
-import { getMyClassLessonPosts, getMyClasses, getMyPayments } from '../../services/meApi.js'
-import { PUBLIC_LOAD_ERROR } from '../../lib/publicUserMessages.js'
+import { ModalPortal } from '../../components/dashboard/ModalPortal'
+import {
+  getMyClassLessonPosts,
+  getMyClasses,
+  getMyClassTeacherRequests,
+  getMyPayments,
+  postMyClassTeacherRequest,
+} from '../../services/meApi.js'
+import { PUBLIC_LOAD_ERROR, PUBLIC_SUBMIT_ERROR } from '../../lib/publicUserMessages.js'
 import { toast } from 'sonner'
 import StudentClassSchedule from './StudentClassSchedule'
 import StudentWorkHub from './StudentWorkHub'
+import PageLoading from '../../components/ui/PageLoading.jsx'
 
 const H = {
   BAI_GIANG: 'student-section-bai-giang',
@@ -67,6 +75,15 @@ function classModalTitle(row) {
   return code ? `${row.class_name} (${code})` : row.class_name
 }
 
+function formatResolvedAt(iso) {
+  if (!iso) return ''
+  try {
+    return new Date(iso).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' })
+  } catch {
+    return ''
+  }
+}
+
 function paymentRowToClassModalShape(p) {
   return {
     id: p.class_id,
@@ -86,6 +103,10 @@ export default function StudentLearningHub() {
   const [classPosts, setClassPosts] = useState([])
   const [loading, setLoading] = useState(true)
   const [payModalClass, setPayModalClass] = useState(null)
+  const [teacherChangeRequests, setTeacherChangeRequests] = useState([])
+  const [teacherReqModal, setTeacherReqModal] = useState(null)
+  const [teacherReqNote, setTeacherReqNote] = useState('')
+  const [teacherReqSubmitting, setTeacherReqSubmitting] = useState(false)
 
   const [mounted, setMounted] = useState(() => {
     if (typeof window === 'undefined') return { schedule: false, work: false }
@@ -102,25 +123,29 @@ export default function StudentLearningHub() {
       setClasses([])
       setPayments([])
       setClassPosts([])
+      setTeacherChangeRequests([])
       setLoading(false)
       return
     }
     setLoading(true)
     try {
-      const [classesRes, paymentsRes, postsRes] = await Promise.all([
+      const [classesRes, paymentsRes, postsRes, reqRes] = await Promise.all([
         getMyClasses(token),
         getMyPayments(token),
         getMyClassLessonPosts(token),
+        getMyClassTeacherRequests(token).catch(() => ({ data: [] })),
       ])
       setClasses(Array.isArray(classesRes?.data) ? classesRes.data : [])
       setPayments(Array.isArray(paymentsRes?.data) ? paymentsRes.data : [])
       setClassPosts(Array.isArray(postsRes?.data) ? postsRes.data : [])
+      setTeacherChangeRequests(Array.isArray(reqRes?.data) ? reqRes.data : [])
     } catch (e) {
       if (import.meta.env.DEV) console.error('[StudentLearningHub]', e)
       toast.error(PUBLIC_LOAD_ERROR)
       setClasses([])
       setPayments([])
       setClassPosts([])
+      setTeacherChangeRequests([])
     } finally {
       setLoading(false)
     }
@@ -169,6 +194,28 @@ export default function StudentLearningHub() {
     }))
   }, [classes, classPosts])
 
+  const pendingTeacherChangeByClassId = useMemo(() => {
+    const m = new Map()
+    for (const r of teacherChangeRequests) {
+      if (r.status === 'pending' && r.class_id != null) {
+        m.set(Number(r.class_id), r)
+      }
+    }
+    return m
+  }, [teacherChangeRequests])
+
+  /** Mỗi lớp: bản ghi yêu cầu mới nhất (API đã sắp created_at giảm dần). */
+  const latestTeacherChangeByClassId = useMemo(() => {
+    const m = new Map()
+    for (const r of teacherChangeRequests) {
+      if (r.class_id == null) continue
+      const cid = Number(r.class_id)
+      if (!Number.isFinite(cid) || m.has(cid)) continue
+      m.set(cid, r)
+    }
+    return m
+  }, [teacherChangeRequests])
+
   const classPaymentRows = useMemo(() => {
     if (user?.dbRole !== 'student') return []
     const latestByClass = new Map()
@@ -202,6 +249,37 @@ export default function StudentLearningHub() {
     navigate({ pathname: location.pathname, search: location.search, hash: `#${hashId}` }, { replace: true })
   }
 
+  const openTeacherReqModal = (row) => {
+    setTeacherReqNote('')
+    setTeacherReqModal({
+      class_id: row.class_id,
+      class_name: row.class_name,
+      teacher_name: row.teacher_name,
+    })
+  }
+
+  const submitTeacherChangeRequest = async (e) => {
+    e.preventDefault()
+    const token = session?.access_token
+    const cid = teacherReqModal?.class_id
+    if (!token || cid == null) return
+    setTeacherReqSubmitting(true)
+    try {
+      await postMyClassTeacherRequest(token, {
+        class_id: Number(cid),
+        student_note: teacherReqNote.trim() || undefined,
+      })
+      toast.success('Đã gửi yêu cầu. Trung tâm sẽ xem xét và liên hệ khi cần.')
+      setTeacherReqModal(null)
+      await load()
+    } catch (err) {
+      if (import.meta.env.DEV) console.error('[StudentLearningHub] teacher request', err)
+      toast.error(err?.message || PUBLIC_SUBMIT_ERROR)
+    } finally {
+      setTeacherReqSubmitting(false)
+    }
+  }
+
   return (
     <div className="space-y-8">
       <PageHeader
@@ -209,7 +287,7 @@ export default function StudentLearningHub() {
         description="Bài giảng theo từng lớp đã ghi danh, lịch, bài tập, kiểm tra; tab Thanh toán lớp cho học phí. Khóa học online xem thêm trên trang Bài giảng."
       />
 
-      {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
+      {loading && <PageLoading variant="inline" />}
 
       {!loading && user?.dbRole !== 'student' && (
         <Panel title="Tài khoản hiện tại">
@@ -227,6 +305,76 @@ export default function StudentLearningHub() {
             tuitionFee={payModalClass?.tuition_fee ?? null}
             onSubmitted={load}
           />
+          {teacherReqModal && (
+            <ModalPortal>
+              <div
+                className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="teacher-req-title"
+                onClick={(ev) => {
+                  if (ev.target === ev.currentTarget) setTeacherReqModal(null)
+                }}
+              >
+                <div
+                  className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl dark:border-slate-600 dark:bg-slate-900"
+                  onClick={(ev) => ev.stopPropagation()}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setTeacherReqModal(null)}
+                    className="absolute right-4 top-4 rounded-lg p-1 text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800"
+                    aria-label="Đóng"
+                  >
+                    ✕
+                  </button>
+                  <h2 id="teacher-req-title" className="pr-10 text-xl font-bold text-gray-900 dark:text-white">
+                    Yêu cầu đổi giáo viên
+                  </h2>
+                  <p className="mt-2 text-sm text-gray-600 dark:text-slate-400">
+                    Lớp:{' '}
+                    <span className="font-semibold text-gray-900 dark:text-slate-200">{teacherReqModal.class_name}</span>
+                    <span className="text-slate-500 dark:text-slate-500">
+                      {' '}
+                      · GV hiện tại: {teacherReqModal.teacher_name}
+                    </span>
+                  </p>
+                  <p className="mt-3 text-sm text-gray-600 dark:text-slate-400">
+                    Trung tâm sẽ xem xét yêu cầu. Việc đổi giáo viên do quản trị thực hiện trên hệ thống sau khi đồng ý.
+                  </p>
+                  <form onSubmit={submitTeacherChangeRequest} className="mt-6 grid gap-3">
+                    <label className="text-sm text-gray-700 dark:text-slate-300">
+                      Lý do hoặc ghi chú (tuỳ chọn)
+                      <textarea
+                        rows={4}
+                        value={teacherReqNote}
+                        onChange={(ev) => setTeacherReqNote(ev.target.value)}
+                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-slate-600 dark:bg-slate-900 dark:text-white"
+                        placeholder="Ví dụ: mong muốn đổi giờ / phong cách dạy…"
+                        maxLength={2000}
+                      />
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setTeacherReqModal(null)}
+                        className="rounded-xl border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-800 dark:border-slate-600 dark:text-slate-200"
+                      >
+                        Hủy
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={teacherReqSubmitting}
+                        className="rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-sky-500 disabled:opacity-50"
+                      >
+                        {teacherReqSubmitting ? 'Đang gửi…' : 'Gửi yêu cầu'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </ModalPortal>
+          )}
           <div
             role="tablist"
             aria-label="Nội dung lớp học"
@@ -327,7 +475,12 @@ export default function StudentLearningHub() {
                   />
                 ) : (
                   <div className="grid gap-4">
-                    {classes.map((row) => (
+                    {classes.map((row) => {
+                      const pendingReq = pendingTeacherChangeByClassId.get(Number(row.class_id))
+                      const latestReq = latestTeacherChangeByClassId.get(Number(row.class_id))
+                      const st = String(latestReq?.status || '')
+                      const showResolvedFeedback = latestReq && ['approved', 'rejected', 'cancelled'].includes(st)
+                      return (
                       <Panel key={row.class_id} noDivider padding className="transition hover:border-sky-500/20">
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div className="min-w-0">
@@ -339,10 +492,67 @@ export default function StudentLearningHub() {
                               <p className="mt-2 text-sm text-slate-300">Lịch: {row.schedule_summary}</p>
                             )}
                           </div>
-                          <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-sm font-semibold text-emerald-200">
-                            Đang học
-                          </span>
+                          <div className="flex flex-col items-end gap-2">
+                            <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-sm font-semibold text-emerald-200">
+                              Đang học
+                            </span>
+                            {pendingReq ? (
+                              <span className="rounded-full border border-amber-500/35 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-100">
+                                Yêu cầu đổi GV: đang chờ xử lý
+                              </span>
+                            ) : null}
+                            {!pendingReq && latestReq?.status === 'approved' ? (
+                              <span className="rounded-full border border-emerald-500/35 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-100">
+                                Yêu cầu đổi GV: đã xử lý
+                              </span>
+                            ) : null}
+                            {!pendingReq && latestReq?.status === 'rejected' ? (
+                              <span className="rounded-full border border-rose-500/35 bg-rose-500/10 px-3 py-1 text-xs font-semibold text-rose-100">
+                                Yêu cầu đổi GV: không chấp nhận
+                              </span>
+                            ) : null}
+                            {!pendingReq && latestReq?.status === 'cancelled' ? (
+                              <span className="rounded-full border border-slate-500/35 bg-slate-500/10 px-3 py-1 text-xs font-semibold text-slate-300">
+                                Yêu cầu đổi GV: đã hủy
+                              </span>
+                            ) : null}
+                          </div>
                         </div>
+
+                        {showResolvedFeedback ? (
+                          <div
+                            className={`mt-4 rounded-xl border px-4 py-3 text-sm ${
+                              st === 'approved'
+                                ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-100'
+                                : st === 'rejected'
+                                  ? 'border-rose-500/30 bg-rose-500/10 text-rose-100'
+                                  : 'border-slate-500/30 bg-slate-500/10 text-slate-300'
+                            }`}
+                          >
+                            <p className="font-medium text-gray-900 dark:text-white">
+                              {st === 'approved'
+                                ? 'Trung tâm đã xử lý yêu cầu đổi giáo viên'
+                                : st === 'rejected'
+                                  ? 'Trung tâm không chấp nhận yêu cầu đổi giáo viên'
+                                  : 'Yêu cầu đổi giáo viên đã được hủy'}
+                            </p>
+                            {latestReq.resolved_at ? (
+                              <p className="mt-1 text-xs opacity-90">
+                                Cập nhật: {formatResolvedAt(latestReq.resolved_at)}
+                              </p>
+                            ) : null}
+                            {latestReq.admin_note ? (
+                              <div className="mt-2 border-t border-white/10 pt-2 dark:border-white/10">
+                                <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">
+                                  Ghi chú từ trung tâm
+                                </p>
+                                <p className="mt-1 whitespace-pre-wrap text-gray-800 dark:text-slate-200">
+                                  {latestReq.admin_note}
+                                </p>
+                              </div>
+                            ) : null}
+                          </div>
+                        ) : null}
 
                         <div className="mt-5 grid gap-3 sm:grid-cols-4">
                           <div className="rounded-xl border border-gray-200 bg-slate-50 px-4 py-3 dark:border-white/10 dark:bg-black/20">
@@ -379,9 +589,18 @@ export default function StudentLearningHub() {
                           >
                             Lịch học / meet
                           </Link>
+                          <button
+                            type="button"
+                            disabled={!!pendingReq}
+                            onClick={() => openTeacherReqModal(row)}
+                            className="rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/15 dark:text-slate-200 dark:hover:bg-white/5"
+                          >
+                            Yêu cầu đổi giáo viên
+                          </button>
                         </div>
                       </Panel>
-                    ))}
+                      )
+                    })}
                   </div>
                 )}
               </section>

@@ -227,11 +227,6 @@ export function AdminDataProvider({ children }) {
         await srv.adminPostTeacherApproval(t, profileId, status)
         await refresh()
       },
-      async removeTeacher(profileId) {
-        if (!confirm('Đặt trạng thái giáo viên tạm khóa?')) return
-        await srv.adminPostTeacherApproval(t, profileId, 'suspended')
-        await refresh()
-      },
 
       async createSchoolClass(body) {
         await srv.adminCreateSchoolClass(t, body)

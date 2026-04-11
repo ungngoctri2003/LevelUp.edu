@@ -11,6 +11,7 @@ import {
   tableRowHover,
 } from '../../components/dashboard/dashboardStyles'
 import { useTeacherState } from '../../hooks/useTeacherState'
+import PageLoading from '../../components/ui/PageLoading.jsx'
 
 const empty = { classId: '', title: '', duration: '45 phút' }
 
@@ -69,7 +70,7 @@ export default function TeacherLessons() {
         </button>
       </PageHeader>
 
-      {loading && <p className="text-sm text-slate-600 dark:text-slate-400">Đang tải…</p>}
+      {loading && <PageLoading variant="inline" />}
 
       <Panel noDivider padding={false} className="overflow-hidden">
         <div className={tableShell}>

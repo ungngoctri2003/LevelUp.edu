@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Reveal } from '../components/motion/Reveal'
+import PageLoading from '../components/ui/PageLoading.jsx'
 import CoursePaymentModal from '../components/CoursePaymentModal.jsx'
 import { useAuthSession } from '../context/AuthSessionContext'
 import { usePublicContent } from '../hooks/usePublicContent'
@@ -76,11 +77,7 @@ export default function LessonsPage() {
   }, [lessonsByCourse, courseParamFromUrl, subjectSlugFromUrl])
 
   if (loading && !lessonsByCourse.length) {
-    return (
-      <div className="py-24 text-center text-gray-600 dark:text-slate-400">
-        Đang tải khóa học…
-      </div>
-    )
+    return <PageLoading variant="page" />
   }
 
   if (error && !lessonsByCourse.length) {

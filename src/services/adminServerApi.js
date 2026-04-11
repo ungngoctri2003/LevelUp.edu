@@ -55,6 +55,18 @@ export function adminDeleteClassEnrollment(accessToken, classId, studentId) {
   })
 }
 
+export function adminListClassTeacherRequests(accessToken, status = 'all') {
+  const q = status && status !== 'all' ? `?status=${encodeURIComponent(String(status))}` : ''
+  return adminFetch(accessToken, `/api/admin/class-teacher-requests${q}`)
+}
+
+export function adminPatchClassTeacherRequest(accessToken, id, patch) {
+  return adminFetch(accessToken, `/api/admin/class-teacher-requests/${encodeURIComponent(String(id))}`, {
+    method: 'PATCH',
+    body: JSON.stringify(patch),
+  })
+}
+
 export function adminListPayments(accessToken) {
   return adminFetch(accessToken, '/api/admin/payments')
 }

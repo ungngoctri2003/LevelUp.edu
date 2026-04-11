@@ -14,6 +14,7 @@ import {
   stringArrayToLines,
 } from '../../components/admin/StructuredContentEditors.jsx'
 import { inputTeacher } from '../../components/dashboard/dashboardStyles'
+import PageLoading from '../../components/ui/PageLoading.jsx'
 
 const field = `${inputTeacher} mt-1 w-full`
 
@@ -156,7 +157,7 @@ export default function TeacherLessonPostDetail() {
         description={`Lớp: ${postRow?.className ?? '—'} — cùng cấu trúc với trang quản trị bài giảng trực tuyến.`}
       />
 
-      {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
+      {loading && <PageLoading variant="inline" />}
 
       {!loading && postRow && (
         <Panel

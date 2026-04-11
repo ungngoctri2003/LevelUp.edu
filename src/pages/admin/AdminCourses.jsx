@@ -17,6 +17,7 @@ import {
 } from '../../components/dashboard/dashboardStyles'
 import { useAuthSession } from '../../context/AuthSessionContext'
 import { useAdminState } from '../../hooks/useAdminState'
+import PageLoading from '../../components/ui/PageLoading.jsx'
 import * as srv from '../../services/adminServerApi.js'
 
 export default function AdminCourses() {
@@ -178,7 +179,7 @@ export default function AdminCourses() {
         </Link>
       </PageHeader>
 
-      {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
+      {loading && <PageLoading variant="inline" />}
 
       <Panel
         title="Danh mục môn học"

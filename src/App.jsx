@@ -82,6 +82,7 @@ function App() {
           <Route path="hoc-vien" element={<AdminStudents />} />
           <Route path="giao-vien" element={<AdminTeachers />} />
           <Route path="lop-hoc" element={<AdminTeacherClasses />} />
+          <Route path="yeu-cau-doi-giao-vien" element={<Navigate to="/admin/lop-hoc" replace />} />
           <Route path="thanh-toan" element={<AdminPayments />} />
           <Route path="khoa-hoc" element={<AdminCourses />} />
           <Route path="tin-tuc" element={<AdminNews />} />

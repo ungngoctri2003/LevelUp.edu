@@ -13,6 +13,7 @@ import { PUBLIC_ACTION_ERROR } from '../../lib/publicUserMessages.js'
 import { toast } from 'sonner'
 import { tableShell, tableHeadAdmin, tableBodyAdmin } from '../../components/dashboard/dashboardStyles'
 import AppDateRangePicker from '../../components/ui/AppDateRangePicker.jsx'
+import PageLoading from '../../components/ui/PageLoading.jsx'
 
 function daySortKeyFromRow(row) {
   const i = WEEK_DAYS.indexOf(row.day)
@@ -261,7 +262,7 @@ export default function StudentClassSchedule({ embedded = false, lockedClassId =
 
   const body = (
     <>
-      {loading && <p className={introP}>Đang tải…</p>}
+      {loading && <PageLoading variant="inline" className={introP} />}
 
       {!loading && !isStudent && (
         <p className={smallMuted}>Chỉ tài khoản học viên xem được lịch lớp.</p>

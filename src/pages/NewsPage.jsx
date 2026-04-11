@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { usePublicContent } from '../hooks/usePublicContent'
+import PageLoading from '../components/ui/PageLoading.jsx'
 
 export default function NewsPage() {
   const { news, loading, error } = usePublicContent()
@@ -22,9 +23,7 @@ export default function NewsPage() {
           </p>
         </div>
 
-        {loading && news.length === 0 && (
-          <p className="text-center text-slate-500 dark:text-slate-400">Đang tải tin…</p>
-        )}
+        {loading && news.length === 0 && <PageLoading variant="block" className="py-8" />}
         {!loading && news.length === 0 && !error && (
           <p className="text-center text-slate-500 dark:text-slate-400">Chưa có tin tức.</p>
         )}

@@ -1451,3 +1451,107 @@ export async function upsertCmsLandingAdmin(sb, partial, user) {
   }
   await logAdminActivity(sb, 'Cập nhật CMS trang chủ (system_settings)', 'system', user?.email, user?.id)
 }
+
+const TEACHER_CHANGE_STATUSES = new Set(['pending', 'approved', 'rejected', 'cancelled'])
+
+/** Danh sách yêu cầu đổi giáo viên (admin). `statusFilter`: 'all' | 'pending' | … */
+export async function fetchClassTeacherRequestsAdmin(sb, statusFilter = 'all') {
+  let q = sb
+    .from('student_teacher_change_requests')
+    .select(
+      'id, student_id, class_id, status, student_note, admin_note, created_at, updated_at, resolved_at, resolved_by',
+    )
+    .order('created_at', { ascending: false })
+  if (statusFilter && statusFilter !== 'all' && TEACHER_CHANGE_STATUSES.has(statusFilter)) {
+    q = q.eq('status', statusFilter)
+  }
+  const { data: reqs, error } = await q
+  if (error) throw new Error(error.message)
+  const rows = reqs || []
+  const classIds = [...new Set(rows.map((r) => r.class_id).filter((id) => Number.isFinite(Number(id))))]
+  const classById = {}
+  if (classIds.length) {
+    const { data: clsRows, error: cErr } = await sb
+      .from('classes')
+      .select('id, name, subject, teacher_id')
+      .in('id', classIds)
+    if (cErr) throw new Error(cErr.message)
+    for (const c of clsRows || []) {
+      classById[c.id] = c
+    }
+  }
+  const profileIdSet = new Set()
+  for (const r of rows) {
+    profileIdSet.add(r.student_id)
+    if (r.resolved_by) profileIdSet.add(r.resolved_by)
+  }
+  for (const c of Object.values(classById)) {
+    if (c.teacher_id) profileIdSet.add(c.teacher_id)
+  }
+  const profileIds = [...profileIdSet]
+  const nameById = {}
+  if (profileIds.length) {
+    const { data: profs, error: pErr } = await sb
+      .from('profiles')
+      .select('id, full_name, email')
+      .in('id', profileIds)
+    if (pErr) throw new Error(pErr.message)
+    for (const p of profs || []) {
+      nameById[p.id] = { full_name: p.full_name, email: p.email }
+    }
+  }
+
+  return rows.map((r) => {
+    const cls = classById[r.class_id]
+    const tid = cls?.teacher_id
+    return {
+      ...r,
+      class_name: cls?.name || `Lớp #${r.class_id}`,
+      class_subject: cls?.subject || '—',
+      current_teacher_id: tid || null,
+      current_teacher_name: tid ? nameById[tid]?.full_name || '—' : '—',
+      student_name: nameById[r.student_id]?.full_name || '—',
+      student_email: nameById[r.student_id]?.email || '—',
+      resolved_by_name: r.resolved_by ? nameById[r.resolved_by]?.full_name || '—' : null,
+    }
+  })
+}
+
+export async function patchClassTeacherRequestAdmin(sb, requestId, patch, user) {
+  const id = String(requestId || '').trim()
+  if (!id) throw new Error('ID yêu cầu không hợp lệ')
+  const { data: cur, error: gErr } = await sb
+    .from('student_teacher_change_requests')
+    .select('id, status, class_id')
+    .eq('id', id)
+    .maybeSingle()
+  if (gErr) throw new Error(gErr.message)
+  if (!cur) throw new Error('Không thấy yêu cầu')
+  if (cur.status !== 'pending') {
+    throw new Error('Yêu cầu đã được xử lý')
+  }
+  const status = String(patch?.status || '').trim()
+  if (!['approved', 'rejected'].includes(status)) {
+    throw new Error('status phải là approved hoặc rejected')
+  }
+  const admin_note =
+    patch?.admin_note != null && String(patch.admin_note).trim() ? String(patch.admin_note).trim().slice(0, 2000) : null
+  const { error } = await sb
+    .from('student_teacher_change_requests')
+    .update({
+      status,
+      admin_note,
+      resolved_at: new Date().toISOString(),
+      resolved_by: user?.id || null,
+    })
+    .eq('id', id)
+    .eq('status', 'pending')
+  if (error) throw new Error(error.message)
+  await logAdminActivity(
+    sb,
+    `${status === 'approved' ? 'Đánh dấu đã xử lý' : 'Từ chối'} yêu cầu đổi GV (lớp #${cur.class_id})`,
+    'admin',
+    user?.email,
+    user?.id,
+  )
+}

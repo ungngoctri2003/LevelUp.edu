@@ -35,6 +35,23 @@ router.get(
 router.get('/classes', jsonData(async (req) => adminApi.fetchClassesAdmin(req.sbAdmin)))
 
 router.get(
+  '/class-teacher-requests',
+  jsonData(async (req) => {
+    const raw = typeof req.query.status === 'string' ? req.query.status.trim() : 'all'
+    return adminApi.fetchClassTeacherRequestsAdmin(req.sbAdmin, raw || 'all')
+  }),
+)
+
+router.patch('/class-teacher-requests/:id', async (req, res) => {
+  try {
+    await adminApi.patchClassTeacherRequestAdmin(req.sbAdmin, req.params.id, req.body || {}, actor(req))
+    res.json({ ok: true })
+  } catch (e) {
+    res.status(400).json({ error: e?.message || 'Lỗi' })
+  }
+})
+
+router.get(
   '/classes/:id/enrollments',
   jsonData(async (req) => adminApi.fetchClassEnrollmentsAdmin(req.sbAdmin, req.params.id)),
 )

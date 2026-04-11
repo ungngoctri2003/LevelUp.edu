@@ -19,6 +19,7 @@ import {
 import { useAuthSession } from '../../context/AuthSessionContext'
 import { toast } from 'sonner'
 import * as srv from '../../services/adminServerApi.js'
+import PageLoading from '../../components/ui/PageLoading.jsx'
 
 const LANDING_TEACHER_LABELS = {
   name: 'Tên',
@@ -156,7 +157,7 @@ export default function AdminLandingTeachers() {
         badge="CMS"
       />
 
-      {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
+      {loading && <PageLoading variant="inline" />}
 
       <Panel title="Thêm thẻ giáo viên" subtitle="Có thể chỉ nhập thông tin hiển thị, không cần gắn tài khoản đăng nhập.">
         <form onSubmit={add} className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

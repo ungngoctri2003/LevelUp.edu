@@ -19,6 +19,7 @@ import {
   labelAdmin,
 } from '../../components/dashboard/dashboardStyles'
 import { useAdminState } from '../../hooks/useAdminState'
+import PageLoading from '../../components/ui/PageLoading.jsx'
 
 const emptyDraft = { title: '', category: 'Thông báo', excerpt: '' }
 
@@ -93,7 +94,7 @@ export default function AdminNews() {
         badge="CMS"
       />
 
-      {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
+      {loading && <PageLoading variant="inline" />}
 
       <Panel title="Đăng tin mới" subtitle="Tin sẽ xuất hiện trên trang Tin tức công khai.">
         <form onSubmit={add} className="space-y-4">

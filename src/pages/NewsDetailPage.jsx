@@ -2,6 +2,7 @@ import { Link, useParams } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import { usePublicContent } from '../hooks/usePublicContent'
 import { fetchPublicNewsById } from '../services/publicApi.js'
+import PageLoading from '../components/ui/PageLoading.jsx'
 
 export default function NewsDetailPage() {
   const { id } = useParams()
@@ -39,11 +40,7 @@ export default function NewsDetailPage() {
   }, [id, fromCatalog, catalogLoading])
 
   if (detailLoading) {
-    return (
-      <div className="py-24 text-center text-slate-500 dark:text-slate-400">
-        Đang tải bài viết…
-      </div>
-    )
+    return <PageLoading variant="page" />
   }
 
   if (!item) {

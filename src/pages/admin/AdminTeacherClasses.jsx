@@ -13,6 +13,9 @@ import {
 import { toast } from 'sonner'
 import { toastActionError } from '../../lib/appToast.js'
 import { useAdminState } from '../../hooks/useAdminState'
+import { useAuthSession } from '../../context/AuthSessionContext'
+import { adminListClassTeacherRequests, adminPatchClassTeacherRequest } from '../../services/adminServerApi.js'
+import PageLoading from '../../components/ui/PageLoading.jsx'
 
 const emptyNewClass = {
   name: '',
@@ -25,7 +28,25 @@ const emptyNewClass = {
   sales_note: '',
 }
 
+function formatTeacherReqDt(iso) {
+  if (!iso) return '—'
+  try {
+    return new Date(iso).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' })
+  } catch {
+    return iso
+  }
+}
+
+const TEACHER_REQ_STATUS_BADGE = {
+  pending: 'border-amber-500/35 bg-amber-500/15 text-amber-200',
+  approved: 'border-emerald-500/35 bg-emerald-500/15 text-emerald-200',
+  rejected: 'border-rose-500/35 bg-rose-500/15 text-rose-200',
+  cancelled: 'border-slate-500/35 bg-slate-500/15 text-slate-300',
+}
+
 export default function AdminTeacherClasses() {
+  const { session } = useAuthSession()
+  const accessToken = session?.access_token
   const {
     state,
     loading,
@@ -48,6 +69,59 @@ export default function AdminTeacherClasses() {
   const [enrollmentsLoading, setEnrollmentsLoading] = useState(false)
   const [addStudentId, setAddStudentId] = useState('')
   const [pullClassId, setPullClassId] = useState('')
+
+  const [teacherReqRows, setTeacherReqRows] = useState([])
+  const [teacherReqLoading, setTeacherReqLoading] = useState(false)
+  const [teacherReqStatusFilter, setTeacherReqStatusFilter] = useState('pending')
+  const [teacherReqActionRow, setTeacherReqActionRow] = useState(null)
+  const [teacherReqAdminNote, setTeacherReqAdminNote] = useState('')
+  const [teacherReqActionBusy, setTeacherReqActionBusy] = useState(false)
+
+  const loadTeacherRequests = useCallback(async () => {
+    if (!accessToken) {
+      setTeacherReqRows([])
+      setTeacherReqLoading(false)
+      return
+    }
+    setTeacherReqLoading(true)
+    try {
+      const res = await adminListClassTeacherRequests(accessToken, teacherReqStatusFilter)
+      setTeacherReqRows(Array.isArray(res?.data) ? res.data : [])
+    } catch (e) {
+      toastActionError(e, 'Không tải được danh sách yêu cầu đổi giáo viên.')
+      setTeacherReqRows([])
+    } finally {
+      setTeacherReqLoading(false)
+    }
+  }, [accessToken, teacherReqStatusFilter])
+
+  useEffect(() => {
+    loadTeacherRequests()
+  }, [loadTeacherRequests])
+
+  const teacherReqPendingCount = useMemo(
+    () => teacherReqRows.filter((r) => r.status === 'pending').length,
+    [teacherReqRows],
+  )
+
+  const resolveTeacherRequest = async (status) => {
+    if (!accessToken || !teacherReqActionRow?.id) return
+    setTeacherReqActionBusy(true)
+    try {
+      await adminPatchClassTeacherRequest(accessToken, teacherReqActionRow.id, {
+        status,
+        admin_note: teacherReqAdminNote.trim() || null,
+      })
+      toast.success(status === 'approved' ? 'Đã đánh dấu đã xử lý.' : 'Đã từ chối yêu cầu.')
+      setTeacherReqActionRow(null)
+      setTeacherReqAdminNote('')
+      await loadTeacherRequests()
+    } catch (e) {
+      toastActionError(e, 'Không cập nhật được yêu cầu.')
+    } finally {
+      setTeacherReqActionBusy(false)
+    }
+  }
 
   const classTeacher = useMemo(
     () => state.teachers.find((t) => t.id === teacherId) || null,
@@ -170,7 +244,7 @@ export default function AdminTeacherClasses() {
     <div className="space-y-8">
       <PageHeader
         title="Lớp &amp; học viên"
-        description="Gán lớp cho giáo viên, tạo hoặc chuyển lớp, quản lý danh sách học viên trong từng lớp."
+        description="Gán lớp cho giáo viên, chuyển lớp, quản lý học viên; xử lý yêu cầu đổi giáo viên do học viên gửi từ khu học viên."
         badge="Quản trị"
       />
 
@@ -183,7 +257,166 @@ export default function AdminTeacherClasses() {
         </Link>
       </div>
 
-      {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
+      <Panel
+        title="Yêu cầu đổi giáo viên"
+        subtitle="Học viên gửi từ Lớp học của tôi. Đổi giáo viên phụ trách bằng Chuyển lớp / Sửa lớp bên dưới, rồi đánh dấu yêu cầu tại đây."
+      >
+        <label className="mt-2 block max-w-xs text-sm text-slate-400">
+          Lọc theo trạng thái
+          <select
+            value={teacherReqStatusFilter}
+            onChange={(e) => setTeacherReqStatusFilter(e.target.value)}
+            className={`${inputAdmin} mt-1 w-full`}
+          >
+            <option value="pending">Đang chờ</option>
+            <option value="all">Tất cả</option>
+            <option value="approved">Đã xử lý</option>
+            <option value="rejected">Đã từ chối</option>
+            <option value="cancelled">Đã hủy</option>
+          </select>
+        </label>
+        {teacherReqStatusFilter === 'pending' && !teacherReqLoading && (
+          <p className="mt-2 text-sm text-slate-500">
+            <span className="font-medium text-slate-300">{teacherReqPendingCount}</span> yêu cầu đang chờ.
+          </p>
+        )}
+        {teacherReqLoading && <PageLoading variant="inline" className="mt-4" />}
+        {!teacherReqLoading && teacherReqRows.length === 0 && (
+          <p className="mt-4 text-sm text-slate-400">Không có yêu cầu phù hợp bộ lọc.</p>
+        )}
+        {!teacherReqLoading && teacherReqRows.length > 0 && (
+          <div className={`${tableShell} mt-4`}>
+            <table className="w-full min-w-[880px] text-left text-sm">
+              <thead className={tableHeadAdmin}>
+                <tr>
+                  <th className="px-4 py-3">Thời gian</th>
+                  <th className="px-4 py-3">Học viên</th>
+                  <th className="px-4 py-3">Lớp</th>
+                  <th className="px-4 py-3">GV hiện tại</th>
+                  <th className="px-4 py-3">Trạng thái</th>
+                  <th className="px-4 py-3">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody className={tableBodyAdmin}>
+                {teacherReqRows.map((r) => (
+                  <tr key={r.id} className={tableRowHover}>
+                    <td className="whitespace-nowrap px-4 py-3 text-slate-400">
+                      {formatTeacherReqDt(r.created_at)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="font-medium text-slate-200">{r.student_name}</div>
+                      <div className="text-xs text-slate-500">{r.student_email}</div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div>{r.class_name}</div>
+                      <div className="text-xs text-slate-500">{r.class_subject}</div>
+                      {r.student_note ? (
+                        <p className="mt-1 max-w-xs text-xs text-slate-400">“{r.student_note}”</p>
+                      ) : null}
+                    </td>
+                    <td className="px-4 py-3 text-slate-300">{r.current_teacher_name}</td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-medium ${TEACHER_REQ_STATUS_BADGE[r.status] || TEACHER_REQ_STATUS_BADGE.pending}`}
+                      >
+                        {r.status === 'pending'
+                          ? 'Chờ xử lý'
+                          : r.status === 'approved'
+                            ? 'Đã xử lý'
+                            : r.status === 'rejected'
+                              ? 'Từ chối'
+                              : r.status}
+                      </span>
+                      {r.admin_note ? (
+                        <p className="mt-1 max-w-[200px] text-xs text-slate-500">Ghi chú: {r.admin_note}</p>
+                      ) : null}
+                    </td>
+                    <td className="px-4 py-3 text-xs">
+                      {r.status === 'pending' ? (
+                        <button
+                          type="button"
+                          className="text-left font-medium text-emerald-400 hover:text-emerald-300"
+                          onClick={() => {
+                            setTeacherReqActionRow(r)
+                            setTeacherReqAdminNote('')
+                          }}
+                        >
+                          Đánh dấu / từ chối…
+                        </button>
+                      ) : (
+                        <span className="text-slate-500">—</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Panel>
+
+      {teacherReqActionRow && (
+        <div
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 p-4"
+          role="dialog"
+          aria-modal="true"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !teacherReqActionBusy) setTeacherReqActionRow(null)
+          }}
+        >
+          <div
+            className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-white/10 bg-slate-900 p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold text-white">Xử lý yêu cầu</h3>
+            <p className="mt-2 text-sm text-slate-400">
+              Lớp <span className="font-medium text-slate-200">{teacherReqActionRow.class_name}</span> — học viên{' '}
+              {teacherReqActionRow.student_name}
+            </p>
+            <p className="mt-3 text-xs text-slate-500">
+              Đổi giáo viên ở phần bên dưới (Chuyển lớp từ giáo viên khác hoặc Sửa lớp), sau đó đánh dấu tại đây.
+            </p>
+            <label className="mt-4 block text-sm text-slate-300">
+              Ghi chú admin (tuỳ chọn)
+              <textarea
+                rows={3}
+                value={teacherReqAdminNote}
+                onChange={(e) => setTeacherReqAdminNote(e.target.value)}
+                className={`${inputAdmin} mt-1 w-full`}
+                placeholder="Ví dụ: Đã chuyển sang GV Nguyễn Văn A"
+              />
+            </label>
+            <div className="mt-6 flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={teacherReqActionBusy}
+                onClick={() => setTeacherReqActionRow(null)}
+                className="rounded-xl border border-white/15 px-4 py-2.5 text-sm text-slate-200"
+              >
+                Đóng
+              </button>
+              <button
+                type="button"
+                disabled={teacherReqActionBusy}
+                onClick={() => resolveTeacherRequest('rejected')}
+                className="rounded-xl border border-rose-500/40 bg-rose-500/15 px-4 py-2.5 text-sm font-medium text-rose-200"
+              >
+                Từ chối
+              </button>
+              <button
+                type="button"
+                disabled={teacherReqActionBusy}
+                onClick={() => resolveTeacherRequest('approved')}
+                className={btnPrimaryAdmin}
+              >
+                {teacherReqActionBusy ? 'Đang lưu…' : 'Đánh dấu đã xử lý'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {loading && <PageLoading variant="inline" />}
 
       {!loading && state.teachers.length === 0 && (
         <Panel title="Chưa có giáo viên">
@@ -505,7 +738,9 @@ export default function AdminTeacherClasses() {
                 </button>
               </div>
               {enrollmentsLoading ? (
-                <p className="mt-4 text-sm text-slate-500">Đang tải danh sách…</p>
+                <div className="mt-4">
+                  <PageLoading variant="inline" />
+                </div>
               ) : (
                 <>
                   <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">

@@ -16,6 +16,7 @@ import {
   tableShell,
 } from '../../components/dashboard/dashboardStyles'
 import { useAdminState } from '../../hooks/useAdminState'
+import PageLoading from '../../components/ui/PageLoading.jsx'
 
 const statusUi = {
   approved: { label: 'Đã duyệt', className: 'bg-emerald-500/20 text-emerald-300' },
@@ -47,7 +48,6 @@ export default function AdminTeachers() {
     createTeacherUser,
     updateTeacher,
     setTeacherApproval,
-    removeTeacher,
   } = useAdminState()
   const [q, setQ] = useState('')
   const [modal, setModal] = useState(null)
@@ -158,7 +158,7 @@ export default function AdminTeachers() {
         badge="Nhân sự"
       />
 
-      {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
+      {loading && <PageLoading variant="inline" />}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
         <input
@@ -304,9 +304,6 @@ export default function AdminTeachers() {
                           Từ chối
                         </button>
                       )}
-                      <button type="button" onClick={() => removeTeacher(r.id)} className="font-medium text-red-400 hover:text-red-300">
-                        Tạm khóa nhanh
-                      </button>
                     </div>
                   </td>
                 </tr>

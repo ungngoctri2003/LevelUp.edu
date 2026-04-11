@@ -5,6 +5,7 @@ import { normalizeExamQuestions } from '../services/publicApi.js'
 import { getMyAssignedExamById, getMyAssignedExams, postMyExamAttempt } from '../services/meApi.js'
 import { toast } from 'sonner'
 import { PUBLIC_LOAD_ERROR } from '../lib/publicUserMessages.js'
+import PageLoading, { LoadingSpinner } from '../components/ui/PageLoading.jsx'
 
 function mapExamForCard(row) {
   if (!row) return null
@@ -447,11 +448,7 @@ export default function TestsPage() {
   }
 
   if (authLoading) {
-    return (
-      <div className="py-24 text-center text-slate-500">
-        <p>Đang tải…</p>
-      </div>
-    )
+    return <PageLoading variant="page" />
   }
 
   if (!session?.access_token) {
@@ -498,12 +495,14 @@ export default function TestsPage() {
           </p>
         </div>
 
-        {loadingQuestions && (
-          <p className="mb-6 text-center text-sm text-slate-500">Đang tải câu hỏi đề…</p>
-        )}
+        {loadingQuestions && <PageLoading variant="block" className="mb-6 py-4" />}
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {examsLoading && <p className="col-span-full text-center text-slate-500">Đang tải đề…</p>}
+          {examsLoading && (
+            <div className="col-span-full">
+              <PageLoading variant="block" />
+            </div>
+          )}
           {!examsLoading && listForbidden && (
             <p className="col-span-full text-center text-slate-500">
               Không thể tải danh sách đề. Vui lòng thử lại sau.
@@ -554,9 +553,16 @@ export default function TestsPage() {
                 type="button"
                 disabled={loadingQuestions}
                 onClick={() => handleStartExam(exam)}
-                className="mt-6 w-full rounded-xl bg-gradient-to-r from-cyan-500 to-fuchsia-600 py-3 font-medium text-white shadow-md transition-opacity hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50"
+                className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-fuchsia-600 py-3 font-medium text-white shadow-md transition-opacity hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {loadingQuestions ? 'Đang tải…' : 'Làm bài'}
+                {loadingQuestions ? (
+                  <>
+                    <LoadingSpinner size="sm" className="border-white/25 border-t-white border-r-white/70" />
+                    Đang tải…
+                  </>
+                ) : (
+                  'Làm bài'
+                )}
               </button>
             </div>
           ))}

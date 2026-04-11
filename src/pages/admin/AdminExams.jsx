@@ -19,6 +19,7 @@ import { useAdminState } from '../../hooks/useAdminState'
 import QuestionBankEditor from '../../components/dashboard/QuestionBankEditor.jsx'
 import { questionBankDraftsFromStored, sanitizeMcqBankForDatabase } from '../../lib/mcqQuestions.js'
 import { parseEmbedFromPaste } from '../../lib/examEmbed.js'
+import PageLoading from '../../components/ui/PageLoading.jsx'
 
 const emptyForm = {
   title: '',
@@ -164,7 +165,7 @@ export default function AdminExams() {
         badge="Đề thi"
       />
 
-      {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
+      {loading && <PageLoading variant="inline" />}
 
       <Panel title="Tạo đề mới" subtitle="Thêm đề vào kho đề dùng chung cho website.">
         <form onSubmit={addExamSubmit} className="space-y-4">

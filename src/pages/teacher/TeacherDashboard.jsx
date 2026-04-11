@@ -5,6 +5,7 @@ import StatCard from '../../components/dashboard/StatCard'
 import PageHeader from '../../components/dashboard/PageHeader'
 import Panel from '../../components/dashboard/Panel'
 import { useTeacherState } from '../../hooks/useTeacherState'
+import PageLoading from '../../components/ui/PageLoading.jsx'
 
 export default function TeacherDashboard() {
   const { state, loading, error, computeTeacherDashboardStats } = useTeacherState()
@@ -29,13 +30,13 @@ export default function TeacherDashboard() {
         </Link>
       </PageHeader>
 
-      {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
+      {loading && <PageLoading variant="inline" />}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard accent="teacher" label="Lớp đang dạy" value={String(stats.myClasses)} />
         <StatCard
           accent="teacher"
-          label="Học sinh (ước)"
+          label="Học sinh"
           value={String(stats.totalStudents)}
           hint="Ước tính theo danh sách lớp"
         />

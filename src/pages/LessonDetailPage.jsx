@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useParams, Navigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Reveal } from '../components/motion/Reveal'
+import PageLoading from '../components/ui/PageLoading.jsx'
 import { useAuthSession } from '../context/AuthSessionContext'
 import { usePublicContent } from '../hooks/usePublicContent'
 import { toYouTubeEmbedUrl, youTubeWatchUrlOrNull } from '../lib/youtubeEmbed.js'
@@ -117,11 +118,11 @@ export default function LessonDetailPage() {
   }
 
   if (catLoading && !ctx) {
-    return <div className="py-24 text-center text-slate-500">Đang tải…</div>
+    return <PageLoading variant="page" />
   }
 
   if (ctx && waitingPurchaseContext) {
-    return <div className="py-24 text-center text-slate-500">Đang tải…</div>
+    return <PageLoading variant="page" />
   }
 
   if (ctx && !canViewPage) {
@@ -133,19 +134,15 @@ export default function LessonDetailPage() {
   }
 
   if (!ctx || !canViewPage) {
-    return (
-      <div className="py-24 text-center text-slate-500">
-        {catLoading ? 'Đang tải…' : 'Không tìm thấy bài giảng.'}
-      </div>
-    )
+    if (catLoading) return <PageLoading variant="page" />
+    return <div className="py-24 text-center text-slate-500">Không tìm thấy bài giảng.</div>
   }
 
   if (!row) {
-    return (
-      <div className="py-24 text-center text-slate-500">
-        {loadErr ? 'Không tải được chi tiết bài giảng.' : 'Đang tải chi tiết…'}
-      </div>
-    )
+    if (loadErr) {
+      return <div className="py-24 text-center text-slate-500">Không tải được chi tiết bài giảng.</div>
+    }
+    return <PageLoading variant="page" />
   }
 
   const { subject, lesson } = ctx

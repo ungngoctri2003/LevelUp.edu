@@ -21,6 +21,7 @@ import {
 import { PUBLIC_LOAD_ERROR, PUBLIC_SUBMIT_ERROR } from '../../lib/publicUserMessages.js'
 import { normalizeMcqForTaking } from '../../lib/mcqQuestions.js'
 import { toast } from 'sonner'
+import PageLoading from '../../components/ui/PageLoading.jsx'
 
 const SECTION_ASSIGNMENTS_ID = 'student-section-bai-tap'
 const SECTION_TESTS_ID = 'student-section-kiem-tra'
@@ -320,7 +321,7 @@ export default function StudentWorkHub({
       {showAssignments && (
       <section id={SECTION_ASSIGNMENTS_ID} className="space-y-4 scroll-mt-24">
         <h2 className={secH2}>Bài tập theo lớp</h2>
-        {assignmentsBusy && <p className={muted}>Đang tải…</p>}
+        {assignmentsBusy && <PageLoading variant="inline" className={muted} />}
 
         {!assignmentsBusy && asgLoadFailed && (
           <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-900 dark:text-amber-100">
@@ -453,7 +454,7 @@ export default function StudentWorkHub({
       {showExams && (
       <section id={SECTION_TESTS_ID} className="space-y-6 scroll-mt-24">
         <h2 className={secH2}>Kiểm tra</h2>
-        {testsBusy && <p className={muted}>Đang tải…</p>}
+        {testsBusy && <PageLoading variant="inline" className={muted} />}
 
         {!testsBusy && (
           <>

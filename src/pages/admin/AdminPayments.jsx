@@ -20,6 +20,7 @@ import {
   filterPaymentsBySubmittedDateRange,
   partitionPayments,
 } from '../../utils/adminPaymentHelpers.js'
+import PageLoading from '../../components/ui/PageLoading.jsx'
 
 const SOURCE_OPTIONS = [
   { value: 'cash', label: 'Tiền mặt' },
@@ -209,8 +210,8 @@ export default function AdminPayments() {
         <tbody className={tableBodyAdmin}>
           {loading && (
             <tr>
-              <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
-                Đang tải…
+              <td colSpan={7} className="px-4 py-4">
+                <PageLoading variant="block" className="py-4" />
               </td>
             </tr>
           )}

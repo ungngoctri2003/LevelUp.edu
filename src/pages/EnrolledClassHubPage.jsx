@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Reveal } from '../components/motion/Reveal'
+import PageLoading from '../components/ui/PageLoading.jsx'
 import ClassPaymentModal from '../components/ClassPaymentModal.jsx'
 import { useAuthSession } from '../context/AuthSessionContext'
 import { usePublicContent } from '../hooks/usePublicContent'
@@ -140,11 +141,11 @@ export default function EnrolledClassHubPage() {
   }
 
   if (publicLoading) {
-    return <div className="py-24 text-center text-slate-500">Đang tải…</div>
+    return <PageLoading variant="page" />
   }
 
   if (token && isStudent && classesLoading) {
-    return <div className="py-24 text-center text-slate-500">Đang tải…</div>
+    return <PageLoading variant="page" />
   }
 
   if (enrollment) {
@@ -235,7 +236,7 @@ export default function EnrolledClassHubPage() {
               <h2 id="hub-lessons-heading" className="sr-only">
                 Bài giảng trong lớp
               </h2>
-              {postsLoading && <p className="text-center text-gray-600 dark:text-slate-400">Đang tải bài giảng…</p>}
+              {postsLoading && <PageLoading variant="block" className="py-4" />}
               {!postsLoading && sortedPosts.length === 0 && (
                 <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50/80 px-6 py-12 text-center dark:border-slate-600 dark:bg-slate-800/40">
                   <p className="text-gray-700 dark:text-slate-300">Chưa có bài giảng nào trong lớp này.</p>

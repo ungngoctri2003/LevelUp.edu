@@ -15,6 +15,7 @@ import {
   stringArrayToLines,
 } from '../../components/admin/StructuredContentEditors.jsx'
 import * as srv from '../../services/adminServerApi.js'
+import PageLoading from '../../components/ui/PageLoading.jsx'
 
 export default function AdminLessonDetail() {
   const { lessonId } = useParams()
@@ -188,7 +189,7 @@ export default function AdminLessonDetail() {
         badge="CMS"
       />
 
-      {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
+      {loading && <PageLoading variant="inline" />}
 
       {!loading && lessonRow && (
         <Panel title={`Bài #${lessonRow.id} — ${lessonRow.title}`} subtitle="Tóm tắt, video và dàn ý trên trang bài giảng">

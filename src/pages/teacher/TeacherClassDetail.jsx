@@ -9,6 +9,7 @@ import {
   tableBodyTeacher,
   tableRowHover,
 } from '../../components/dashboard/dashboardStyles'
+import PageLoading from '../../components/ui/PageLoading.jsx'
 
 const emptyRoster = { studentId: '', avgScore: 8, attendance: '90' }
 
@@ -99,7 +100,7 @@ export default function TeacherClassDetail() {
         </p>
       </div>
 
-      {loading && <p className="text-sm text-slate-600 dark:text-slate-400">Đang tải…</p>}
+      {loading && <PageLoading variant="inline" />}
 
       <p className="text-xs text-slate-600 dark:text-slate-500">
         Thêm học viên bằng mã tài khoản nội bộ (do quản trị hoặc danh sách học viên cung cấp).

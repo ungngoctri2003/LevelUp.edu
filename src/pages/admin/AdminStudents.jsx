@@ -17,6 +17,7 @@ import {
   labelAdmin,
 } from '../../components/dashboard/dashboardStyles'
 import { useAdminState } from '../../hooks/useAdminState'
+import PageLoading from '../../components/ui/PageLoading.jsx'
 
 const statusLabel = {
   active: 'Đang học',
@@ -149,7 +150,7 @@ export default function AdminStudents() {
         badge="Student"
       />
 
-      {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
+      {loading && <PageLoading variant="inline" />}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
         <select

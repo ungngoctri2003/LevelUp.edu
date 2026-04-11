@@ -20,6 +20,7 @@ import { useAdminState } from '../../hooks/useAdminState'
 import { toast } from 'sonner'
 import { toastActionError } from '../../lib/appToast.js'
 import * as srv from '../../services/adminServerApi.js'
+import PageLoading from '../../components/ui/PageLoading.jsx'
 
 const classEmptyDraft = { class_id: '', title: '', duration_display: '45 phút' }
 
@@ -247,7 +248,7 @@ export default function AdminLessons() {
 
       {tab === 'online' && (
         <>
-          {onlineLoading && <p className="text-sm text-slate-400">Đang tải…</p>}
+          {onlineLoading && <PageLoading variant="inline" />}
 
           <Panel title="Thêm bài giảng trực tuyến" subtitle="Gắn bài với một khóa học (môn học theo khóa). Nội dung chi tiết chỉnh sau.">
             <form onSubmit={addOnline} className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -372,7 +373,7 @@ export default function AdminLessons() {
 
       {tab === 'lop' && (
         <>
-          {lopLoading && <p className="text-sm text-slate-400">Đang tải…</p>}
+          {lopLoading && <PageLoading variant="inline" />}
 
           <Panel title="Thêm bài giảng lớp" subtitle="Chọn lớp có sẵn — thường do giáo viên chủ nhiệm đăng">
             <form onSubmit={addLop} className="mt-4 grid gap-3 sm:grid-cols-2">

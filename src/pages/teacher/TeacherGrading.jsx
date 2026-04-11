@@ -8,6 +8,7 @@ import {
   tableBodyTeacher,
   tableRowHover,
 } from '../../components/dashboard/dashboardStyles'
+import PageLoading from '../../components/ui/PageLoading.jsx'
 
 export default function TeacherGrading() {
   const { state, loading, error, gradeSubmission, reopenSubmission, deleteSubmission } = useTeacherState()
@@ -25,7 +26,7 @@ export default function TeacherGrading() {
         </p>
       </div>
 
-      {loading && <p className="text-sm text-slate-600 dark:text-slate-400">Đang tải…</p>}
+      {loading && <PageLoading variant="inline" />}
 
       <div className={tableShell}>
         <table className="w-full min-w-[880px] text-left text-sm">

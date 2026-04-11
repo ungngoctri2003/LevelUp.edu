@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Reveal } from '../components/motion/Reveal'
+import PageLoading from '../components/ui/PageLoading.jsx'
 import { useAuthSession } from '../context/AuthSessionContext'
 import { usePublicContent } from '../hooks/usePublicContent'
 import { buildLessonsByCourse } from '../services/publicApi.js'
@@ -80,11 +81,7 @@ export default function CourseDetailPage() {
   const waitingPurchaseContext = isStudent && !!session?.access_token && !purchaseLoaded
 
   if (loading && !lessonsByCourse.length) {
-    return (
-      <div className="py-24 text-center text-gray-600 dark:text-slate-400">
-        Đang tải khóa học…
-      </div>
-    )
+    return <PageLoading variant="page" />
   }
 
   if (error && !lessonsByCourse.length) {
@@ -104,19 +101,11 @@ export default function CourseDetailPage() {
   }
 
   if (!activeCourse) {
-    return (
-      <div className="py-24 text-center text-gray-600 dark:text-slate-400">
-        Đang tải…
-      </div>
-    )
+    return <PageLoading variant="page" />
   }
 
   if (waitingPurchaseContext) {
-    return (
-      <div className="py-24 text-center text-gray-600 dark:text-slate-400">
-        Đang tải khóa học…
-      </div>
-    )
+    return <PageLoading variant="page" />
   }
 
   if (!canViewPage) {

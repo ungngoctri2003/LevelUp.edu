@@ -6,6 +6,7 @@ import { Reveal } from '../components/motion/Reveal'
 import { useAuthSession } from '../context/AuthSessionContext'
 import { usePublicContent } from '../hooks/usePublicContent'
 import { getMyClasses, getMyPayments } from '../services/meApi.js'
+import PageLoading from '../components/ui/PageLoading.jsx'
 
 function classRowState(classId, myClasses, myPayments) {
   const cid = Number(classId)
@@ -64,9 +65,7 @@ export default function ClassesForSalePage() {
   const showFatalError = error && !saleClasses.length
 
   if (loading && !saleClasses.length) {
-    return (
-      <div className="py-24 text-center text-gray-600 dark:text-slate-400">Đang tải danh sách lớp…</div>
-    )
+    return <PageLoading variant="page" />
   }
 
   if (showFatalError) {

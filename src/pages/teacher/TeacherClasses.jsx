@@ -11,6 +11,7 @@ import {
   labelAdmin,
   btnPrimaryTeacher,
 } from '../../components/dashboard/dashboardStyles'
+import PageLoading from '../../components/ui/PageLoading.jsx'
 
 const empty = { code: '', name: '', subject: '', grade: '12', schedule: '' }
 
@@ -90,7 +91,7 @@ export default function TeacherClasses() {
         </button>
       </div>
 
-      {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
+      {loading && <PageLoading variant="inline" />}
 
       <div className="grid gap-4 md:grid-cols-2">
         {state.classes.map((c) => (

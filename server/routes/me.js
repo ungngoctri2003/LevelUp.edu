@@ -258,6 +258,73 @@ router.get('/classes', async (req, res) => {
   })
 })
 
+/** GET /api/me/class-teacher-requests — yêu cầu đổi GV của học viên */
+router.get('/class-teacher-requests', async (req, res) => {
+  const svc = createServiceClient()
+  if (!svc) return res.status(503).json({ error: 'Máy chủ chưa cấp đủ để tải yêu cầu.' })
+  const uid = req.authUser.id
+  const { data: profile, error: pErr } = await svc.from('profiles').select('role').eq('id', uid).maybeSingle()
+  if (pErr) return res.status(500).json({ error: pErr.message })
+  if (profile?.role !== 'student') {
+    return res.status(403).json({ error: 'Chỉ học viên xem được yêu cầu này.' })
+  }
+  const { data: rows, error } = await svc
+    .from('student_teacher_change_requests')
+    .select(
+      'id, student_id, class_id, status, student_note, admin_note, created_at, updated_at, resolved_at, resolved_by',
+    )
+    .eq('student_id', uid)
+    .order('created_at', { ascending: false })
+  if (error) return res.status(500).json({ error: error.message })
+  res.json({ data: rows || [] })
+})
+
+/** POST /api/me/class-teacher-requests — gửi yêu cầu đổi giáo viên (đã ghi danh lớp) */
+router.post('/class-teacher-requests', async (req, res) => {
+  const svc = createServiceClient()
+  if (!svc) return res.status(503).json({ error: 'Máy chủ chưa cấp đủ để gửi yêu cầu.' })
+  const uid = req.authUser.id
+  const { class_id: rawClassId, student_note } = req.body || {}
+  const classId = Number(rawClassId)
+  if (!Number.isFinite(classId)) {
+    return res.status(400).json({ error: 'class_id không hợp lệ' })
+  }
+  const { data: profile, error: pErr } = await svc.from('profiles').select('role').eq('id', uid).maybeSingle()
+  if (pErr) return res.status(500).json({ error: pErr.message })
+  if (profile?.role !== 'student') {
+    return res.status(403).json({ error: 'Chỉ học viên được gửi yêu cầu đổi giáo viên.' })
+  }
+  const { data: enr, error: eErr } = await svc
+    .from('class_enrollments')
+    .select('class_id')
+    .eq('student_id', uid)
+    .eq('class_id', classId)
+    .maybeSingle()
+  if (eErr) return res.status(500).json({ error: eErr.message })
+  if (!enr) {
+    return res.status(403).json({ error: 'Bạn chưa được ghi danh lớp này.' })
+  }
+  const note =
+    typeof student_note === 'string' && student_note.trim() ? student_note.trim().slice(0, 2000) : null
+  const { data, error } = await svc
+    .from('student_teacher_change_requests')
+    .insert({
+      student_id: uid,
+      class_id: classId,
+      status: 'pending',
+      student_note: note,
+    })
+    .select('id, class_id, status, student_note, created_at')
+    .single()
+  if (error) {
+    if (error.code === '23505') {
+      return res.status(409).json({ error: 'Bạn đã có yêu cầu đang chờ xử lý cho lớp này.' })
+    }
+    return res.status(500).json({ error: error.message })
+  }
+  res.status(201).json({ data })
+})
+
 /** GET /api/me/payments — yêu cầu thanh toán của học viên hiện tại */
 router.get('/payments', async (req, res) => {
   const svc = createServiceClient()
@@ -683,19 +750,6 @@ router.get('/exams/:id', async (req, res) => {
   const { data, error } = await sb.from('exams').select('*').eq('id', id).maybeSingle()
   if (error) return res.status(500).json({ error: error.message })
   if (!data) return res.status(404).json({ error: 'Không tìm thấy đề' })
-  res.json({ data })
-})
-
-/** GET /api/me/classes */
-router.get('/classes', async (req, res) => {
-  const sb = req.supabaseUser
-  const { data, error } = await sb
-    .from('classes')
-    .select(
-      'id, code, name, subject, grade_label, schedule_summary, teacher_id, created_at, updated_at',
-    )
-    .order('id', { ascending: true })
-  if (error) return res.status(500).json({ error: error.message })
   res.json({ data })
 })
 

@@ -14,6 +14,7 @@ import {
   stringArrayToLines,
 } from '../../components/admin/StructuredContentEditors.jsx'
 import * as srv from '../../services/adminServerApi.js'
+import PageLoading from '../../components/ui/PageLoading.jsx'
 
 export default function AdminTeacherLessonPostDetail() {
   const { postId } = useParams()
@@ -153,7 +154,7 @@ export default function AdminTeacherLessonPostDetail() {
         badge="Lớp học"
       />
 
-      {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
+      {loading && <PageLoading variant="inline" />}
 
       {!loading && postRow && (
         <Panel

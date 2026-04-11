@@ -69,7 +69,7 @@ export default function StudentDashboard() {
         <StatCard accent="student" label="Bài kiểm tra đã làm" value={String(stats.testCount)} />
         <StatCard
           accent="student"
-          label="Điểm TB (ước)"
+          label="Điểm TB"
           value={stats.avgDisplay}
           hint={`Lần gần nhất: ${stats.lastScore}`}
         />

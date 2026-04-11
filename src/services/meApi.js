@@ -39,6 +39,18 @@ export async function getMyClasses(accessToken) {
   return meFetch(accessToken, '/api/me/classes')
 }
 
+/** Yêu cầu đổi giáo viên (học viên) */
+export async function getMyClassTeacherRequests(accessToken) {
+  return meFetch(accessToken, '/api/me/class-teacher-requests')
+}
+
+export async function postMyClassTeacherRequest(accessToken, body) {
+  return meFetch(accessToken, '/api/me/class-teacher-requests', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
+}
+
 export async function getMyPayments(accessToken) {
   return meFetch(accessToken, '/api/me/payments')
 }

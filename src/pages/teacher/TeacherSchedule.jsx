@@ -18,6 +18,7 @@ import {
   tableRowHover,
 } from '../../components/dashboard/dashboardStyles'
 import AppDatePicker from '../../components/ui/AppDatePicker.jsx'
+import PageLoading from '../../components/ui/PageLoading.jsx'
 import AppDateRangePicker from '../../components/ui/AppDateRangePicker.jsx'
 import {
   WEEK_DAYS,
@@ -284,7 +285,7 @@ export default function TeacherSchedule() {
         </button>
       </PageHeader>
 
-      {loading && <p className="text-sm text-slate-400">Đang tải…</p>}
+      {loading && <PageLoading variant="inline" />}
 
       <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
         <div className="flex flex-wrap gap-3">

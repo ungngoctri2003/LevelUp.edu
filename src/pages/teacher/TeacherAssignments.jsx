@@ -13,6 +13,7 @@ import {
   inputTeacher,
   labelAdmin,
 } from '../../components/dashboard/dashboardStyles'
+import PageLoading from '../../components/ui/PageLoading.jsx'
 
 const empty = { classId: '', title: '', dueDate: '', dueTime: '', questionItems: [] }
 const emptyExamAssign = { examId: '', classId: '' }
@@ -103,7 +104,7 @@ export default function TeacherAssignments() {
         </button>
       </div>
 
-      {loading && <p className="text-sm text-slate-600 dark:text-slate-400">Đang tải…</p>}
+      {loading && <PageLoading variant="inline" />}
 
       <div className={tableShell}>
         <table className="w-full min-w-[800px] text-left text-sm">
