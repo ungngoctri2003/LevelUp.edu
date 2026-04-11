@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { safePostAuthPath } from './authRedirect.js'
+import { postAuthPathFromLocation, safePostAuthPath } from './authRedirect.js'
 
 describe('safePostAuthPath', () => {
   it('returns null for unsafe or empty input', () => {
@@ -21,5 +21,24 @@ describe('safePostAuthPath', () => {
 
   it('allows query on safe path', () => {
     expect(safePostAuthPath('/bai-kiem-tra?exam=3', 'teacher')).toBe('/bai-kiem-tra?exam=3')
+  })
+})
+
+describe('postAuthPathFromLocation', () => {
+  it('strips auth from query and keeps other params', () => {
+    expect(postAuthPathFromLocation('/khoa-hoc', '?auth=login&utm=1', '', 'user')).toBe('/khoa-hoc?utm=1')
+  })
+
+  it('allows public path for any role', () => {
+    expect(postAuthPathFromLocation('/bai-giang', '', '', 'teacher')).toBe('/bai-giang')
+  })
+
+  it('returns null when pathname requires different role', () => {
+    expect(postAuthPathFromLocation('/admin', '', '', 'user')).toBeNull()
+    expect(postAuthPathFromLocation('/admin/hoc-vien', '?tab=1', '', 'teacher')).toBeNull()
+  })
+
+  it('preserves hash', () => {
+    expect(postAuthPathFromLocation('/lop-hoc', '?x=1', '#phan-1', 'user')).toBe('/lop-hoc?x=1#phan-1')
   })
 })

@@ -301,7 +301,7 @@ export default function AdminPayments() {
       </div>
 
       <Panel
-        title={paymentTab === 'class' ? 'Thanh toán lớp học' : 'Thanh toán khóa học (catalog)'}
+        title={paymentTab === 'class' ? 'Thanh toán lớp học' : 'Thanh toán khóa học'}
         subtitle={
           paymentTab === 'class'
             ? `${summaryClass.total} yêu cầu · ${summaryClass.pending} chờ · ${summaryClass.paid} đã xác nhận. Xác nhận thanh toán sẽ ghi danh học viên vào lớp khi đã gắn đúng tài khoản.`

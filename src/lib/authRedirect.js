@@ -1,5 +1,5 @@
 /**
- * Chuẩn hóa `next` sau đăng nhập: chỉ path nội bộ, tránh open redirect, khớp role.
+ * Chuẩn hoá `next` sau đăng nhập: chỉ path nội bộ, tránh open redirect, khớp role.
  * @param {string | null | undefined} raw
  * @param {'admin' | 'teacher' | 'user' | null | undefined} role
  * @returns {string | null} path + query + hash an toàn hoặc null
@@ -38,4 +38,21 @@ export function safePostAuthPath(raw, role) {
   }
 
   return p
+}
+
+/**
+ * Đích sau đăng nhập từ useLocation: bỏ tham số auth khỏi query, giữ hash, rồi safePostAuthPath.
+ * @param {string} pathname
+ * @param {string} search — ví dụ `?a=1` hoặc ``
+ * @param {string} hash — ví dụ `#sec` hoặc ``
+ * @param {'admin' | 'teacher' | 'user' | null | undefined} role
+ * @returns {string | null}
+ */
+export function postAuthPathFromLocation(pathname, search, hash, role) {
+  const raw = typeof search === 'string' && search.startsWith('?') ? search.slice(1) : search || ''
+  const params = new URLSearchParams(raw)
+  params.delete('auth')
+  const qs = params.toString()
+  const path = `${pathname || '/'}${qs ? `?${qs}` : ''}${typeof hash === 'string' ? hash : ''}`
+  return safePostAuthPath(path, role)
 }

@@ -1,12 +1,12 @@
 import { useEffect, useId, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuthModal } from '../context/AuthModalContext'
 import { toast } from 'sonner'
 import { useAuthSession } from '../context/AuthSessionContext'
 import { authErrorMessageForUser } from '../lib/authErrorMessages.js'
-import { safePostAuthPath } from '../lib/authRedirect.js'
+import { postAuthPathFromLocation, safePostAuthPath } from '../lib/authRedirect.js'
 
 function ForgotPasswordForm({ onBackToLogin, onSubmitEmail, titleId }) {
   const fieldIds = useId()
@@ -295,21 +295,24 @@ export default function AuthModal() {
   const { authView, openLogin, openRegister, openForgotPassword, closeAuth } = useAuthModal()
   const { login, register, requestPasswordReset } = useAuthSession()
   const navigate = useNavigate()
+  const location = useLocation()
   const [searchParams] = useSearchParams()
   const titleId = useId()
 
-  const redirectForRole = (role) => {
-    if (role === 'admin') navigate('/admin', { replace: true })
-    else if (role === 'teacher') navigate('/giao-vien', { replace: true })
-    else navigate('/hoc-vien', { replace: true })
-  }
-
   const goAfterAuth = (role) => {
     const rr = role || 'user'
-    const next = safePostAuthPath(searchParams.get('next'), rr)
+    const fromNext = safePostAuthPath(searchParams.get('next'), rr)
     closeAuth()
-    if (next) navigate(next, { replace: true })
-    else redirectForRole(rr)
+    if (fromNext) {
+      navigate(fromNext, { replace: true })
+      return
+    }
+    const fromLocation = postAuthPathFromLocation(location.pathname, location.search, location.hash, rr)
+    if (fromLocation) {
+      navigate(fromLocation, { replace: true })
+      return
+    }
+    navigate('/', { replace: true })
   }
 
   const handleLogin = async ({ email, password }) => {

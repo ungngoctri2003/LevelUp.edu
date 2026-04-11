@@ -128,7 +128,7 @@ export default function ThemeSettings({ compact = false }) {
               <span className="text-sm text-gray-700 dark:text-slate-300">
                 Giảm hiệu ứng chuyển động
                 <span className="mt-0.5 block text-[11px] font-normal text-gray-500 dark:text-slate-500">
-                  Tắt gần hết animation (Framer Motion + chuyển trang). Bật để thấy chuyển đổi gần như tức thì.
+                  Tắt gần hết animation. Bật để thấy chuyển đổi gần như tức thì.
                 </span>
               </span>
               <button
@@ -147,10 +147,6 @@ export default function ThemeSettings({ compact = false }) {
                 />
               </button>
             </label>
-
-            <p className="mt-3 text-[11px] leading-snug text-gray-500 dark:text-slate-500">
-              Lưu trên trình duyệt này. Chế độ “Theo hệ thống” cập nhật khi bạn đổi giao diện Windows/macOS.
-            </p>
           </motion.div>
         )}
       </AnimatePresence>
