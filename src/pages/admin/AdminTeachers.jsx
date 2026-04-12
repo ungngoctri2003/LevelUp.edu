@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { toastActionError } from '../../lib/appToast.js'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuthSession } from '../../context/AuthSessionContext'
+import { supabase } from '../../lib/supabaseClient'
 import PageHeader from '../../components/dashboard/PageHeader'
 import Panel from '../../components/dashboard/Panel'
 import { ModalPortal } from '../../components/dashboard/ModalPortal'
@@ -49,6 +51,9 @@ export default function AdminTeachers() {
     updateTeacher,
     setTeacherApproval,
   } = useAdminState()
+  const { user } = useAuthSession()
+  const navigate = useNavigate()
+  const [staffFor, setStaffFor] = useState(null)
   const [q, setQ] = useState('')
   const [modal, setModal] = useState(null)
   const [form, setForm] = useState(emptyForm)
@@ -118,6 +123,22 @@ export default function AdminTeachers() {
       await setTeacherApproval(id, nextStatus)
     } catch (err) {
       toastActionError(err, 'Không cập nhật được trạng thái.')
+    }
+  }
+
+  const openStaffChat = async (teacherId) => {
+    if (!supabase || !user?.id) return
+    setStaffFor(teacherId)
+    try {
+      const { data, error: rpcErr } = await supabase.rpc('ensure_direct_thread', {
+        p_other_user: teacherId,
+      })
+      if (rpcErr) throw rpcErr
+      navigate(`/admin/tin-nhan/dm/${data}`)
+    } catch (err) {
+      toastActionError(err, 'Không mở được tin nhắn.')
+    } finally {
+      setStaffFor(null)
     }
   }
 
@@ -275,6 +296,14 @@ export default function AdminTeachers() {
                   </td>
                   <td className="px-4 py-3 text-xs">
                     <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        disabled={staffFor === r.id}
+                        onClick={() => openStaffChat(r.id)}
+                        className="font-medium text-sky-400 hover:text-sky-300 disabled:opacity-50"
+                      >
+                        {staffFor === r.id ? 'Đang mở…' : 'Nhắn tin'}
+                      </button>
                       <Link
                         to={`/admin/lop-hoc?gv=${encodeURIComponent(r.id)}`}
                         className="font-medium text-violet-400 hover:text-violet-300"

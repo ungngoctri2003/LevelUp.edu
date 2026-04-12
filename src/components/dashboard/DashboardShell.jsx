@@ -9,6 +9,7 @@ import { usePersistedSidebarOpen } from '../../hooks/usePersistedSidebarOpen'
 import { NavIcon } from './DashboardNavIcons'
 import SidebarToggleIcon from './SidebarToggleIcon'
 import HeaderNotificationBell from '../notifications/HeaderNotificationBell'
+import HeaderChatLink from '../messaging/HeaderChatLink'
 
 const shellGrad = {
   admin:
@@ -56,6 +57,7 @@ export default function DashboardShell({ navItems, accent = 'admin', title, prof
   const [desktopSidebarOpen, , toggleDesktopSidebar] = usePersistedSidebarOpen(`levelup:sidebar:${accent}`, true)
 
   const closeMobile = () => setMobileOpen(false)
+  const chatHref = accent === 'admin' ? '/admin/tin-nhan' : '/giao-vien/tin-nhan'
   const drawerTransition = reduceMotion ? { duration: 0.15, ease: 'linear' } : { type: 'spring', damping: 28, stiffness: 320 }
   const mainTransition = reduceMotion
     ? { duration: 0.01, ease: 'linear' }
@@ -221,6 +223,7 @@ export default function DashboardShell({ navItems, accent = 'admin', title, prof
                 <div className="flex shrink-0 flex-wrap items-center justify-end gap-x-2 gap-y-2 sm:gap-x-3">
                   <ThemeSettings compact />
                   <HeaderNotificationBell variant={accent} />
+                  <HeaderChatLink to={chatHref} variant={accent} />
                   <span
                     className="hidden h-6 w-px shrink-0 bg-slate-200 sm:block dark:bg-white/10"
                     aria-hidden

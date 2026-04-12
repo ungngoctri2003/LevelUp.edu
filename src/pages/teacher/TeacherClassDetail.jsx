@@ -98,6 +98,15 @@ export default function TeacherClassDetail() {
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
           {cls.subject} · Khối {cls.grade} · {cls.schedule}
         </p>
+        <div className="mt-4 rounded-xl border border-emerald-500/35 bg-emerald-500/[0.07] px-4 py-3 dark:border-emerald-500/25 dark:bg-emerald-500/10">
+          <p className="text-sm text-slate-700 dark:text-slate-200">Chat nhóm cả lớp với học viên đã ghi danh.</p>
+          <Link
+            to={`/giao-vien/tin-nhan/class/${encodeURIComponent(classId)}`}
+            className="mt-2 inline-flex text-sm font-semibold text-emerald-700 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300"
+          >
+            Mở chat lớp →
+          </Link>
+        </div>
       </div>
 
       {loading && <PageLoading variant="inline" />}

@@ -40,6 +40,7 @@ import StudentDashboard from './pages/student/StudentDashboard'
 import StudentLearningHub from './pages/student/StudentLearningHub'
 import StudentRegisteredCoursesPage from './pages/student/StudentRegisteredCoursesPage'
 import StudentProfile from './pages/student/StudentProfile'
+import ChatHubPage from './pages/chat/ChatHubPage'
 import StaffProfilePage from './pages/dashboard/StaffProfilePage'
 import AuthModal from './components/AuthModal'
 import AuthSearchParamsSync from './components/AuthSearchParamsSync'
@@ -98,6 +99,8 @@ function App() {
           <Route path="lead-dang-ky" element={<Navigate to="/admin/thanh-toan" replace />} />
           <Route path="cms-trang-chu" element={<Navigate to="/admin" replace />} />
           <Route path="ho-so" element={<StaffProfilePage variant="admin" />} />
+          <Route path="tin-nhan" element={<ChatHubPage variant="admin" basePath="/admin/tin-nhan" />} />
+          <Route path="tin-nhan/:kind/:id" element={<ChatHubPage variant="admin" basePath="/admin/tin-nhan" />} />
         </Route>
 
         <Route path="/giao-vien" element={<TeacherLayout />}>
@@ -111,6 +114,8 @@ function App() {
           <Route path="cham-diem" element={<TeacherGrading />} />
           <Route path="hoc-sinh" element={<TeacherStudents />} />
           <Route path="ho-so" element={<StaffProfilePage variant="teacher" />} />
+          <Route path="tin-nhan" element={<ChatHubPage variant="teacher" basePath="/giao-vien/tin-nhan" />} />
+          <Route path="tin-nhan/:kind/:id" element={<ChatHubPage variant="teacher" basePath="/giao-vien/tin-nhan" />} />
         </Route>
 
         <Route path="/hoc-vien" element={<StudentLayout />}>
@@ -123,6 +128,8 @@ function App() {
           <Route path="bai-kiem-tra" element={<Navigate to="/hoc-vien/khoa-hoc#student-section-kiem-tra" replace />} />
           <Route path="thanh-toan-lop" element={<Navigate to="/hoc-vien/khoa-hoc#student-section-thanh-toan" replace />} />
           <Route path="ho-so" element={<StudentProfile />} />
+          <Route path="tin-nhan" element={<ChatHubPage variant="student" basePath="/hoc-vien/tin-nhan" />} />
+          <Route path="tin-nhan/:kind/:id" element={<ChatHubPage variant="student" basePath="/hoc-vien/tin-nhan" />} />
         </Route>
       </Routes>
         <AuthModal />
