@@ -80,7 +80,7 @@ function courseDisplayTitle(row) {
 }
 
 export default function AdminPayments() {
-  const { state, loading, error, updatePayment } = useAdminState()
+  const { state, loading, error, updatePayment, sendPaymentReminder } = useAdminState()
   const [paymentTab, setPaymentTab] = useState('class')
   const [classStatusFilter, setClassStatusFilter] = useState('all')
   const [classClassFilter, setClassClassFilter] = useState('all')
@@ -92,6 +92,7 @@ export default function AdminPayments() {
   const [dateTo, setDateTo] = useState('')
   const [editingId, setEditingId] = useState(null)
   const [draft, setDraft] = useState(null)
+  const [remindBusyId, setRemindBusyId] = useState(null)
 
   useEffect(() => {
     if (error) toast.error(error)
@@ -164,6 +165,23 @@ export default function AdminPayments() {
     })
   }
 
+  const runSendReminder = async (row) => {
+    if (!row?.student_id) {
+      toast.warning('Gắn tài khoản học viên (và lưu) trước khi gửi nhắc trong app.')
+      return
+    }
+    if (row.payment_status !== 'pending') return
+    setRemindBusyId(row.id)
+    try {
+      await sendPaymentReminder(row.id)
+      toast.success('Đã gửi nhắc thanh toán tới học viên (thông báo trong app).')
+    } catch (err) {
+      toastActionError(err, 'Không gửi được nhắc thanh toán.')
+    } finally {
+      setRemindBusyId(null)
+    }
+  }
+
   const save = async () => {
     if (!editingId || !draft) return
     if (draft.payment_status === 'paid' && !draft.student_id) {
@@ -193,18 +211,26 @@ export default function AdminPayments() {
 
   const isCoursePayment = editingRow?.payment_kind === 'course' || editingRow?.course_id != null
 
+  const canRemindFromModal =
+    editingRow &&
+    draft &&
+    editingRow.payment_status === 'pending' &&
+    editingRow.student_id &&
+    draft.payment_status === 'pending' &&
+    String(draft.student_id || '') === String(editingRow.student_id || '')
+
   const renderPaymentsTable = (rows, kind) => (
     <div className={tableShell}>
-      <table className="w-full min-w-[940px] text-left text-sm">
+      <table className="w-full min-w-[1000px] text-left text-sm">
         <thead className={tableHeadAdmin}>
           <tr>
             <th className="px-4 py-3">{kind === 'class' ? 'Lớp' : 'Khóa học'}</th>
             <th className="px-4 py-3">Học viên / liên hệ</th>
             <th className="px-4 py-3">Nguồn</th>
-            <th className="px-4 py-3">Số tiền</th>
+            <th className="w-36 min-w-0 px-2 py-3 text-right">Số tiền</th>
             <th className="px-4 py-3">Trạng thái</th>
             <th className="px-4 py-3">Thời gian</th>
-            <th className="px-4 py-3">Thao tác</th>
+            <th className="w-42 min-w-0 whitespace-nowrap px-2 py-3">Thao tác</th>
           </tr>
         </thead>
         <tbody className={tableBodyAdmin}>
@@ -247,7 +273,7 @@ export default function AdminPayments() {
               <td className="px-4 py-3 align-top text-slate-800 dark:text-slate-300">
                 {SOURCE_OPTIONS.find((opt) => opt.value === row.payment_source)?.label || row.payment_source}
               </td>
-              <td className="px-4 py-3 align-top font-medium text-slate-900 dark:text-slate-300">
+              <td className="w-28 min-w-0 px-2 py-3 text-right align-top font-medium tabular-nums text-slate-900 dark:text-slate-300">
                 {formatCurrency(row.amount)}
               </td>
               <td className="px-4 py-3 align-top">
@@ -267,14 +293,34 @@ export default function AdminPayments() {
                 <p>Gửi: {formatDateTime(row.submitted_at)}</p>
                 <p>Xác nhận: {formatDateTime(row.confirmed_at)}</p>
               </td>
-              <td className="px-4 py-3 align-top">
-                <button
-                  type="button"
-                  onClick={() => openEditor(row)}
-                  className="font-medium text-cyan-700 hover:text-cyan-800 dark:text-cyan-400 dark:hover:text-cyan-300"
-                >
-                  Xử lý
-                </button>
+              <td className="w-36 min-w-0 px-2 py-3 align-top">
+                <div className="flex flex-row flex-wrap items-center gap-x-2 gap-y-1">
+                  <button
+                    type="button"
+                    onClick={() => openEditor(row)}
+                    className="shrink-0 font-medium text-cyan-700 hover:text-cyan-800 dark:text-cyan-400 dark:hover:text-cyan-300"
+                  >
+                    Xử lý
+                  </button>
+                  {row.payment_status === 'pending' && (
+                    <>
+                      <span className="hidden h-4 w-px shrink-0 bg-slate-300 sm:block dark:bg-white/15" aria-hidden />
+                      <button
+                        type="button"
+                        disabled={!row.student_id || remindBusyId === row.id}
+                        title={
+                          row.student_id
+                            ? 'Gửi thông báo nhắc vào chuông ứng dụng của học viên'
+                            : 'Cần gắn tài khoản học viên trước'
+                        }
+                        onClick={() => runSendReminder(row)}
+                        className="shrink-0 text-xs font-medium whitespace-nowrap text-amber-700/90 hover:text-amber-600 disabled:cursor-not-allowed disabled:opacity-45 dark:text-amber-300/90 dark:hover:text-amber-200"
+                      >
+                        {remindBusyId === row.id ? 'Đang gửi…' : 'Nhắc thanh toán'}
+                      </button>
+                    </>
+                  )}
+                </div>
               </td>
             </tr>
           ))}
@@ -287,7 +333,7 @@ export default function AdminPayments() {
     <div className="space-y-8">
       <PageHeader
         title="Thanh toán — lớp học & khóa học"
-        description="Hai luồng riêng: đăng ký lớp (ghi danh) và mua khóa học online. Gắn đúng tài khoản học viên trước khi xác nhận đã thanh toán."
+        description="Hai luồng riêng: đăng ký lớp (ghi danh) và mua khóa học online. Gắn đúng tài khoản học viên trước khi xác nhận đã thanh toán. Với yêu cầu đang chờ, dùng «Nhắc trong app» để gửi thông báo nhắc vào chuông học viên."
         badge="Quản trị"
       />
 
@@ -611,6 +657,16 @@ export default function AdminPayments() {
                 <button type="button" onClick={save} className={btnPrimaryAdmin}>
                   Lưu thay đổi
                 </button>
+                {canRemindFromModal && (
+                  <button
+                    type="button"
+                    disabled={remindBusyId === editingRow.id}
+                    onClick={() => runSendReminder(editingRow)}
+                    className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-2.5 text-sm font-medium text-amber-900 transition hover:bg-amber-500/15 disabled:opacity-50 dark:text-amber-100 dark:hover:bg-amber-500/20"
+                  >
+                    {remindBusyId === editingRow.id ? 'Đang gửi nhắc…' : 'Gửi nhắc thanh toán'}
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => {

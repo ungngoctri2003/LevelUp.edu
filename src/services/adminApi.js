@@ -25,6 +25,20 @@ function normalizeMoney(v) {
   return Math.round(n * 100) / 100
 }
 
+function formatPaymentAmountVi(amount) {
+  const n = Number(amount)
+  if (!Number.isFinite(n)) return ''
+  try {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND',
+      maximumFractionDigits: 0,
+    }).format(n)
+  } catch {
+    return `${Math.round(n)} đ`
+  }
+}
+
 function normalizePaymentSource(v) {
   const allowed = new Set(['cash', 'bank_transfer', 'momo', 'vnpay', 'other'])
   const src = String(v || '').trim() || 'bank_transfer'
@@ -654,6 +668,98 @@ export async function adminUpdatePayment(sb, paymentId, patch, user) {
   await logAdminActivity(
     sb,
     `Cập nhật thanh toán lớp #${cur.class_id} -> ${nextStatus}`,
+    'course',
+    user?.email,
+    user?.id,
+  )
+}
+
+/**
+ * Gửi thông báo trong app (user_notifications) nhắc học viên hoàn tất thanh toán — chỉ khi đang chờ và đã gắn student_id.
+ */
+export async function adminSendPaymentReminder(sb, paymentId, user) {
+  if (isPaymentUuid(paymentId)) {
+    const uuid = String(paymentId).trim()
+    const { data: cur, error: gErr } = await sb
+      .from('student_course_payments')
+      .select('*')
+      .eq('id', uuid)
+      .maybeSingle()
+    if (gErr) throw new Error(gErr.message)
+    if (!cur) throw new Error('Không tìm thấy yêu cầu thanh toán khóa học')
+    if (cur.payment_status !== 'pending') {
+      throw new Error('Chỉ gửi nhắc khi yêu cầu đang chờ xác nhận.')
+    }
+    if (!cur.student_id) {
+      throw new Error('Gắn tài khoản học viên trước khi gửi nhắc thanh toán.')
+    }
+
+    const { data: crs } = await sb.from('courses').select('title').eq('id', cur.course_id).maybeSingle()
+    const title = crs?.title || `Khóa #${cur.course_id}`
+    const amt = formatPaymentAmountVi(cur.amount)
+    const bodyParts = [
+      `Yêu cầu thanh toán khóa «${title}» vẫn đang chờ xác nhận.`,
+      amt ? `Số tiền: ${amt}.` : null,
+      'Vui lòng hoàn tất chuyển khoản theo hướng dẫn và kiểm tra trạng thái tại mục thanh toán.',
+    ].filter(Boolean)
+
+    const { error: nErr } = await sb.from('user_notifications').insert({
+      user_id: cur.student_id,
+      title: 'Nhắc hoàn tất thanh toán',
+      body: bodyParts.join(' '),
+      link_path: '/hoc-vien/khoa-hoc-da-dang-ky',
+      kind: 'payment_reminder',
+    })
+    if (nErr) throw new Error(nErr.message)
+
+    await logAdminActivity(
+      sb,
+      `Gửi nhắc thanh toán khóa (yêu cầu ${uuid.slice(0, 8)}…, khóa #${cur.course_id})`,
+      'course',
+      user?.email,
+      user?.id,
+    )
+    return
+  }
+
+  const id = Number(paymentId)
+  if (!Number.isFinite(id)) throw new Error('ID thanh toán không hợp lệ')
+
+  const { data: cur, error: gErr } = await sb
+    .from('student_class_payments')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle()
+  if (gErr) throw new Error(gErr.message)
+  if (!cur) throw new Error('Không tìm thấy yêu cầu thanh toán')
+  if (cur.payment_status !== 'pending') {
+    throw new Error('Chỉ gửi nhắc khi yêu cầu đang chờ xác nhận.')
+  }
+  if (!cur.student_id) {
+    throw new Error('Gắn tài khoản học viên trước khi gửi nhắc thanh toán.')
+  }
+
+  const { data: cls } = await sb.from('classes').select('name').eq('id', cur.class_id).maybeSingle()
+  const cname = cls?.name || `Lớp #${cur.class_id}`
+  const amt = formatPaymentAmountVi(cur.amount)
+  const bodyParts = [
+    `Yêu cầu thanh toán lớp «${cname}» vẫn đang chờ xác nhận.`,
+    amt ? `Số tiền: ${amt}.` : null,
+    'Vui lòng hoàn tất chuyển khoản theo hướng dẫn và kiểm tra trạng thái tại mục thanh toán.',
+  ].filter(Boolean)
+
+  const { error: nErr } = await sb.from('user_notifications').insert({
+    user_id: cur.student_id,
+    title: 'Nhắc hoàn tất thanh toán',
+    body: bodyParts.join(' '),
+    link_path: '/hoc-vien/khoa-hoc#student-section-thanh-toan',
+    kind: 'payment_reminder',
+  })
+  if (nErr) throw new Error(nErr.message)
+
+  await logAdminActivity(
+    sb,
+    `Gửi nhắc thanh toán lớp (yêu cầu #${id}, lớp #${cur.class_id})`,
     'course',
     user?.email,
     user?.id,

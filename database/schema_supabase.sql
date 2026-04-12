@@ -1033,6 +1033,64 @@ create policy public_teacher_profiles_write_admin on public.public_teacher_profi
   for all using ((select public.is_admin())) with check ((select public.is_admin()));
 
 -- ---------------------------------------------------------------------------
+-- User notifications (in-app bell)
+-- ---------------------------------------------------------------------------
+create table public.user_notifications (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references public.profiles (id) on delete cascade,
+  title       text not null,
+  body        text,
+  link_path   text,
+  kind        text not null default 'info',
+  read_at     timestamptz,
+  created_at  timestamptz not null default now()
+);
+
+create index user_notifications_user_created_idx on public.user_notifications (user_id, created_at desc);
+create index user_notifications_user_unread_idx on public.user_notifications (user_id) where read_at is null;
+
+alter table public.user_notifications enable row level security;
+
+create policy user_notifications_select_own on public.user_notifications
+  for select using (user_id = (select auth.uid()));
+
+create policy user_notifications_update_own on public.user_notifications
+  for update
+  using (user_id = (select auth.uid()))
+  with check (user_id = (select auth.uid()));
+
+create or replace function public.enqueue_user_notification(
+  target_user_id uuid,
+  p_title text,
+  p_body text,
+  p_link_path text default null,
+  p_kind text default 'info'
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.user_notifications (user_id, title, body, link_path, kind)
+  values (
+    target_user_id,
+    p_title,
+    p_body,
+    p_link_path,
+    coalesce(nullif(trim(p_kind), ''), 'info')
+  );
+end;
+$$;
+
+revoke all on function public.enqueue_user_notification(uuid, text, text, text, text) from public;
+grant execute on function public.enqueue_user_notification(uuid, text, text, text, text) to service_role;
+
+-- Các trigger tạo user_notifications (đổi GV, ghi danh, bài giảng, bài tập, lịch, nộp/chấm bài, duyệt GV, lead/đơn/thanh toán):
+--   database/migrations/20260413_user_notifications.sql
+--   database/migrations/20260414_notification_triggers.sql
+
+-- ---------------------------------------------------------------------------
 -- Grants (API roles): RLS still applies — least privilege baseline
 -- ---------------------------------------------------------------------------
 grant usage on schema public to anon, authenticated, service_role;

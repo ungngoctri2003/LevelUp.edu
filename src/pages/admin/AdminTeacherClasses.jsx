@@ -258,6 +258,7 @@ export default function AdminTeacherClasses() {
       </div>
 
       <Panel
+        id="admin-teacher-change-requests"
         title="Yêu cầu đổi giáo viên"
         subtitle="Học viên gửi từ Lớp học của tôi. Đổi giáo viên phụ trách bằng Chuyển lớp / Sửa lớp bên dưới, rồi đánh dấu yêu cầu tại đây."
       >

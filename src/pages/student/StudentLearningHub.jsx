@@ -606,13 +606,23 @@ export default function StudentLearningHub() {
               </section>
             )}
 
-            {mounted.schedule && activeHash === H.LICH && <StudentClassSchedule embedded />}
+            {mounted.schedule && activeHash === H.LICH && (
+              <section id={H.LICH} className="scroll-mt-24 space-y-4" tabIndex={-1}>
+                <StudentClassSchedule embedded />
+              </section>
+            )}
 
             {mounted.work && (activeHash === H.BAI_TAP || activeHash === H.KIEM_TRA) && (
-              <StudentWorkHub
-                embedded
-                embeddedFocus={activeHash === H.KIEM_TRA ? 'exams' : 'assignments'}
-              />
+              <section
+                id={activeHash === H.KIEM_TRA ? H.KIEM_TRA : H.BAI_TAP}
+                className="scroll-mt-24 space-y-4"
+                tabIndex={-1}
+              >
+                <StudentWorkHub
+                  embedded
+                  embeddedFocus={activeHash === H.KIEM_TRA ? 'exams' : 'assignments'}
+                />
+              </section>
             )}
 
             {activeHash === H.THANH_TOAN && (

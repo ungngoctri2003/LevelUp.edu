@@ -8,6 +8,7 @@ import { useTheme } from '../../context/ThemeContext'
 import { usePersistedSidebarOpen } from '../../hooks/usePersistedSidebarOpen'
 import { NavIcon } from '../dashboard/DashboardNavIcons'
 import SidebarToggleIcon from '../dashboard/SidebarToggleIcon'
+import HeaderNotificationBell from '../notifications/HeaderNotificationBell'
 
 export const studentNavItems = [
   { to: '/hoc-vien', label: 'Tổng quan', end: true, icon: 'dashboard' },
@@ -194,6 +195,7 @@ export default function StudentShell() {
                 </div>
                 <div className="flex shrink-0 flex-wrap items-center justify-end gap-x-2 gap-y-2 sm:gap-x-3">
                   <ThemeSettings compact />
+                  <HeaderNotificationBell variant="student" />
                   <span
                     className="hidden h-6 w-px shrink-0 bg-slate-200 sm:block dark:bg-white/10"
                     aria-hidden

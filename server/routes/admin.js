@@ -115,6 +115,15 @@ router.patch(
   }),
 )
 
+router.post(
+  '/payments/:id/remind',
+  handle(async (req) => {
+    const raw = req.params.id
+    if (raw == null || String(raw).trim() === '') throw new Error('ID thanh toán không hợp lệ')
+    await adminApi.adminSendPaymentReminder(req.sbAdmin, raw, actor(req))
+  }),
+)
+
 router.post('/users/student', async (req, res) => {
   try {
     const data = await adminApi.adminProvisionStudent(req.sbAdmin, req.body || {}, actor(req))

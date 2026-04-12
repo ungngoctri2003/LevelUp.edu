@@ -78,6 +78,13 @@ export function adminPatchPayment(accessToken, id, patch) {
   })
 }
 
+/** Gửi nhắc thanh toán vào chuông thông báo học viên (user_notifications). */
+export function adminPostPaymentReminder(accessToken, id) {
+  return adminFetch(accessToken, `/api/admin/payments/${encodeURIComponent(String(id))}/remind`, {
+    method: 'POST',
+  })
+}
+
 function adminFetch(accessToken, path, init = {}) {
   if (!accessToken) {
     throw new Error('Phiên đăng nhập không hợp lệ. Vui lòng đăng xuất và đăng nhập lại.')

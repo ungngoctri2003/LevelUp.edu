@@ -262,6 +262,10 @@ export function AdminDataProvider({ children }) {
         await refresh()
       },
 
+      async sendPaymentReminder(id) {
+        await srv.adminPostPaymentReminder(t, id)
+      },
+
       async saveDashboardSettings(partial) {
         await srv.adminPatchDashboardSettings(t, partial)
         await refresh()
