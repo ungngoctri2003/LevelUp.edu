@@ -222,8 +222,8 @@ export default function DashboardShell({ navItems, accent = 'admin', title, prof
                 </div>
                 <div className="flex shrink-0 flex-wrap items-center justify-end gap-x-2 gap-y-2 sm:gap-x-3">
                   <ThemeSettings compact />
-                  {/* <HeaderNotificationBell variant={accent} />
-                  <HeaderChatLink to={chatHref} variant={accent} /> */}
+                  <HeaderNotificationBell variant={accent} />
+                  <HeaderChatLink to={chatHref} variant={accent} />
                   <span
                     className="hidden h-6 w-px shrink-0 bg-slate-200 sm:block dark:bg-white/10"
                     aria-hidden

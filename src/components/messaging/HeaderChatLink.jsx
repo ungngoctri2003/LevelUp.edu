@@ -37,17 +37,18 @@ export default function HeaderChatLink({ to, variant = 'admin' }) {
     ) : null
 
   return (
-    <NavLink
-      to={to}
-      className={({ isActive }) =>
-        `relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950 ${variantBtn[variant]} ${variantRing[variant]} ${
-          isActive ? variantActive[variant] : ''
-        }`
-      }
-      aria-label={unreadCount > 0 ? `Tin nhắn, ${unreadCount} hội thoại chưa đọc` : 'Tin nhắn'}
-    >
-      <MessageCircle className="h-5 w-5 shrink-0" strokeWidth={1.75} aria-hidden />
-      {badge}
-    </NavLink>
+    // <NavLink
+    //   to={to}
+    //   className={({ isActive }) =>
+    //     `relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950 ${variantBtn[variant]} ${variantRing[variant]} ${
+    //       isActive ? variantActive[variant] : ''
+    //     }`
+    //   }
+    //   aria-label={unreadCount > 0 ? `Tin nhắn, ${unreadCount} hội thoại chưa đọc` : 'Tin nhắn'}
+    // >
+    //   <MessageCircle className="h-5 w-5 shrink-0" strokeWidth={1.75} aria-hidden />
+    //   {badge}
+    // </NavLink>
+     <MessageCircle className="h-5 w-5 shrink-0" strokeWidth={1.75} aria-hidden />
   )
 }
