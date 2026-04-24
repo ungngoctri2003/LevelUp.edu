@@ -25,6 +25,7 @@ import AdminLessons from './pages/admin/AdminLessons'
 import AdminLessonDetail from './pages/admin/AdminLessonDetail'
 import AdminTeacherLessonPostDetail from './pages/admin/AdminTeacherLessonPostDetail'
 import AdminLandingTeachers from './pages/admin/AdminLandingTeachers'
+import AdminStatsPage from './pages/admin/AdminStatsPage'
 import TeacherLayout from './pages/teacher/TeacherLayout'
 import TeacherDashboard from './pages/teacher/TeacherDashboard'
 import TeacherClasses from './pages/teacher/TeacherClasses'
@@ -80,6 +81,7 @@ function App() {
 
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
+          <Route path="thong-ke" element={<AdminStatsPage />} />
           <Route path="hoc-vien" element={<AdminStudents />} />
           <Route path="giao-vien" element={<AdminTeachers />} />
           <Route path="lop-hoc" element={<AdminTeacherClasses />} />

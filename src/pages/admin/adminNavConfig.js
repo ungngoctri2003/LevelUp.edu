@@ -1,6 +1,7 @@
 /** Menu sidebar admin — tách file để Vite Fast Refresh không báo lỗi khi dùng chung với component. */
 export const adminNavItems = [
   { to: '/admin', label: 'Tổng quan', end: true, icon: 'dashboard' },
+  { to: '/admin/thong-ke', label: 'Thống kê', icon: 'chart' },
   { to: '/admin/hoc-vien', label: 'Học viên', icon: 'users' },
   { to: '/admin/giao-vien', label: 'Giáo viên', icon: 'teacher' },
   { to: '/admin/lop-hoc', label: 'Lớp & học viên', icon: 'class' },
